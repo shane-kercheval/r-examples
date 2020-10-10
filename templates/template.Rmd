@@ -1,0 +1,54 @@
+---
+title: ""
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+library(tidyverse)
+# library(scales)
+# library(stringr)
+# library(lubridate)
+# library(ggrepel)
+# library(forecast)
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+```{r data, echo=FALSE}
+the_data <- readRDS('data.RDS')
+```
+
+```{r snippet_name, echo=FALSE, fig.height=6, fig.width=plot_width_height_6}
+the_data %>%
+    ggplot(aes(x=, y=)) +
+    geom_xyz() +
+    geom_text(aes(y=variable, label=rt_pretty_numbers_long(variable)), check_overlap=TRUE, vjust=-0.5) +
+    scale_x_date(labels = rt_pretty_date_label(date_floor, date_break_format), breaks=date_breaks_width, limits=date_limits) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels=rt_pretty_axes) +
+    expand_limits(y=0) +
+    scale_fill_manual(values=rt_colors()) +
+    theme_light(base_size=base_size) +
+    theme(legend.position='none',
+          axis.text.x=element_text(angle=30, hjust=1)) +
+    labs(title="",
+         subtitle="",
+         x="",
+         y="",
+         caption="")
+```
