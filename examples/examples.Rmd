@@ -39,6 +39,8 @@ Create a dplyr-like function that uses the column names of the dataframe rather 
 
 https://dplyr.tidyverse.org/articles/programming.html
 
+### dplyr-like function
+
 ```{r}
 var_summary <- function(data, var) {
     # note the {{ var }}
@@ -53,24 +55,184 @@ mtcars %>%
     var_summary(mpg)
 ```
 
-```{r}
+> If you want the user to provide a set of data-variables that are then transformed, use across():
 
+```{r}
+var_summary <- function(data, .group_by, .var) {
+    # note the {{ var }}
+    data %>%
+        group_by(across({{ .group_by }})) %>%
+        summarise(n = n(),
+                  min = min({{ .var }}),
+                  max = max({{ .var }}))
+}
+
+mtcars %>% var_summary(.group_by=cyl, .var=mpg)
+```
+
+```{r}
+mtcars %>% var_summary(.group_by=c(cyl, vs), .var=mpg)
+```
+
+
+> Use the .names argument to across() to control the names of the output.
+
+(Note the vignette uses `.col` instead of `col`, which fails.)
+
+```{r}
+my_summarise <- function(data, .group_by, .summarise_vars) {
+  data %>%
+    group_by(across({{ .group_by }})) %>% 
+    summarise(across({{ .summarise_vars }},
+                     mean,
+                     .names = "mean_{col}"))
+}
+mtcars %>% my_summarise(cyl, mpg)
+```
+
+```{r}
+mtcars %>% my_summarise(c(cyl, vs), .summarise_vars=c(mpg, hp))
+```
+
+
+### .data
+
+```{r}
+var <- 'cyl'
+mtcars %>% count(.data[[var]])
+```
+
+> "Note that `.data` is not a data frame; it’s a special construct, a pronoun, that allows you to access the current variables either directly, with `.data$x` or indirectly with `.data[[var]]`. Don’t expect other functions to work with it."
+
+```{r}
+# ROW_NUMBER() OVER (PARITION BY col_x ORDER BY col_y) AS index
+row_number_over_partition_by <- function(data, .partition_by, .order_by) {
+    data %>%
+        group_by(across({{ .partition_by }})) %>%
+        mutate(index = row_number({{ .order_by }})) %>%
+        ungroup()
+}
+mtcars %>% 
+    select(cyl, mpg) %>%
+    row_number_over_partition_by(cyl, mpg) %>%
+    arrange(cyl, mpg)
+```
+
+```{r}
+mtcars %>% 
+    select(cyl, mpg) %>%
+    row_number_over_partition_by(cyl, desc(mpg)) %>%
+    arrange(cyl, mpg)
+```
+
+### eval_tidy
+
+```{r}
+with_data <- function(data, .x) {
+  expr <- rlang::enquo(.x)
+  print(expr)
+  rlang::eval_tidy(expr, data = data)
+}
+mtcars %>% with_data(.x=mean(cyl) * 10)
+```
+
+```{r}
+select <- function(.data, ...) {
+  expr <- rlang::expr(...)
+  print(expr)
+  pos <- tidyselect::eval_select(expr, data = .data)
+  rlang::set_names(.data[pos], names(pos))
+}
+
+mtcars %>%
+  select(mpg, cyl)
 ```
 
 
 
+```{r}
+# this is a hack because row_number only takes one column
+#.partition_by, 
+row_number_over_partition_by <- function(.x, .col_name, .partition_by, ...) {
+    .result <- .x %>%
+        mutate(temp______original_order = row_number()) %>%
+        group_by(across({{ .partition_by }})) %>%
+        arrange( ... , .by_group = TRUE) %>%
+        mutate(grouped_index = row_number()) %>%
+        ungroup() %>%
+        arrange(temp______original_order) %>%
+        pull(grouped_index)
+
+    .x[deparse(substitute(.col_name))] <- .result
+    
+    return (.x)
+}
+filter_over_partition_by <- function(.x, .col_name, .partition_by, ...) {
+    .x %>%
+        mutate(temp______original_order = row_number()) %>%
+        group_by(across({{ .partition_by }})) %>%
+        arrange( ... , .by_group = TRUE) %>%
+        filter(row_number() == 1) %>%
+        ungroup() %>%
+        arrange(temp______original_order) %>%
+        select(-temp______original_order)
+}
+mtcars %>% 
+    select(cyl, am, vs, mpg) %>%
+    row_number_over_partition_by(
+        # new column name
+        .col_name = my_index,
+        # "partition by"
+        .partition_by = c(cyl, am),
+        # "order by" i.e. sort index in order of these variable
+        desc(vs), mpg
+    ) %>%
+    arrange(desc(cyl), am, desc(vs), mpg)
+mtcars %>% 
+    select(cyl, am, vs, mpg) %>%
+    filter_over_partition_by(
+        # new column name
+        .col_name = my_index,
+        # "partition by"
+        .partition_by = c(cyl, am),
+        # "order by" i.e. sort index in order of these variable
+        desc(vs), mpg
+    ) %>%
+    arrange(desc(cyl), am, desc(vs), mpg)
+```
+
+
+```{r}
+row_number_over_partition_by <- function(data, ...) {
+    data %>% arrange( ... )
+}
+mtcars %>% 
+    select(cyl, am, vs, mpg) %>%
+    row_number_over_partition_by(desc(vs), mpg)
+```
+
+
+```{r}
+mtcars %>% arrange_at(c("desc(cyl)", "mpg"))
+```
 
 
 
+```{r}
+mtcars %>% arrange(across(quos(c(mpg, cyl))))
+mtcars %>% arrange(quos(c(mpg, cyl)))
+
+mtcars %>% arrange(quos(c(mpg, cyl)))
+mtcars %>% arrange(!!quos(c(mpg, cyl)))
+
+mtcars %>% arrange(!!! rlang::syms(c("mpg", "cyl")))
+
+vector_of_vars <- c("desc(mpg)", "cyl")
+mtcars %>% arrange_(.dots=vector_of_vars)
 
 
-
-
-
-
-
-
-
+mtcars
+```
 
 
 
