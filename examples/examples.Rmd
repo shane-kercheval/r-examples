@@ -36,9 +36,10 @@ plot_width_height_8 <- calculate_plot_width(8)
 library(tidyverse)
 library(janitor)
 library(ggplot2)
+library(tidytext)
 ```
 
-# General Data Cleaning
+# Data Cleaning
 
 ---
 
@@ -47,6 +48,7 @@ CO2
 starwars
 storms
 ```
+## General
 
 ### `clean_names()`
 
@@ -74,6 +76,9 @@ Turn `1` column into `x` columns based on regex
 ```
 
 ---
+
+
+## Aggregation
 
 ### `group_by() & which.max()`
 
@@ -108,7 +113,8 @@ starwars %>%
     group_by(gender) %>%
     top_n(3, height) %>%
     select(gender, name, height) %>%
-    arrange(gender, height)
+    arrange(gender, height) %>%
+    ungroup()
 ```
 
 ---
@@ -121,20 +127,20 @@ starwars %>%
 ```{r}
 mtcars %>% 
   group_by(cyl) %>% 
-  summarise(across(starts_with("d"), 
-                   list(mean = mean, 
-						   sd = sd), 
+  summarise(across(starts_with("d"),
+                   list(mean = mean,
+						   sd = sd),
                    .names = "{col}_{fn}"))
 ```
 
 ---
 
-same as above but using formulas (for `mpg`)
+same as above using formulas
 
 ```{r}
 mtcars %>% 
   group_by(cyl) %>% 
-  summarise(across(mpg, 
+  summarise(across(starts_with("d"), 
                    list(minus_sd = ~ (mean(.x) - sd(.x)), 
                         mean = mean, 
                         plus_sd = ~ (mean(.x) + sd(.x)))
@@ -143,7 +149,25 @@ mtcars %>%
 
 ---
 
-# dplyr/tidyverse
+### `summarise_at()`
+
+```{r}
+iris %>% group_by(Species) %>% summarise_at(vars(Sepal.Length, Sepal.Width), sum, na.rm = TRUE)
+```
+
+---
+
+### `add_count`
+
+```{r}
+iris %>% add_count(Species, name = 'num_species') %>% head()
+```
+
+`add_count(Species, name = 'num_species')` is equivalent to `group_by(Species) %>% mutate(num_species = n()) %>% ungroup()`
+
+---
+
+# dplyr/tidyverse 
 
 ## Indirection
 
@@ -327,4 +351,28 @@ mtcars %>%
 
 
 
+
+
+
+# ggplot
+
+### `reorder_within()`
+
+Reorder sub-categories within category e.g. for faceting.
+
+For example, the order of `setosa`, `versicolor`, `virginica` is allowed to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
+
+```{r}
+iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
+iris_gathered %>%
+    ggplot(aes(x=reorder_within(x=Species, by=value, within=metric),
+               y=value)) +
+    geom_boxplot() +
+    # this is necessary to undo the transformations to the values that reorder_within did
+    scale_x_reordered() +
+    facet_wrap(~ metric, scales = 'free_x')
+```
+
+
+# stats
 
