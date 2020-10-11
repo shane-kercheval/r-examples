@@ -143,10 +143,6 @@ mtcars %>%
 
 ---
 
-
----
-
-
 # dplyr/tidyverse
 
 ## Indirection
