@@ -1,4 +1,10 @@
+-   [Packages](#packages)
 -   [General Data Cleaning](#general-data-cleaning)
+    -   [`clean_names()`](#clean_names)
+    -   [`extract()`](#extract)
+    -   [`group_by() & which.max()`](#group_by-which.max)
+    -   [`group_by()` & `top_n()`](#group_by-top_n)
+    -   [`summarise()` & `across`](#summarise-across)
 -   [dplyr/tidyverse](#dplyrtidyverse)
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
@@ -6,10 +12,37 @@
         -   [eval\_tidy](#eval_tidy)
         -   [other examples](#other-examples)
 
+Packages
+========
+
+``` r
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+```
+
 General Data Cleaning
 =====================
 
 ------------------------------------------------------------------------
+
+### `clean_names()`
+
+``` r
+iris %>% colnames()
+```
+
+    ## [1] "Sepal.Length" "Sepal.Width"  "Petal.Length" "Petal.Width"  "Species"
+
+``` r
+iris %>% janitor::clean_names() %>% colnames()
+```
+
+    ## [1] "sepal_length" "sepal_width"  "petal_length" "petal_width"  "species"
+
+------------------------------------------------------------------------
+
+### `extract()`
 
 Turn `1` column into `x` columns based on regex
 
@@ -32,6 +65,121 @@ Turn `1` column into `x` columns based on regex
     ## 7          S3E1      3       1
     ## 8          S3E2      3       2
     ## 9          S3E3      3       3
+
+------------------------------------------------------------------------
+
+### `group_by() & which.max()`
+
+``` r
+which.max(c(2, 1, 4, 3))
+```
+
+    ## [1] 3
+
+``` r
+which.max(c(2, 4, 4, 3))
+```
+
+    ## [1] 2
+
+`first(name[which.max(height)])`
+
+``` r
+starwars %>%
+    group_by(gender) %>%
+    summarise(n = n(),
+              tallest_person = first(name[which.max(height)]),
+              tallest_height = max(height, na.rm = TRUE),
+              oldest_person = first(name[which.min(birth_year)]))
+```
+
+    ## # A tibble: 3 x 5
+    ##   gender        n tallest_person tallest_height oldest_person        
+    ##   <chr>     <int> <chr>                   <int> <chr>                
+    ## 1 feminine     17 Taun We                   213 Leia Organa          
+    ## 2 masculine    66 Yarael Poof               264 Wicket Systri Warrick
+    ## 3 <NA>          4 Ric Olié                  183 Quarsh Panaka
+
+[Tidy Tuesday screencast: analyzing franchise revenue -
+YouTube](https://youtu.be/1xsbTs9-a50?t=365)
+
+------------------------------------------------------------------------
+
+### `group_by()` & `top_n()`
+
+This gets the `N` rows associated with the top `N` values for each
+category being grouped
+
+`top_n(3, height)`
+
+``` r
+starwars %>%
+    group_by(gender) %>%
+    top_n(3, height) %>%
+    select(gender, name, height) %>%
+    arrange(gender, height)
+```
+
+    ## # A tibble: 10 x 3
+    ## # Groups:   gender [3]
+    ##    gender    name          height
+    ##    <chr>     <chr>          <int>
+    ##  1 feminine  Ayla Secura      178
+    ##  2 feminine  Shaak Ti         178
+    ##  3 feminine  Adi Gallia       184
+    ##  4 feminine  Taun We          213
+    ##  5 masculine Lama Su          229
+    ##  6 masculine Tarfful          234
+    ##  7 masculine Yarael Poof      264
+    ##  8 <NA>      Sly Moore        178
+    ##  9 <NA>      Ric Olié         183
+    ## 10 <NA>      Quarsh Panaka    183
+
+------------------------------------------------------------------------
+
+### `summarise()` & `across`
+
+-   Summarize multiple columns with multiple functions
+-   name columns with `glue` style convention
+
+``` r
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(across(starts_with("d"), 
+                   list(mean = mean, 
+                           sd = sd), 
+                   .names = "{col}_{fn}"))
+```
+
+    ## # A tibble: 3 x 5
+    ##     cyl disp_mean disp_sd drat_mean drat_sd
+    ##   <dbl>     <dbl>   <dbl>     <dbl>   <dbl>
+    ## 1     4      105.    26.9      4.07   0.365
+    ## 2     6      183.    41.6      3.59   0.476
+    ## 3     8      353.    67.8      3.23   0.372
+
+------------------------------------------------------------------------
+
+same as above but using formulas (for `mpg`)
+
+``` r
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(across(mpg, 
+                   list(minus_sd = ~ (mean(.x) - sd(.x)), 
+                        mean = mean, 
+                        plus_sd = ~ (mean(.x) + sd(.x)))
+                   ))
+```
+
+    ## # A tibble: 3 x 4
+    ##     cyl mpg_minus_sd mpg_mean mpg_plus_sd
+    ##   <dbl>        <dbl>    <dbl>       <dbl>
+    ## 1     4         22.2     26.7        31.2
+    ## 2     6         18.3     19.7        21.2
+    ## 3     8         12.5     15.1        17.7
+
+------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -228,7 +376,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fba646c2670
+    ## env:  0x7fd475d99588
 
     ## [1] 61.875
 

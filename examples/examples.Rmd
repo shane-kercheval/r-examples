@@ -11,12 +11,12 @@ output:
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 #devtools::install_github('shane-kercheval/rtools')
 #library(rtools)
-library(tidyverse)
 # library(scales)
 # library(stringr)
 # library(lubridate)
 # library(ggrepel)
 # library(forecast)
+library(ggplot2)
 library(knitr)
 
 options(scipen=999) # non-scientific notation
@@ -30,9 +30,37 @@ plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
+# Packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+```
+
 # General Data Cleaning
 
 ---
+
+```{r eval=FALSE, include=FALSE}
+CO2
+starwars
+storms
+```
+
+### `clean_names()`
+
+```{r}
+iris %>% colnames()
+```
+
+```{r}
+iris %>% janitor::clean_names() %>% colnames()
+```
+
+---
+
+### `extract()`
 
 Turn `1` column into `x` columns based on regex
 
@@ -46,6 +74,78 @@ Turn `1` column into `x` columns based on regex
 ```
 
 ---
+
+### `group_by() & which.max()`
+
+```{r}
+which.max(c(2, 1, 4, 3))
+which.max(c(2, 4, 4, 3))
+```
+
+`first(name[which.max(height)])`
+
+```{r}
+starwars %>%
+    group_by(gender) %>%
+    summarise(n = n(),
+              tallest_person = first(name[which.max(height)]),
+              tallest_height = max(height, na.rm = TRUE),
+              oldest_person = first(name[which.min(birth_year)]))
+```
+
+[Tidy Tuesday screencast: analyzing franchise revenue - YouTube](https://youtu.be/1xsbTs9-a50?t=365)
+
+---
+
+### `group_by()` & `top_n()`
+
+This gets the `N` rows associated with the top `N` values for each category being grouped
+
+`top_n(3, height)`
+
+```{r}
+starwars %>%
+    group_by(gender) %>%
+    top_n(3, height) %>%
+    select(gender, name, height) %>%
+    arrange(gender, height)
+```
+
+---
+
+### `summarise()` & `across`
+
+* Summarize multiple columns with multiple functions
+* name columns with `glue` style convention
+
+```{r}
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(across(starts_with("d"), 
+                   list(mean = mean, 
+						   sd = sd), 
+                   .names = "{col}_{fn}"))
+```
+
+---
+
+same as above but using formulas (for `mpg`)
+
+```{r}
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(across(mpg, 
+                   list(minus_sd = ~ (mean(.x) - sd(.x)), 
+                        mean = mean, 
+                        plus_sd = ~ (mean(.x) + sd(.x)))
+                   ))
+```
+
+---
+
+
+---
+
 
 # dplyr/tidyverse
 
