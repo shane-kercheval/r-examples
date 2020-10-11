@@ -30,8 +30,24 @@ plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
-# dplyr
+# General Data Cleaning
 
+---
+
+Turn `1` column into `x` columns based on regex
+
+`convert=TRUE` converts them to numeric
+
+```{r}
+.df <- data.frame(season_epison = paste0('S', c(1, 1, 1, 2, 2, 2, 3, 3, 3),
+                                         'E', c(1, 2, 3, 1, 2, 3, 1, 2, 3)))
+
+.df %>% extract(season_epison, c('season', 'episode'), 'S(.*)E(.*)', convert = TRUE, remove = FALSE)
+```
+
+---
+
+# dplyr/tidyverse
 
 ## Indirection
 
@@ -74,6 +90,7 @@ mtcars %>% var_summary(.group_by=cyl, .var=mpg)
 mtcars %>% var_summary(.group_by=c(cyl, vs), .var=mpg)
 ```
 
+---
 
 > Use the .names argument to across() to control the names of the output.
 
@@ -94,15 +111,16 @@ mtcars %>% my_summarise(cyl, mpg)
 mtcars %>% my_summarise(c(cyl, vs), .summarise_vars=c(mpg, hp))
 ```
 
+---
 
 ### .data
+
+> "Note that `.data` is not a data frame; it’s a special construct, a pronoun, that allows you to access the current variables either directly, with `.data$x` or indirectly with `.data[[var]]`. Don’t expect other functions to work with it."
 
 ```{r}
 var <- 'cyl'
 mtcars %>% count(.data[[var]])
 ```
-
-> "Note that `.data` is not a data frame; it’s a special construct, a pronoun, that allows you to access the current variables either directly, with `.data$x` or indirectly with `.data[[var]]`. Don’t expect other functions to work with it."
 
 ```{r}
 # ROW_NUMBER() OVER (PARITION BY col_x ORDER BY col_y) AS index
@@ -136,19 +154,7 @@ with_data <- function(data, .x) {
 mtcars %>% with_data(.x=mean(cyl) * 10)
 ```
 
-```{r}
-select <- function(.data, ...) {
-  expr <- rlang::expr(...)
-  print(expr)
-  pos <- tidyselect::eval_select(expr, data = .data)
-  rlang::set_names(.data[pos], names(pos))
-}
-
-mtcars %>%
-  select(mpg, cyl)
-```
-
-
+### other examples
 
 ```{r}
 # this is a hack because row_number only takes one column
@@ -167,16 +173,6 @@ row_number_over_partition_by <- function(.x, .col_name, .partition_by, ...) {
     
     return (.x)
 }
-filter_over_partition_by <- function(.x, .col_name, .partition_by, ...) {
-    .x %>%
-        mutate(temp______original_order = row_number()) %>%
-        group_by(across({{ .partition_by }})) %>%
-        arrange( ... , .by_group = TRUE) %>%
-        filter(row_number() == 1) %>%
-        ungroup() %>%
-        arrange(temp______original_order) %>%
-        select(-temp______original_order)
-}
 mtcars %>% 
     select(cyl, am, vs, mpg) %>%
     row_number_over_partition_by(
@@ -188,11 +184,22 @@ mtcars %>%
         desc(vs), mpg
     ) %>%
     arrange(desc(cyl), am, desc(vs), mpg)
+```
+
+```{r}
+filter_over_partition_by <- function(.x, .partition_by, ...) {
+    .x %>%
+        mutate(temp______original_order = row_number()) %>%
+        group_by(across({{ .partition_by }})) %>%
+        arrange( ... , .by_group = TRUE) %>%
+        filter(row_number() == 1) %>%
+        ungroup() %>%
+        arrange(temp______original_order) %>%
+        select(-temp______original_order)
+}
 mtcars %>% 
     select(cyl, am, vs, mpg) %>%
     filter_over_partition_by(
-        # new column name
-        .col_name = my_index,
         # "partition by"
         .partition_by = c(cyl, am),
         # "order by" i.e. sort index in order of these variable
@@ -202,37 +209,14 @@ mtcars %>%
 ```
 
 
-```{r}
-row_number_over_partition_by <- function(data, ...) {
-    data %>% arrange( ... )
-}
-mtcars %>% 
-    select(cyl, am, vs, mpg) %>%
-    row_number_over_partition_by(desc(vs), mpg)
-```
-
-
-```{r}
-mtcars %>% arrange_at(c("desc(cyl)", "mpg"))
-```
 
 
 
-```{r}
-mtcars %>% arrange(across(quos(c(mpg, cyl))))
-mtcars %>% arrange(quos(c(mpg, cyl)))
-
-mtcars %>% arrange(quos(c(mpg, cyl)))
-mtcars %>% arrange(!!quos(c(mpg, cyl)))
-
-mtcars %>% arrange(!!! rlang::syms(c("mpg", "cyl")))
-
-vector_of_vars <- c("desc(mpg)", "cyl")
-mtcars %>% arrange_(.dots=vector_of_vars)
 
 
-mtcars
-```
+
+
+
 
 
 
