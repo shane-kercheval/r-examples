@@ -1,16 +1,23 @@
 -   [Packages](#packages)
--   [General Data Cleaning](#general-data-cleaning)
-    -   [`clean_names()`](#clean_names)
-    -   [`extract()`](#extract)
-    -   [`group_by() & which.max()`](#group_by-which.max)
-    -   [`group_by()` & `top_n()`](#group_by-top_n)
-    -   [`summarise()` & `across`](#summarise-across)
+-   [Data Cleaning](#data-cleaning)
+    -   [General](#general)
+        -   [`clean_names()`](#clean_names)
+        -   [`extract()`](#extract)
+    -   [Aggregation](#aggregation)
+        -   [`group_by() & which.max()`](#group_by-which.max)
+        -   [`group_by()` & `top_n()`](#group_by-top_n)
+        -   [`summarise()` & `across`](#summarise-across)
+        -   [`summarise_at()`](#summarise_at)
+        -   [`add_count`](#add_count)
 -   [dplyr/tidyverse](#dplyrtidyverse)
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
         -   [.data](#data)
         -   [eval\_tidy](#eval_tidy)
         -   [other examples](#other-examples)
+-   [ggplot](#ggplot)
+    -   [`reorder_within()`](#reorder_within)
+    -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
 
 Packages
 ========
@@ -19,12 +26,16 @@ Packages
 library(tidyverse)
 library(janitor)
 library(ggplot2)
+library(tidytext)
 ```
 
-General Data Cleaning
-=====================
+Data Cleaning
+=============
 
 ------------------------------------------------------------------------
+
+General
+-------
 
 ### `clean_names()`
 
@@ -67,6 +78,9 @@ Turn `1` column into `x` columns based on regex
     ## 9          S3E3      3       3
 
 ------------------------------------------------------------------------
+
+Aggregation
+-----------
 
 ### `group_by() & which.max()`
 
@@ -117,11 +131,11 @@ starwars %>%
     group_by(gender) %>%
     top_n(3, height) %>%
     select(gender, name, height) %>%
-    arrange(gender, height)
+    arrange(gender, height) %>%
+    ungroup()
 ```
 
     ## # A tibble: 10 x 3
-    ## # Groups:   gender [3]
     ##    gender    name          height
     ##    <chr>     <chr>          <int>
     ##  1 feminine  Ayla Secura      178
@@ -145,9 +159,9 @@ starwars %>%
 ``` r
 mtcars %>% 
   group_by(cyl) %>% 
-  summarise(across(starts_with("d"), 
-                   list(mean = mean, 
-                           sd = sd), 
+  summarise(across(starts_with("d"),
+                   list(mean = mean,
+                           sd = sd),
                    .names = "{col}_{fn}"))
 ```
 
@@ -160,26 +174,59 @@ mtcars %>%
 
 ------------------------------------------------------------------------
 
-same as above but using formulas (for `mpg`)
+same as above using formulas
 
 ``` r
 mtcars %>% 
   group_by(cyl) %>% 
-  summarise(across(mpg, 
+  summarise(across(starts_with("d"), 
                    list(minus_sd = ~ (mean(.x) - sd(.x)), 
                         mean = mean, 
                         plus_sd = ~ (mean(.x) + sd(.x)))
                    ))
 ```
 
-    ## # A tibble: 3 x 4
-    ##     cyl mpg_minus_sd mpg_mean mpg_plus_sd
-    ##   <dbl>        <dbl>    <dbl>       <dbl>
-    ## 1     4         22.2     26.7        31.2
-    ## 2     6         18.3     19.7        21.2
-    ## 3     8         12.5     15.1        17.7
+    ## # A tibble: 3 x 7
+    ##     cyl disp_minus_sd disp_mean disp_plus_sd drat_minus_sd drat_mean
+    ##   <dbl>         <dbl>     <dbl>        <dbl>         <dbl>     <dbl>
+    ## 1     4          78.3      105.         132.          3.71      4.07
+    ## 2     6         142.       183.         225.          3.11      3.59
+    ## 3     8         285.       353.         421.          2.86      3.23
+    ## # … with 1 more variable: drat_plus_sd <dbl>
 
 ------------------------------------------------------------------------
+
+### `summarise_at()`
+
+``` r
+iris %>% group_by(Species) %>% summarise_at(vars(Sepal.Length, Sepal.Width), sum, na.rm = TRUE)
+```
+
+    ## # A tibble: 3 x 3
+    ##   Species    Sepal.Length Sepal.Width
+    ##   <fct>             <dbl>       <dbl>
+    ## 1 setosa             250.        171.
+    ## 2 versicolor         297.        138.
+    ## 3 virginica          329.        149.
+
+------------------------------------------------------------------------
+
+### `add_count`
+
+``` r
+iris %>% add_count(Species, name = 'num_species') %>% head()
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species num_species
+    ## 1          5.1         3.5          1.4         0.2  setosa          50
+    ## 2          4.9         3.0          1.4         0.2  setosa          50
+    ## 3          4.7         3.2          1.3         0.2  setosa          50
+    ## 4          4.6         3.1          1.5         0.2  setosa          50
+    ## 5          5.0         3.6          1.4         0.2  setosa          50
+    ## 6          5.4         3.9          1.7         0.4  setosa          50
+
+`add_count(Species, name = 'num_species')` is equivalent to
+`group_by(Species) %>% mutate(num_species = n()) %>% ungroup()`
 
 ------------------------------------------------------------------------
 
@@ -376,7 +423,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fd475d99588
+    ## env:  0x7ffe48b3bf90
 
     ## [1] 61.875
 
@@ -477,3 +524,41 @@ mtcars %>%
     ## 4     6     1     0  19.7
     ## 5     4     0     1  21.5
     ## 6     4     1     1  21.4
+
+ggplot
+======
+
+### `reorder_within()`
+
+Reorder sub-categories within category e.g. for faceting.
+
+For example, the order of `setosa`, `versicolor`, `virginica` is allowed
+to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
+
+``` r
+iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
+iris_gathered %>%
+    ggplot(aes(x=reorder_within(x=Species, by=value, within=metric),
+               y=value)) +
+    geom_boxplot() +
+    # this is necessary to undo the transformations to the values that reorder_within did
+    scale_x_reordered() +
+    facet_wrap(~ metric, scales = 'free_x')
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-24-1.png)
+
+### `scale_x_log10()` with seconds
+
+    * scales the x-axis ticks but keeps the actual values the same
+    * this works when viewing time (in seconds)
+
+``` r
+data.frame(value = abs(rnorm(1000, sd = (60^4) / 3))) %>%
+ggplot(aes(x='', y=value)) +
+    geom_point() +
+    scale_y_log10(breaks = c(0, 60 ^ (0:4)),
+                  labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-25-1.png)
