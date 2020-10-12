@@ -16,6 +16,7 @@ output:
 # library(lubridate)
 # library(ggrepel)
 # library(forecast)
+library(tidyverse)
 library(ggplot2)
 library(knitr)
 
@@ -329,31 +330,6 @@ mtcars %>%
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ggplot
 
 ### `reorder_within()`
@@ -373,6 +349,15 @@ iris_gathered %>%
     facet_wrap(~ metric, scales = 'free_x')
 ```
 
+### `scale_x_log10()` with seconds
 
-# stats
+	* scales the x-axis ticks but keeps the actual values the same
+	* this works when viewing time (in seconds)
 
+```{r}
+data.frame(value = abs(rnorm(1000, sd = (60^4) / 3))) %>%
+ggplot(aes(x='', y=value)) +
+    geom_point() +
+    scale_y_log10(breaks = c(0, 60 ^ (0:4)),
+                  labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
+```
