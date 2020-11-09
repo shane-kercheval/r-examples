@@ -1,0 +1,199 @@
+---
+title: "Regression Examples"
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+library(tidyverse)
+# library(scales)
+# library(stringr)
+# library(lubridate)
+# library(ggrepel)
+# library(forecast)
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+source('regression_helpers.R')
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+This data contains weekly prices and sales for three OJ brands, as well as an indicator `feature` showing whether each brand was advertised (in store or flyer) that week. (Business Data Science, pg 43).
+
+```{r data}
+weekly_oj_sales <- read.csv('data/oj.csv') %>% rename(featured = feat) %>% mutate(featured = featured == 1)
+head(weekly_oj_sales)
+```
+
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=price, y=sales, color = brand)) +
+    geom_point(alpha=0.1) +
+    geom_smooth() +
+    facet_wrap(~ featured)
+```
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color = brand)) +
+    geom_point(alpha=0.1) +
+    geom_smooth() +
+    facet_wrap(~ featured)
+```
+
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color = brand)) +
+    geom_point(alpha=0.1) +
+    geom_smooth(method = 'lm') +
+    facet_wrap(~ featured)
+```
+
+- Sales decrease with price.
+
+# Regression
+
+## Results
+
+```{r}
+reg_results <- lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales)
+summary(reg_results)
+```
+
+```{r}
+reg_results %>%
+    tidy() %>%
+    mutate(conf.low = estimate - (2 * std.error),
+           conf.high = estimate + (2 * std.error)) %>%
+    filter(term != '(Intercept)') %>%
+    mutate(color = case_when(
+        estimate > 0 & conf.low > 0 ~ 'blue',
+        estimate < 0 & conf.high < 0 ~ 'red',
+        TRUE ~ 'grey'
+    )) %>%
+    mutate(term = fct_reorder(term, estimate)) %>%
+    ggplot(aes(x = term, y=estimate, color=color)) +
+    geom_point() +
+    scale_color_manual(values=c('blue','dark grey','red')) +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+    coord_flip() +
+    theme(legend.position = 'none') +
+    labs(title = 'Regression Coefficients')
+```
+
+```{r}
+actual_values <- log(weekly_oj_sales$sales)
+predicted_values <- predict(reg_results) %>% as.numeric()
+residual_values <- residuals(reg_results) %>% as.numeric()
+
+equal <- function(.expected, .actual, .precision=6) {
+    round(.expected, .precision) == round(.actual, .precision)
+}
+all(equal(actual_values - predicted_values, residual_values))
+```
+
+## Anova Table
+
+http://rinterested.github.io/statistics/anova_of_OLS_models.html
+https://stats.stackexchange.com/questions/115304/interpreting-output-from-anova-when-using-lm-as-input
+https://stats.stackexchange.com/questions/49924/how-does-anova-lm-in-r-calculates-sum-sq
+
+
+Why use anova?
+
+The Anova Table can be used to calculate the percent of "explained variance" of the model.
+
+Also, from https://stats.stackexchange.com/questions/115304/interpreting-output-from-anova-when-using-lm-as-input
+
+> First of all, you may be perfectly satisfied with the summary output, and that's fine. However, the ANOVA table may offer some advantages.
+> 
+> First, if you have a categorical / factor variable with more than two levels, the summary output is hard to interpret. It will give you tests of individual levels against the reference level, but won't give you a test of the factor as a whole.
+>
+> Another reason you might prefer to look at an ANOVA table is that it allows you to use information about the possible associations between your independent variables and
+
+```{r}
+anova_table <- .regression_results %>%
+    anova() %>%
+    tidy() %>%
+    mutate(p.value = round(p.value, 5)) %>%
+    arrange(term)
+anova_table
+```
+
+The sum of `sumsq` (i.e. `sum of squares`) is the same as `Total Sum of Suares (SST)` explained in Introductory Econometrics 7e pg. 34.
+
+```{r}
+# Total Sum of Squares (SST)
+(SST <- sum((log(weekly_oj_sales$sales) - mean(log(weekly_oj_sales$sales)))^2))
+```
+
+```{r}
+equal(SST, sum(anova_table$sumsq))
+```
+
+The `sumsq` value of `Residuals` is the same as the `Residual Sum of Squares (SSR)`
+
+Sum of Residuals
+
+```{r}
+# Residual Sum of Squares ()
+(SSR <- sum(residual_values^2))
+```
+
+```{r}
+SSR == anova_table %>% filter(term == 'Residuals') %>% pull(sumsq)
+```
+
+The `Explained Sum of Squares (SSE)` is the same as all of the `sumsq` values added together, excluding the `Residuals` value.
+
+`SST = SSE + SSR`
+
+
+
+```{r}
+# Explained Sum of Squares (SSE)
+(SSE <- sum((fitted(reg_results) - mean(log(weekly_oj_sales$sales)))^2))
+```
+
+```{r}
+equal(SSE, anova_table %>% filter(term != 'Residuals') %>% pull(sumsq) %>% sum())
+```
+
+```{r}
+equal(SST, SSE + SSR)
+```
+
+## Amount of Variation Explained
+
+```{r}
+anova_table %>%
+    select(term, sumsq) %>%
+    mutate(percent_variation = percent(sumsq / sum(sumsq))) %>%
+    arrange(desc(sumsq))
+```
+
+```{r}
+plot_regression_variance_explained(reg_results)
+```
+
+https://bookdown.org/ndphillips/YaRrr/comparing-regression-models-with-anova.html
+
+> To compare the fits of two models, you can use the anova() function with the regression objects as two separate arguments. The anova() function will take the model objects as arguments, and return an ANOVA testing whether the more complex model is significantly better at capturing the data than the simpler model. If the resulting p-value is sufficiently low (usually less than 0.05), we conclude that the more complex model is significantly better than the simpler model, and thus favor the more complex model. If the p-value is not sufficiently low (usually greater than 0.05), we should favor the simpler model.
+
+(This only make statistical sense if the models are nested.)

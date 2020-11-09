@@ -423,7 +423,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7ffe48b3bf90
+    ## env:  0x7fd022b58200
 
     ## [1] 61.875
 
