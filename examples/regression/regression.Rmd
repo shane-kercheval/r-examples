@@ -110,10 +110,9 @@ all(equal(actual_values - predicted_values, residual_values))
 
 ## Anova Table
 
-http://rinterested.github.io/statistics/anova_of_OLS_models.html
 https://stats.stackexchange.com/questions/115304/interpreting-output-from-anova-when-using-lm-as-input
 https://stats.stackexchange.com/questions/49924/how-does-anova-lm-in-r-calculates-sum-sq
-
+http://rinterested.github.io/statistics/anova_of_OLS_models.html
 
 Why use anova?
 
@@ -164,8 +163,6 @@ The `Explained Sum of Squares (SSE)` is the same as all of the `sumsq` values ad
 
 `SST = SSE + SSR`
 
-
-
 ```{r}
 # Explained Sum of Squares (SSE)
 (SSE <- sum((fitted(reg_results) - mean(log(weekly_oj_sales$sales)))^2))
@@ -177,6 +174,24 @@ equal(SSE, anova_table %>% filter(term != 'Residuals') %>% pull(sumsq) %>% sum()
 
 ```{r}
 equal(SST, SSE + SSR)
+```
+
+R-squared is simply the percent of variation explained by the model (i.e. SSE / SST)
+
+```{r}
+summary(reg_results)$r.squared
+```
+
+```{r}
+SSE / SST
+```
+
+However, R-squared will go up every time you add a new feature. So you can artificially inflate this number.
+
+`Adjusted R-Squared` "imposes a penatly for adding additional independent variables to a model." (Introductory Econometrics 7E)
+
+```{r}
+summary(reg_results)$adj.r.squared
 ```
 
 ## Amount of Variation Explained
@@ -192,8 +207,18 @@ anova_table %>%
 plot_regression_variance_explained(reg_results)
 ```
 
+## Anova to Compare Models
+
 https://bookdown.org/ndphillips/YaRrr/comparing-regression-models-with-anova.html
 
 > To compare the fits of two models, you can use the anova() function with the regression objects as two separate arguments. The anova() function will take the model objects as arguments, and return an ANOVA testing whether the more complex model is significantly better at capturing the data than the simpler model. If the resulting p-value is sufficiently low (usually less than 0.05), we conclude that the more complex model is significantly better than the simpler model, and thus favor the more complex model. If the p-value is not sufficiently low (usually greater than 0.05), we should favor the simpler model.
 
 (This only make statistical sense if the models are nested.)
+
+```{r}
+anova(lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
+      lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales))
+```
+
+## Out of Sample R-Squared
+
