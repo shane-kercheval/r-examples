@@ -225,6 +225,11 @@ anova(lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
 plot(effects::effect(c('log(price)', 'brand'), reg_results))
 ```
 
+## Plot Assumptions
+
+```{r}
+plot(reg_results)
+```
 
 ## Out of Sample R-Squared
 
