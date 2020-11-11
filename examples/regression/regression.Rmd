@@ -257,10 +257,6 @@ plot_residual_vs_variable(model=reg_results,
                           dataset = weekly_oj_sales %>% mutate(`log(price)` = log(price)))
 ```
 
-## Out of Sample R-Squared
-
-r
-
 ## Interpretation
 
 ### Elasticities (i.e. regression slopes)
@@ -414,3 +410,12 @@ weekly_oj_sales %>%
     geom_smooth() +
     facet_wrap(~ featured)
 ```
+
+## Out of Sample R-Squared
+
+
+
+
+
+
+
