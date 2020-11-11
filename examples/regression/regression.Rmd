@@ -397,3 +397,20 @@ Now it no longer makes sense to talk about an overall elasticity number for each
 |  No      | ``r dominicks_not_featured_price_elasticity`` |  ``r minute_maid_not_featured_price_elasticity`` | ``r topicana_not_featured_price_elasticity``  |
 |  Yes     | ``r dominicks_featured_price_elasticity`` |  ``r minute_maid_featured_price_elasticity`` | ``r topicana_featured_price_elasticity``  |
 
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_smooth(method='lm') +
+    facet_wrap(~ featured)
+```
+
+... "It could be that the demand curve is nonlinear" ....
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_smooth() +
+    facet_wrap(~ featured)
+```
