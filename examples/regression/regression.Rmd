@@ -77,6 +77,18 @@ summary(reg_results)
 ```
 
 ```{r}
+names(reg_results)
+```
+
+```{r}
+coefficients(reg_results)
+```
+
+```{r}
+coefficients(reg_results)['log(price)']
+```
+
+```{r}
 reg_results %>%
     tidy() %>%
     mutate(conf.low = estimate - (2 * std.error),
@@ -127,7 +139,7 @@ Also, from https://stats.stackexchange.com/questions/115304/interpreting-output-
 > Another reason you might prefer to look at an ANOVA table is that it allows you to use information about the possible associations between your independent variables and
 
 ```{r}
-anova_table <- .regression_results %>%
+anova_table <- reg_results %>%
     anova() %>%
     tidy() %>%
     mutate(p.value = round(p.value, 5)) %>%
@@ -228,8 +240,47 @@ plot(effects::effect(c('log(price)', 'brand'), reg_results))
 ## Plot Assumptions
 
 ```{r}
-plot(reg_results)
+plot(reg_results) 
+```
+
+```{r}
+plot_actual_vs_predicted(reg_results)
+```
+
+```{r}
+plot_residual_vs_predicted(model=reg_results)
+```
+
+```{r}
+plot_residual_vs_variable(model=reg_results,
+                          predictor = 'price',
+                          dataset = weekly_oj_sales %>% mutate(`log(price)` = log(price)))
 ```
 
 ## Out of Sample R-Squared
+
+r
+
+## Interpretation
+
+This is an example of a log-log model, which have an interpretation of 
+
+> sales increase by B% for every 1% increase in price (Business Data Science pg. 45-47)
+
+Where `B` is the coefficient on price.
+
+```{r}
+coef(reg_results)['log(price)']
+```
+
+So `sales` drop (i.e. increase by negative amount) by about ``r paste0(round(coef(reg_results)['log(price)'], 1), '%')`` for every `1%` increase in `price`.
+
+
+
+
+
+
+
+
+
 
