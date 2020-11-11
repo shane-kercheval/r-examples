@@ -263,24 +263,137 @@ r
 
 ## Interpretation
 
+### Elasticities (i.e. regression slopes)
+
+`log(sales) = intercept + log(price) + e` gives a regression line describing the expected sales given price. This is the price elasticity of sales (i.e. elasticity of sales based on price).
+
+```{r}
+reg_results <- lm(log(sales) ~ log(price), data = weekly_oj_sales)
+get_regression_equation(reg_results)
+coef(reg_results)['log(price)']
+```
+
 This is an example of a log-log model, which have an interpretation of 
 
 > sales increase by B% for every 1% increase in price (Business Data Science pg. 45-47)
 
 Where `B` is the coefficient on price.
 
+So `sales` drop (i.e. increase by negative coefficient) by about ``r paste0(round(coef(reg_results)['log(price)'], 1), '%')`` for every `1%` increase in `price`.
+
 ```{r}
-coef(reg_results)['log(price)']
+#breaks <- c(-0.5, 0, 0.5, 1, 1.5)
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales))) +
+    geom_point(alpha=0.2) +
+    geom_smooth(method='lm')# +
+   # scale_x_continuous(breaks = breaks, labels = round(exp(breaks), 1))
 ```
 
-So `sales` drop (i.e. increase by negative amount) by about ``r paste0(round(coef(reg_results)['log(price)'], 1), '%')`` for every `1%` increase in `price`.
+---
 
+`log(sales) = intercept + log(price) + brand + e` gives a regression line that has a different intercept for each brand, but the same price elasticities. This equation says "even though all brand sales have the same elasticity to price, at the same price they will have different expected sales." i.e. they have the same regression slope.
 
+```{r}
+reg_results <- lm(log(sales) ~ log(price) + brand, data = weekly_oj_sales)
 
+price_elasticity <- coef(reg_results)['log(price)']
 
+dominicks_intercept <- coefficients(reg_results)['(Intercept)']
+minute_maid_intercept <- coefficients(reg_results)['(Intercept)'] + coefficients(reg_results)['brandminute.maid']
+tropicana_intercept <- coefficients(reg_results)['(Intercept)'] + coefficients(reg_results)['brandtropicana']
 
+get_regression_equation(reg_results)
+```
 
+In this example, we see that when we control for brand, `sales` are expected to drop by about ``r paste0(round(abs(price_elasticity), 1), '%')`` for every `1%` increase in `price`.
 
+Each brand is allowed to have it's own intercept, meaning that "even though all brand sales have the same elasticity to price, at the same price they will have different expected sales." (BDS pg 46)
 
+The intercept gives the value for `Dominick`'s log sales at a log price of 0 (i.e. when all variables have a value of zero i.e. `log(price)` = $0, `brandminute.maid` = 0, `brandtropicana` = 0)
 
+- Intercept for Dominicks: ``r dominicks_intercept``
+- Intercept for Minute Maid: ``r minute_maid_intercept``
+- Intercept for Tropicana: ``r tropicana_intercept``
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_abline(slope = price_elasticity, intercept = dominicks_intercept, color='red', size=1.5) +
+    geom_abline(slope = price_elasticity, intercept = minute_maid_intercept, color='green', size=1.5) +
+    geom_abline(slope = price_elasticity, intercept = tropicana_intercept, color='blue', size=1.5)
+```
+
+As mentioned, all brands in this model share that same elasticity (regression slope). "This is unrealistic: money is less of an issue for Tropicana customer than it is for the average Dominick's customer." (BDS pg 47)
+
+---
+
+`log(sales) = intercept + log(price) + brand + log(price)*brand + e` allows us to add an interaction term. (regression shorthand is: `log(sales) ~ log(price) * brand`). The result is a separate intercept (which we had in the last model) as well as a separate slope (elasticity) for each brand.
+
+```{r}
+reg_results <- lm(log(sales) ~ log(price) * brand, data = weekly_oj_sales) # same as lm(log(sales) ~ log(price) + brand + log(price)*brand, data = weekly_oj_sales)
+
+dominicks_price_elasticity <- coef(reg_results)['log(price)']
+minute_maid_price_elasticity <- coef(reg_results)['log(price)'] + coef(reg_results)['log(price):brandminute.maid']
+tropicana_price_elasticity <- coef(reg_results)['log(price)'] + coef(reg_results)['log(price):brandtropicana']
+
+get_regression_equation(reg_results)
+```
+
+Now it no longer makes sense to talk about an overall elasticity number, but rather elasticity for each brand.
+
+- Elasticity for Dominicks: ``r dominicks_price_elasticity`` (`sales` are expected to drop by about ``r paste0(round(abs(dominicks_price_elasticity), 1), '%')`` for every `1%` increase in `price`)
+- Intercept for Minute Maid: ``r minute_maid_price_elasticity`` (`sales` are expected to drop by about ``r paste0(round(abs(minute_maid_price_elasticity), 1), '%')`` for every `1%` increase in `price`)
+- Intercept for Tropicana: ``r tropicana_price_elasticity`` (`sales` are expected to drop by about ``r paste0(round(abs(tropicana_price_elasticity), 1), '%')`` for every `1%` increase in `price`)
+
+```{r}
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_smooth(method='lm')
+```
+
+---
+
+Now let's look at the affect of advertising using the `featured` dummy variable, "indicating that a given brand was promoted with either an in-store display promo or a flier ad during the week that sales and prices were recorded. The ads can increase sales at all prices, and they can change the price sensitivity, and they can do both of these things in a brand-specific manner." (BDS pg 48)
+
+We add a 3-way interaction between price, brand, and featured; meaning that each brand will have different elasticities and intercepts, which will be different for featured vs not-featured.
+
+```{r}
+reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
+
+format_elasticity <- function(.x) {
+    paste0(round(.x, 1), '%')
+}
+
+dominicks_not_featured_price_elasticity <- format_elasticity(coef(reg_results)['log(price)'])
+dominicks_featured_price_elasticity <- format_elasticity(coef(reg_results)['log(price)'] + coef(reg_results)['log(price):featuredTRUE'])
+
+# relevant coefficients
+# 'log(price)'
+# 'log(price):brandminute.maid'
+# 'log(price):brandminute.maid:featuredTRUE'
+# 'log(price):featuredTRUE'
+minute_maid_not_featured_price_elasticity <- coef(reg_results)['log(price)'] + coef(reg_results)['log(price):brandminute.maid']
+minute_maid_featured_price_elasticity <- format_elasticity(minute_maid_not_featured_price_elasticity + 
+                                                               coef(reg_results)['log(price):brandminute.maid:featuredTRUE'] +
+                                                               coef(reg_results)['log(price):featuredTRUE'])
+minute_maid_not_featured_price_elasticity <- format_elasticity(minute_maid_not_featured_price_elasticity)
+
+topicana_not_featured_price_elasticity <- coef(reg_results)['log(price)'] + coef(reg_results)['log(price):brandtropicana']
+topicana_featured_price_elasticity <- format_elasticity(topicana_not_featured_price_elasticity +
+                                                            coef(reg_results)['log(price):brandtropicana:featuredTRUE'] +
+                                                            coef(reg_results)['log(price):featuredTRUE'])
+topicana_not_featured_price_elasticity <- format_elasticity(topicana_not_featured_price_elasticity)
+
+get_regression_equation(reg_results)
+```
+
+Now it no longer makes sense to talk about an overall elasticity number for each brand, but rather elasticity per brand depending on `featured`.
+
+| Featured | Dominick's | Minute Maid | Tropicana |
+| ---------|------------|-------------|-----------|
+|  No      | ``r dominicks_not_featured_price_elasticity`` |  ``r minute_maid_not_featured_price_elasticity`` | ``r topicana_not_featured_price_elasticity``  |
+|  Yes     | ``r dominicks_featured_price_elasticity`` |  ``r minute_maid_featured_price_elasticity`` | ``r topicana_featured_price_elasticity``  |
 

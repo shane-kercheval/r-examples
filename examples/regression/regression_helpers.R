@@ -5,6 +5,16 @@ library(broom)
 library(forcats)
 library(scales)
 
+get_regression_equation <- function(.regression_results, .round_by=2) {
+    
+    actual_variable <- str_remove_all(string=as.character(.regression_results$terms)[2], pattern = '`')
+    paste(actual_variable, "=", paste0(round(coefficients(.regression_results), .round_by),
+                                       names(coefficients(.regression_results)),
+                                       collapse = " + "),
+          "+ error")
+    
+}
+
 #' Plot the percent of variance explained for a given regression model
 #'
 #' @param .regression_results model
