@@ -198,6 +198,12 @@ summary(reg_results)$r.squared
 SSE / SST
 ```
 
+```{r}
+# can also use the R2 function provided by Taddy in Business Data Science pg 72
+# which will work for models beyond linear/logistic regression
+R2(y=log(weekly_oj_sales$sales), pred = predicted_values, family = 'gaussian')
+```
+
 However, R-squared will go up every time you add a new feature. So you can artificially inflate this number.
 
 `Adjusted R-Squared` "imposes a penatly for adding additional independent variables to a model." (Introductory Econometrics 7E)

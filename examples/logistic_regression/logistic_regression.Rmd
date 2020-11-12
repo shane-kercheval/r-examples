@@ -22,7 +22,7 @@ library(knitr)
 options(scipen=999) # non-scientific notation
 options(dplyr.summarise.inform=F)
 
-source('regression_helpers.R')
+source('../regression/regression_helpers.R')
 
 theme_set(theme_light())
 
@@ -35,6 +35,104 @@ plot_width_height_8 <- calculate_plot_width(8)
 This data contains weekly prices and sales for three OJ brands, as well as an indicator `feature` showing whether each brand was advertised (in store or flyer) that week. (Business Data Science, pg 43).
 
 ```{r data}
-weekly_oj_sales <- read.csv('data/oj.csv') %>% rename(featured = feat) %>% mutate(featured = featured == 1)
-head(weekly_oj_sales)
+emails <- read.csv('data/spam.csv')
+head(emails[, c(1:4, ncol(emails))])
 ```
+
+Logistic Regression is a linear model for log odds. The odds of an event are the probability that it happens over the probability that it doesn't.
+
+`log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
+
+```{r}
+reg_results <- glm(spam ~ ., data=emails, family='binomial')
+summary(reg_results)
+```
+
+```{r}
+get_regression_equation(reg_results)
+```
+
+```{r}
+log_odds_to_probability <- function(.log_odds) {
+    if(.log_odds < 0) {
+        
+        .odds <- 1 / exp(.log_odds)
+        return (1 - (.odds / (1 + .odds)))
+        
+    } else {
+    
+        .odds <- exp(.log_odds)
+        # log odds = probability / 1 - probability
+        return (.odds / (1 + .odds))
+    }
+}
+(log_odds_free <- coef(reg_results)['word_free'])
+(odds_free <- exp(log_odds_free))
+# log odds = probability / 1 - probability
+(probability_free <- odds_free / (1 + odds_free))
+probability_free_check <- log_odds_to_probability(log_odds_free)
+```
+
+The log odds that an email is spam increase by ``r round(log_odds_free, 1)`` if the email contains the word `free`.
+
+The odds that an email is spam increase by ``r round(odds_free, 1)`` times if the email contains the word `free`.
+
+The probably that an email is spam is ``r percent(probability_free)`` if the email contains the word `free`. ??? not sure if this is correct interpretation.
+
+```{r}
+log_odds_to_probability(1)
+log_odds_to_probability(-1)
+```
+
+```{r}
+coef(reg_results)['word_george']
+-1 / exp(coef(reg_results)['word_george'])
+log_odds_to_probability(coef(reg_results)['word_george'])
+```
+
+```{r}
+.log_odds <- 5
+exp(.log_odds)
+
+.log_odds <- -5
+-1 / exp(.log_odds)
+```
+
+```{r}
+new_data <- c(rep(0, ncol(emails) - 4), mean(emails$capital_run_length_average), mean(emails$capital_run_length_longest), mean(emails$capital_run_length_total))
+new_data <- c(rep(0, ncol(emails) - 1))
+names(new_data) <- colnames(emails[, 1:(ncol(emails)-1)])
+new_data <- t(as.data.frame(new_data)) %>% as.data.frame()
+predict(reg_results,
+        newdata = new_data,
+        type = 'response')
+
+new_data[1, 'word_free'] <- 1
+predict(reg_results,
+        newdata = new_data,
+        type = 'response')
+
+new_data[1, 'word_george'] <- 1
+predict(reg_results,
+        newdata = new_data,
+        type = 'response')
+```
+
+```{r}
+R2(y=emails$spam, pred=predict(reg_results, type='response'), family = 'binomial')
+```
+
+"The difference between Residual Deviance and Null Deviance is due to information contained in teh covariates. An important metric of how tightly your regression fits is the proprortion of deviance explained by x, R-Squared" (BDS pg 56)
+
+```{r}
+(reg_results$null.deviance - reg_results$deviance) / reg_results$null.deviance
+```
+
+```{r}
+emails %>%
+    mutate(spam = as.logical(spam),
+           predictions = predicted_values) %>%
+    ggplot(aes(x=spam, y=predicted_values, group=spam)) +
+    geom_boxplot()
+```
+
