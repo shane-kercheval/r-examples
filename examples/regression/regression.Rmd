@@ -425,9 +425,13 @@ For example, "the usual standard errors will be wrong if there are heteroskedast
 
 "The `AER` package can be used to obtain HC standard errors with little effort." "It turns out that, for OLS, the parameter variance estimates you get from the nonparametric bootstrap actually approximated by the HC procedure. That is, you can use the HC standard errors as a fast alternative to bootstrapping for OLS." 
 
+Note that the HC procedure still assumes independence between observations. (Clustered Standard errors discussed in Chapter 5 of BDS  can be used.)
+
 ```{r}
 library(AER)
+reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
 coefficient_variances <- vcovHC(reg_results)
+coefficient_variances[1:5, 1:5]
 ```
 
 "This is the sampling covariance matrix of the coefficients; variances are along the diagonal. To get the standard error, which is the sampling standard deviation, you need to take the square root of the diagnal variance estimate." BDS pg 60
@@ -451,9 +455,75 @@ reg_results %>%
 
 ## Out of Sample R-Squared
 
+```{r}
+reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
+(in_sample_r2 <- R2(y=log(weekly_oj_sales$sales), pred = predict(reg_results), family = 'gaussian'))
+```
 
+```{r}
+num_records <- nrow(weekly_oj_sales)
+k_folds <- 10
+fold_id <- sample.int(k_folds, num_records, replace = TRUE)
+oos_validation <- data.frame(fold = 1:k_folds, r_squared_in_sample=rep(NA, k_folds), r_squared_out_sample=rep(NA, k_folds))
 
+for(fold in 1:k_folds) {
+    train_indices <- which(fold_id != fold)
+    
+    fold_model <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales[train_indices,])
+    
+    in_sample_actuals <- log(weekly_oj_sales[train_indices, ]$sales)
+    in_sample_predictions <- predict(fold_model)
+    
+    out_sample_actuals <- log(weekly_oj_sales[-train_indices,]$sales)
+    out_sample_predictions <- predict(fold_model, newdata = weekly_oj_sales[-train_indices,])
+    
+    oos_validation[fold, 'r_squared_in_sample'] <- R2(y=in_sample_actuals, pred=in_sample_predictions, family = 'gaussian')
+    oos_validation[fold, 'r_squared_out_sample'] <- R2(y=out_sample_actuals, pred=out_sample_predictions, family = 'gaussian')
+}
+oos_validation %>%
+    mutate(percent_diff = (r_squared_out_sample - r_squared_in_sample) / r_squared_in_sample)
+```
 
+```{r}
+mean(oos_validation$r_squared_out_sample)
+paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
+```
 
+This isn't too bad actually, lets look at an example that is much worse (from BDS pg 72)
 
+```{r}
+semi_conductors <- read.csv('data/semiconductor.csv')
+reg_results <- glm(FAIL ~ ., data=semi_conductors, family='binomial')
+(in_sample_r2 <- R2(y=semi_conductors$FAIL, pred = predict(reg_results, type='response'), family = 'binomial'))
+```
+
+```{r}
+num_records <- nrow(semi_conductors)
+k_folds <- 10
+fold_id <- sample.int(k_folds, num_records, replace = TRUE)
+oos_validation <- data.frame(fold = 1:k_folds, r_squared_in_sample=rep(NA, k_folds), r_squared_out_sample=rep(NA, k_folds))
+
+for(fold in 1:k_folds) {
+    train_indices <- which(fold_id != fold)
+    
+    fold_model <- suppressWarnings(glm(FAIL ~ ., data=semi_conductors[train_indices, ], family='binomial'))
+    
+    in_sample_actuals <- semi_conductors[train_indices, ]$FAIL
+    in_sample_predictions <- predict(fold_model, type='response')
+    
+    out_sample_actuals <- semi_conductors[-train_indices,]$FAIL
+    out_sample_predictions <- predict(fold_model, newdata = semi_conductors[-train_indices,], type='response')
+    
+    oos_validation[fold, 'r_squared_in_sample'] <- R2(y=in_sample_actuals, pred=in_sample_predictions, family = 'binomial')
+    oos_validation[fold, 'r_squared_out_sample'] <- R2(y=out_sample_actuals, pred=out_sample_predictions, family = 'binomial')
+}
+oos_validation %>%
+    mutate(percent_diff = (r_squared_out_sample - r_squared_in_sample) / r_squared_in_sample)
+```
+
+```{r}
+in_sample_r2
+mean(oos_validation$r_squared_out_sample)
+paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
+```
 

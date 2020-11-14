@@ -39,3 +39,4 @@ vignettes/*.pdf
 .Renviron
 r-examples.Rproj
 templates/.DS_Store
+.DS_Store
