@@ -417,6 +417,38 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
+## Regression Coefficient Uncertainty
+
+BDS pg. 58
+
+For example, "the usual standard errors will be wrong if there are heteroskedastic errors" or "if there is any dependence betweeen observations".
+
+"The `AER` package can be used to obtain HC standard errors with little effort." "It turns out that, for OLS, the parameter variance estimates you get from the nonparametric bootstrap actually approximated by the HC procedure. That is, you can use the HC standard errors as a fast alternative to bootstrapping for OLS." 
+
+```{r}
+library(AER)
+coefficient_variances <- vcovHC(reg_results)
+```
+
+"This is the sampling covariance matrix of the coefficients; variances are along the diagonal. To get the standard error, which is the sampling standard deviation, you need to take the square root of the diagnal variance estimate." BDS pg 60
+
+```{r}
+coefficient_names <- colnames(coefficient_variances) %>% rtools::rt_remove_val('(Intercept)')
+coefficient_starndard_errors <- map_dbl(coefficient_names, ~sqrt(coefficient_variances[ ., .]))
+names(coefficient_starndard_errors) <- coefficient_names
+coefficient_starndard_errors
+```
+
+```{r}
+reg_results %>%
+    tidy() %>%
+    filter(term != '(Intercept)') %>%
+    dplyr::select(term, `std.error`) %>%
+    rename(original_standard_errors = std.error) %>%
+    mutate(new_standard_errors = coefficient_starndard_errors,
+           perc_diff = percent((coefficient_starndard_errors - original_standard_errors) / original_standard_errors))
+```
+
 ## Out of Sample R-Squared
 
 
