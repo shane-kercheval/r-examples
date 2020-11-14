@@ -136,3 +136,44 @@ emails %>%
     geom_boxplot()
 ```
 
+```{r}
+confusion_matrix <- function(actual_classes, predicted_classes, positive_class) {
+    print(table(actual_classes, predicted_classes))
+    
+    stopifnot(positive_class %in% actual_classes)
+    stopifnot(positive_class %in% predicted_classes)
+
+    actual_classes <- ifelse(actual_classes == positive_class, TRUE, FALSE)
+    predicted_classes <- ifelse(predicted_classes == positive_class, TRUE, FALSE)
+    
+    actual_positives = sum(actual_classes)
+    actual_negatives = sum(!actual_classes)
+    total_observations <- length(actual_classes)
+    
+    stopifnot(actual_positives + actual_negatives == total_observations)
+
+    true_positives = sum(actual_classes & predicted_classes)
+    true_negatives = sum(!actual_classes & !predicted_classes)
+    false_positives = sum(predicted_classes & !actual_classes)
+    false_negatives = sum(!predicted_classes & actual_classes)
+    
+    stopifnot(true_positives + false_negatives == actual_positives)
+
+    # todo doesn't handle divide-by-zero, etc.
+    print(paste('true_positive_rate a.k.a sensitivity:', round(true_positives / actual_positives, 4)))
+    print(paste('true_negative_rate a.k.a specificity:', round(true_negatives / actual_negatives, 4)))
+    print(paste('false_positive_rate:', round(false_positives / actual_negatives, 4)))
+    print(paste('false_negative_rate:', round(false_negatives / actual_positives, 4)))
+    # if you predict it's going to be positive (denominator), how often is it (numerator)?
+    print(paste('positive_predictive_value:', round(true_positives / (true_positives + false_positives), 4)))
+    # if you predict it's going to be negative (denominator), how often is it (numerator)?
+    print(paste('negative_predictive_value:', round(true_negatives / (true_negatives + false_negatives), 4)))
+    print(paste('accuracy:', round((true_negatives + true_positives) / total_observations, 4)))
+    print(paste('error_rate:', round((false_positives + false_negatives) / total_observations, 4)))
+    print(paste('prevalence:', round(actual_positives / total_observations, 4)))
+}
+
+confusion_matrix(actual_classes=emails$spam,
+                 predicted_classes=round(predict(reg_results, type='response')),
+                 positive_class=1)
+```
