@@ -171,6 +171,28 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 # dplyr/tidyverse 
 
+## `semi-join`
+
+```{r}
+band_members
+```
+
+```{r}
+band_instruments
+```
+
+`x %>% semi_join(y)` is an `inner_join(y)` that returns only `x` (doesn't include any columns from `y`)
+
+```{r}
+band_members %>% semi_join(band_instruments, by = 'name')
+```
+
+```{r}
+band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band)
+```
+
+---
+
 ## Indirection
 
 Create a dplyr-like function that uses the column names of the dataframe rather than strings or the object directly.
@@ -382,6 +404,5 @@ d %>%
     geom_line()
 ```
 
-```{r}
-interaction(d$treatment, d$replicate)
-```
+
+
