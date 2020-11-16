@@ -171,6 +171,28 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 # dplyr/tidyverse 
 
+## `semi-join`
+
+```{r}
+band_members
+```
+
+```{r}
+band_instruments
+```
+
+`x %>% semi_join(y)` is an `inner_join(y)` that returns only `x` (doesn't include any columns from `y`)
+
+```{r}
+band_members %>% semi_join(band_instruments, by = 'name')
+```
+
+```{r}
+band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band)
+```
+
+---
+
 ## Indirection
 
 Create a dplyr-like function that uses the column names of the dataframe rather than strings or the object directly.
@@ -362,3 +384,25 @@ ggplot(aes(x='', y=value)) +
     scale_y_log10(breaks = c(0, 60 ^ (0:4)),
                   labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
 ```
+
+### ggplot2 with `interaction()`
+
+group by two columns in ggplot2
+
+```{r}
+# Data frame with two continuous variables and two factors 
+set.seed(0)
+x <- rep(1:10, 4)
+y <- c(rep(1:10, 2)+rnorm(20)/5, rep(6:15, 2) + rnorm(20)/5)
+treatment <- gl(2, 20, 40, labels=letters[1:2])
+replicate <- gl(2, 10, 40)
+d <- data.frame(x=x, y=y, treatment=treatment, replicate=replicate)
+d %>%
+    ggplot(aes(x=x, y=y, colour=treatment, shape = replicate,
+               group=interaction(treatment, replicate))) +
+    geom_point() +
+    geom_line()
+```
+
+
+
