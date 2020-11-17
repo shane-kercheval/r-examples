@@ -1,0 +1,237 @@
+---
+title: "Regression Examples"
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+library(tidyverse)
+# library(scales)
+# library(stringr)
+# library(lubridate)
+# library(ggrepel)
+# library(forecast)
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+source('../regression/regression_helpers.R')
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+# Data
+
+Example shown in Business Data Science pg 134
+
+```{r data}
+library(foreign)
+
+descr <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_descriptive_vars.dta")
+prgm <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_stateprograms_vars.dta")
+s12 <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_survey12m_vars.dta")
+
+head(descr)
+#head(prgm)
+#head(s12)
+
+
+# nicely organized, one row per person
+stopifnot(all(s12$person_id == descr$person_id))
+stopifnot(all(s12$person_id == prgm$person_id))
+
+P <- descr[,c("person_id","household_id", "numhh_list")]
+P <- P %>% rename(numhh = numhh_list)
+P$medicaid <- as.numeric(prgm[,"ohp_all_ever_firstn_30sep2009"]=="Enrolled")
+P$selected <- as.numeric(descr[,"treatment"]=="Selected")
+P$weight <- s12$weight_12m
+P$doc_any_12m <- as.numeric(s12$doc_any_12m == "Yes")
+levels(P$numhh) <- c("1","2","3+")
+
+P <- P[complete.cases(P),]
+head(P)
+```
+
+Average Treatment Effect
+
+```{r}
+(ybar <- tapply(P$doc_any_12m, P$selected, mean))
+(ATE <- ybar['1'] - ybar['0'])
+```
+
+```{r}
+(num_sample <- table(P$selected))
+(yvar <- tapply(P$doc_any_12m, P$selected, var))
+(starndard_errors <- sqrt(sum(yvar / num_sample)))
+ATE + (c(-2, 2) * starndard_errors)
+```
+
+# Weights
+
+```{r}
+(num_selected_weighted <- tapply(P$weight, P$selected, sum))
+(num_doc_any_12_weighted <- tapply(P$weight * P$doc_any_12m, P$selected, sum))
+(ybar_weighted <- num_doc_any_12_weighted / num_selected_weighted)
+(ATE_weighted <- ybar_weighted['1'] - ybar_weighted['0'])
+```
+
+# Regression
+
+We have an imballance in the data, from the control to the treatment: the family members of the people `selected` are also selected. So that families of 2, and 3+ will be overresented in the `selected` group. We don't simply want to group by household because we want it at the individual level, and each individual in the household may or may not visit doc in the 12 month period. (Actually the author does do this later on by averaging doc_any_12m per household id)
+
+```{r}
+table(P$selected, P$numhh)
+table(P$selected, P$numhh) / as.numeric(table(P$selected))
+```
+
+```{r}
+reg_results <- lm(doc_any_12m ~ selected + numhh, data=P)
+summary(reg_results)
+```
+
+```{r}
+predict(reg_results, newdata = data.frame(selected=0, numhh='1'))
+coef(reg_results)['(Intercept)']
+```
+
+```{r}
+predict(reg_results, newdata = data.frame(selected=1, numhh='1'))
+coef(reg_results)['(Intercept)'] + coef(reg_results)['selected']
+```
+
+Lets say the control's frequency for `numhh` is the expected frequency (although I'm not sure why a 3+ household is so infrequent)
+
+```{r}
+new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
+                       numhh=c('1', '2', '3+', '1', '2', '3+'))
+new_data$predictions <- predict(reg_results, newdata = new_data)
+new_data
+```
+
+This weighted average of the predictions make sense since the `selected` coefficient is the expected difference across each numhh value (since there is no interaction terms i.e. same slope)
+
+```{r}
+diffs <- new_data$predictions[1:3] - new_data$predictions[4:6]
+# do this across control and treatment
+numhh_frequency <- table(P$numhh) / nrow(P)
+
+# weighted average
+(ATE <- sum(diffs * numhh_frequency))
+coef(reg_results)['selected'] 
+```
+
+```{r}
+(ybar <- tapply(P$doc_any_12m, P$selected, mean))
+(ATE <- ybar['1'] - ybar['0'])
+```
+
+```{r}
+(ybar <- tapply(new_data$predictions, new_data$selected, mean))
+(ATE <- ybar['1'] - ybar['0'])
+```
+
+```{r}
+coef(reg_results)['selected']
+ATE - coef(reg_results)['selected']
+```
+
+# Full Interaction
+
+The author mentions we have to scale `numhh`
+
+`scale=FALSE` means we will only center the data rather than center/scale
+
+```{r}
+X <- scale(model.matrix(~numhh, data=P)[, -1], scale=FALSE)
+# data centered around 0
+colMeans(X)
+```
+
+```{r}
+reg_results_full <- lm(doc_any_12m ~ selected * X, data=P)
+summary(reg_results_full)
+```
+
+```{r}
+coefficients(reg_results_full)['selected']
+```
+
+But we didn't scale when we did `selected + numhh`
+
+```{r}
+reg_results_full2 <- lm(doc_any_12m ~ selected + X, data=P)
+summary(reg_results_full2)
+```
+
+But turns out if we had we would have gotten the same coefficient.
+
+It's because the original regression coefficient says that at the **every value of numhh (i.e. same number of people in the household)**, `selected` increases the `doc_any_12m` by `0.06333824`
+
+```{r}
+coef(reg_results)['selected']
+coef(reg_results_full2)['selected']
+```
+
+What if we hadn't scaled `numhh`?
+
+```{r}
+reg_results_full_non_scaled <- lm(doc_any_12m ~ selected * numhh, data=P)
+summary(reg_results_full_non_scaled)
+```
+
+```{r}
+coef(reg_results_full)['selected']
+coef(reg_results_full_non_scaled)['selected']
+```
+
+Before, the `selected` coefficient was the predicted difference in in selected vs not selected across all `numhh` values. Now, however, we've added an interaction term and, as a result, the difference between a selected vs not selected with the same `numhh` depends on what the `numhh` is. So the coefficient for `selected` is the predicted difference between a selected vs not selected who both have `numhh1` (1 person in the household)
+
+> The implication is that, once you add interaction effects, the main effects may or may not be particularly interesting, at least as they stand, and you should be careful in how you interpret them... Once interaction terms are added, you are primarily interested in their significance, rather than the significance of the terms used to compute them. https://www3.nd.edu/~rwilliam/stats2/l53.pdf
+
+But, if we take this model, and calculate difference between selected and non-selected using weighted average of frequencies of numhh, then we get the coeffient value of the centered data/model
+
+```{r}
+new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
+                       numhh=c('1', '2', '3+', '1', '2', '3+'))
+```
+
+```{r}
+new_data$predictions <- predict(reg_results_full_non_scaled, newdata = new_data)
+```
+
+```{r}
+diffs <- new_data$predictions[1:3] - new_data$predictions[4:6]
+# do this across control and treatment
+numhh_frequency <- table(P$numhh) / nrow(P)
+# weighted average
+(ATE <- sum(diffs * numhh_frequency))
+coef(reg_results_full)['selected'] 
+```
+
+```{r}
+coef(reg_results_full_non_scaled)['selected']
+(coef(reg_results_full_non_scaled)['selected'] - ATE) / ATE
+(coef(reg_results_full)['selected'] - ATE) / ATE
+```
+
+Now there is a difference, and the `ATE` of the weighted average non-scaled is closer to the selected coefficient of the full/scaled than it is to the selection coefficient of it's own (non-scaled) model.
+
+Perhaps https://www3.nd.edu/~rwilliam/stats2/l53.pdf can explain
+
+It does, 
+
+> * The coefficient for male (3.55) is now the average difference between a male with an average gpa and a female with an average gpa. This is probably more meaningful than looking at the difference between the nonexistent man and woman who are flunking everything.
+
+So translating the `coef(reg_results_full)['selected']` `r coef(reg_results_full)['selected']` is the average difference between selected with average numhh vs not selected with average numhh
