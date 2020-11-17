@@ -352,7 +352,6 @@ mtcars %>%
     arrange(desc(cyl), am, desc(vs), mpg)
 ```
 
-
 # ggplot
 
 ### `reorder_within()`
@@ -361,14 +360,16 @@ Reorder sub-categories within category e.g. for faceting.
 
 For example, the order of `setosa`, `versicolor`, `virginica` is allowed to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
 
+other examples: https://juliasilge.com/blog/reorder-within/
+
 ```{r}
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
 iris_gathered %>%
-    ggplot(aes(x=reorder_within(x=Species, by=value, within=metric),
+    ggplot(aes(x=tidytext::reorder_within(x=Species, by=value, within=metric),
                y=value)) +
     geom_boxplot() +
     # this is necessary to undo the transformations to the values that reorder_within did
-    scale_x_reordered() +
+    tidytext::scale_x_reordered() +
     facet_wrap(~ metric, scales = 'free_x')
 ```
 

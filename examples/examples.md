@@ -10,6 +10,7 @@
         -   [`summarise_at()`](#summarise_at)
         -   [`add_count`](#add_count)
 -   [dplyr/tidyverse](#dplyrtidyverse)
+    -   [`semi-join`](#semi-join)
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
         -   [.data](#data)
@@ -18,6 +19,7 @@
 -   [ggplot](#ggplot)
     -   [`reorder_within()`](#reorder_within)
     -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
+    -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
 
 Packages
 ========
@@ -233,6 +235,56 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 dplyr/tidyverse
 ===============
 
+`semi-join`
+-----------
+
+``` r
+band_members
+```
+
+    ## # A tibble: 3 x 2
+    ##   name  band   
+    ##   <chr> <chr>  
+    ## 1 Mick  Stones 
+    ## 2 John  Beatles
+    ## 3 Paul  Beatles
+
+``` r
+band_instruments
+```
+
+    ## # A tibble: 3 x 2
+    ##   name  plays 
+    ##   <chr> <chr> 
+    ## 1 John  guitar
+    ## 2 Paul  bass  
+    ## 3 Keith guitar
+
+`x %>% semi_join(y)` is an `inner_join(y)` that returns only `x`
+(doesn’t include any columns from `y`)
+
+``` r
+band_members %>% semi_join(band_instruments, by = 'name')
+```
+
+    ## # A tibble: 2 x 2
+    ##   name  band   
+    ##   <chr> <chr>  
+    ## 1 John  Beatles
+    ## 2 Paul  Beatles
+
+``` r
+band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band)
+```
+
+    ## # A tibble: 2 x 2
+    ##   name  band   
+    ##   <chr> <chr>  
+    ## 1 John  Beatles
+    ## 2 Paul  Beatles
+
+------------------------------------------------------------------------
+
 Indirection
 -----------
 
@@ -423,7 +475,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fd022b58200
+    ## env:  0x7fa915cc2ee0
 
     ## [1] 61.875
 
@@ -535,18 +587,21 @@ Reorder sub-categories within category e.g. for faceting.
 For example, the order of `setosa`, `versicolor`, `virginica` is allowed
 to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
 
+other examples:
+<a href="https://juliasilge.com/blog/reorder-within/" class="uri">https://juliasilge.com/blog/reorder-within/</a>
+
 ``` r
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
 iris_gathered %>%
-    ggplot(aes(x=reorder_within(x=Species, by=value, within=metric),
+    ggplot(aes(x=tidytext::reorder_within(x=Species, by=value, within=metric),
                y=value)) +
     geom_boxplot() +
     # this is necessary to undo the transformations to the values that reorder_within did
-    scale_x_reordered() +
+    tidytext::scale_x_reordered() +
     facet_wrap(~ metric, scales = 'free_x')
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-28-1.png)
 
 ### `scale_x_log10()` with seconds
 
@@ -561,4 +616,25 @@ ggplot(aes(x='', y=value)) +
                   labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-25-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-29-1.png)
+
+### ggplot2 with `interaction()`
+
+group by two columns in ggplot2
+
+``` r
+# Data frame with two continuous variables and two factors 
+set.seed(0)
+x <- rep(1:10, 4)
+y <- c(rep(1:10, 2)+rnorm(20)/5, rep(6:15, 2) + rnorm(20)/5)
+treatment <- gl(2, 20, 40, labels=letters[1:2])
+replicate <- gl(2, 10, 40)
+d <- data.frame(x=x, y=y, treatment=treatment, replicate=replicate)
+d %>%
+    ggplot(aes(x=x, y=y, colour=treatment, shape = replicate,
+               group=interaction(treatment, replicate))) +
+    geom_point() +
+    geom_line()
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-30-1.png)
