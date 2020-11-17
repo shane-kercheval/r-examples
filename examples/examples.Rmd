@@ -171,6 +171,15 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 # dplyr/tidyverse 
 
+## `join` `suffix`
+
+```{r}
+band_members %>%
+    inner_join(band_members, by = 'name',
+               suffix = c('.x', '.y'))
+```
+
+
 ## `semi-join`
 
 ```{r}
