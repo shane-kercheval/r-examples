@@ -74,7 +74,6 @@ sem %>%
     group_by(date) %>%
     summarise(difference = log(sum(revenue[variant == 'Treatment'])) - log(sum(revenue[variant == 'Control']))) %>%
     ungroup() %>%
-    #pivot_longer(-date, names_to=)
     ggplot(aes(x=date, y=difference)) +
     geom_vline(xintercept = ymd('2012-05-22')) +
     geom_line() +
@@ -164,8 +163,25 @@ data.frame(index=1:length(.y), y=.y, z=.z) %>%
 # treatment_period of 1 means >= May 22, when the ads were shut off for Treatment (potental drop in sales for treatment may be expected)
 sem_per_dma <- sem %>%
     group_by(dma, treatment_period, variant) %>%
-    summarise(y = mean(log(revenue))) %>%
+    summarise(y = mean(log(revenue)), n=n()) %>%
+    ungroup() %>%
+    mutate(variant = factor(variant, levels=c("Control", "Treatment"))) %>%
     as.data.frame()
+head(sem_per_dma)
+```
+
+```{r}
+reg_results <- lm(y ~ treatment_period * variant, data=sem_per_dma)
+summary(reg_results)
+```
+
+```{r}
+reg_results <- lm(y ~ treatment_period * variant, data=sem_per_dma)
+summary(reg_results)
+```
+
+```{r}
+get_regression_equation(reg_results, .round_by = 5)
 ```
 
 
