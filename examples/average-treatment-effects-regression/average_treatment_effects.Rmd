@@ -102,6 +102,12 @@ summary(reg_results)
 ```
 
 ```{r}
+get_regression_equation(reg_results, .round_by = 4)
+```
+
+```{r}
+# the intercept is equivalent to single person household not being selected
+# i.e. doc_any_12m = 0.5925(Intercept) + 0.0633*0 + -0.0655*0 + -0.1838*0
 predict(reg_results, newdata = data.frame(selected=0, numhh='1'))
 coef(reg_results)['(Intercept)']
 ```
@@ -111,7 +117,7 @@ predict(reg_results, newdata = data.frame(selected=1, numhh='1'))
 coef(reg_results)['(Intercept)'] + coef(reg_results)['selected']
 ```
 
-Lets say the control's frequency for `numhh` is the expected frequency (although I'm not sure why a 3+ household is so infrequent)
+Lets generate predictions for every combination, take the differences in predictions for the treatment minus the control, and then take the weighted average of those predictions. That value should equal the value of the `selected` coefficient.
 
 ```{r}
 new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
@@ -123,33 +129,24 @@ new_data
 This weighted average of the predictions make sense since the `selected` coefficient is the expected difference across each numhh value (since there is no interaction terms i.e. same slope)
 
 ```{r}
-diffs <- new_data$predictions[1:3] - new_data$predictions[4:6]
+# diff the selected == 1 from the selected == 0
+# the predictions will have the same diff value
+# because (since we aren't interacting the terms) the selected coefficient
+# is the expected difference across ALL values of numhh (i.e. same slope, same difference between lines at all values)
+# but, we will do the same thing below for the model with interactions
+(diffs <- new_data$predictions[1:3] - new_data$predictions[4:6])
 # do this across control and treatment
 numhh_frequency <- table(P$numhh) / nrow(P)
 
 # weighted average
 (ATE <- sum(diffs * numhh_frequency))
-coef(reg_results)['selected'] 
-```
-
-```{r}
-(ybar <- tapply(P$doc_any_12m, P$selected, mean))
-(ATE <- ybar['1'] - ybar['0'])
-```
-
-```{r}
-(ybar <- tapply(new_data$predictions, new_data$selected, mean))
-(ATE <- ybar['1'] - ybar['0'])
-```
-
-```{r}
 coef(reg_results)['selected']
-ATE - coef(reg_results)['selected']
+as.numeric(ATE - coef(reg_results)['selected'])
 ```
 
 # Full Interaction
 
-The author mentions we have to scale `numhh`
+The author mentions we have to center `numhh`
 
 `scale=FALSE` means we will only center the data rather than center/scale
 
@@ -162,6 +159,10 @@ colMeans(X)
 ```{r}
 reg_results_full <- lm(doc_any_12m ~ selected * X, data=P)
 summary(reg_results_full)
+```
+
+```{r}
+get_regression_equation(reg_results_full, .round_by = 4)
 ```
 
 ```{r}
@@ -196,11 +197,11 @@ coef(reg_results_full)['selected']
 coef(reg_results_full_non_scaled)['selected']
 ```
 
-Before, the `selected` coefficient was the predicted difference in in selected vs not selected across all `numhh` values. Now, however, we've added an interaction term and, as a result, the difference between a selected vs not selected with the same `numhh` depends on what the `numhh` is. So the coefficient for `selected` is the predicted difference between a selected vs not selected who both have `numhh1` (1 person in the household)
+Before, the `selected` coefficient was the predicted difference in in selected vs not selected across all `numhh` values. Now, however, we've added an interaction term and, as a result, the difference between a selected vs not selected with the same `numhh` depends on what the `numhh` is. **So the coefficient for `selected` is the predicted difference between a selected vs not selected person who both have `numhh1` (1 person in the household).**
 
 > The implication is that, once you add interaction effects, the main effects may or may not be particularly interesting, at least as they stand, and you should be careful in how you interpret them... Once interaction terms are added, you are primarily interested in their significance, rather than the significance of the terms used to compute them. https://www3.nd.edu/~rwilliam/stats2/l53.pdf
 
-But, if we take this model, and calculate difference between selected and non-selected using weighted average of frequencies of numhh, then we get the coeffient value of the centered data/model
+But, if we take this non-centered model, and calculate difference between selected and non-selected using weighted average of frequencies of numhh, then we get the coeffient value of the centered data/model
 
 ```{r}
 new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
@@ -226,7 +227,7 @@ coef(reg_results_full_non_scaled)['selected']
 (coef(reg_results_full)['selected'] - ATE) / ATE
 ```
 
-Now there is a difference, and the `ATE` of the weighted average non-scaled is closer to the selected coefficient of the full/scaled than it is to the selection coefficient of it's own (non-scaled) model.
+Now there is a difference, and the `ATE` of the weighted average non-centered is pretty much identical to the selected coefficient of the full/centered.
 
 Perhaps https://www3.nd.edu/~rwilliam/stats2/l53.pdf can explain
 

@@ -1,0 +1,239 @@
+---
+title: ""
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+library(rtools)
+# library(scales)
+# library(stringr)
+library(lubridate)
+# library(ggrepel)
+# library(forecast)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+> A diff-in-diff analysis applies when you have two groups whose pretreatment differences can be isolated and modeled so that post-treatment differences are the basis for causal estimates of the treatment effect. - Business Data Science pg 141
+
+```{r}
+# business data science pg 141
+sem <- read.csv("data/paidsearch.csv")
+sem <- sem %>%
+    mutate(date = as.Date(strptime(date, "%d-%b-%y", tz = 'UTC')),
+           dma = factor(dma),
+           variant = ifelse(search.stays.on == 1, 'Control', 'Treatment')) %>%
+    relocate(variant, .after=search.stays.on)
+head(sem)
+```
+
+```{r}
+sem %>%
+    count(date, variant, wt=revenue, name='revenue') %>%
+    ggplot(aes(x=date, y=revenue, color=variant, group=variant)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth()
+```
+
+
+```{r}
+sem %>%
+    count(date, variant, wt=revenue, name='revenue') %>%
+    ggplot(aes(x=date, y=log(revenue), color=variant, group=variant)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth()
+```
+
+> Here we will focus on differences in log revenue because we anticipate that the treatment and control groups are related on percentage scale. BDS pg 143.
+
+```{r}
+sem %>%
+    group_by(date) %>%
+    summarise(difference = log(sum(revenue[variant == 'Treatment'])) - log(sum(revenue[variant == 'Control']))) %>%
+    ungroup() %>%
+    #pivot_longer(-date, names_to=)
+    ggplot(aes(x=date, y=difference)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth() +
+    labs(title = "Log Difference of Total Revenue (Treatment - Control)",
+         subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
+         y = "Log Difference (Treatment - Control)",
+         x = 'Date')
+```
+
+## Quick Refresher & Example with Logs
+
+If we would not have used log differences, here is what we would have had
+
+```{r}
+sem %>%
+    group_by(date) %>%
+    summarise(difference = sum(revenue[variant == 'Treatment']) - sum(revenue[variant == 'Control'])) %>%
+    ungroup() %>%
+    #pivot_longer(-date, names_to=)
+    ggplot(aes(x=date, y=difference)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth() +
+    labs(title = "Difference of Total Revenue (Treatment - Control)",
+         subtitle = "Note: as compared with log difference, no change in trend is found,\nbecause we are comparing a change within a smaller group to no change in a larger group\n(i.e. additive difference), whereas we want to know the multiplicative difference.",
+         y = "Difference (Treatment - Control)",
+         x = 'Date')
+```
+
+For example, `.y` and `.z` change multiplicatively (actually percent change is the same for each, which you can see in the last graph)
+
+```{r}
+.x <- seq(1, 2, .1)
+.x <- c(.x, rev(.x))
+(.y <- .x * 1000)
+(.z <- .y * 1000)
+```
+
+Both sequences above have the same percent change.
+
+However, there additive difference doesn't reflect that.
+
+```{r}
+.z - .y
+```
+
+But when we look at the log differences, it is exactly the same for each value, because each variable is changing at constant rate, and so there log differences are the same... i.e. they change multiplicatively.
+
+```{r}
+log(.z) - log(.y)
+```
+
+Both differences are graphed below.
+
+```{r}
+data.frame(index=1:length(.y), y=.y, z=.z) %>%
+    pivot_longer(cols=-index) %>%
+    ggplot(aes(x=index, y=value, color=name, group=name)) +
+    geom_line()
+```
+
+```{r}
+data.frame(index=1:length(.y), y=.y, z=.z) %>%
+    mutate(differences = z - y) %>%
+    ggplot(aes(x=index, y=differences)) +
+    geom_line()
+```
+
+```{r}
+data.frame(index=1:length(.y), y=.y, z=.z) %>%
+    mutate(difference = log(z) - log(y)) %>%
+    ggplot(aes(x=index, y=difference)) +
+    geom_line() +
+    labs(y='log differences', 
+         subtitle = 'both .x and .y are increasing and decreasing at the same rate')
+```
+
+## Create dataset that is basis for regression model.
+
+```{r}
+# treatment_period of 0 means < May 22, when the ads were on for both variants (consistance difference is expected)
+# treatment_period of 1 means >= May 22, when the ads were shut off for Treatment (potental drop in sales for treatment may be expected)
+sem_per_dma <- sem %>%
+    group_by(dma, treatment_period, variant) %>%
+    summarise(y = mean(log(revenue))) %>%
+    as.data.frame()
+```
+
+
+```{r}
+
+## quick summary: total revenue by date and treatment/controls
+totalrev <- tapply(sem$revenue, sem[,c("date","search.stays.on")], sum)
+## for plotting, we'll convert the row `dates' to R Date class
+## see http://www.statmethods.net/input/dates.html for format codes.
+asdate <- as.Date(rownames(totalrev), format="%d-%b-%y")
+## order everything by date
+totalrev <- totalrev[order(asdate),]
+asdate <- sort(asdate)
+
+## plot the revenues by group
+plot(asdate, totalrev[,'0'], type="l", bty="n", col=2,
+	ylim=range(totalrev), log="y", xlab="", ylab="revenue")
+lines(asdate, totalrev[,'1'], type="l")
+legend("right",col=c(1,2), lwd=2, bty="n",
+	legend=c("control (search stays on)", "treatment (search goes off)"))
+abline(v=as.Date("2012-05-22"), lty=2)
+## and the difference between groups
+plot(asdate, log(totalrev[,'1'])-log(totalrev[,'0']), 
+	type="l", bty="n", col=3,lwd=2, xlab="", 
+	ylab="log(rev_control) - log(rev_treat)")
+abline(v=as.Date("2012-05-22"), lty=2,lwd=2)
+
+######  Actual Analysis #######
+## we'll make use of the data.table package
+library(data.table)
+sem <- as.data.table(sem)
+semavg <- sem[, 
+			list(d=mean(1-search.stays.on), y=mean(log(revenue))), 
+			by=c("dma","treatment_period")]
+setnames(semavg, "treatment_period", "t") # names to match slides
+semavg <- as.data.frame(semavg)
+
+# same thing with dplyr
+sem %>%
+    rename(t = treatment_period, d = search.stays.on) %>%
+    mutate(d = 1 - d) %>%
+    group_by(dma, t, d) %>%
+    summarise(y = mean(log(revenue))) %>%
+    as.data.frame() %>%
+    head(10)
+semavg %>% arrange(dma, t) %>% head(10)
+
+library(AER)
+
+semreg <- glm(y ~ d*t, data=semavg)
+summary(semreg)
+sqrt(vcovCL(semreg, cluster=semavg$dma)['d:t','d:t'])
+
+head(semavg)
+dmareg <- glm(y ~ dma + d*t, data=semavg)
+summary(dmareg)$coef["d:t",]
+
+## just to confirm: 
+##   we get the same thing just viewing this as a sample of n_dma differences.
+r <- tapply(semavg$y, semavg$dma, function(y) y[2]-y[1])
+d <- semavg[match(names(r),semavg$dma),"d"]  # get corresponding d
+rbar <- tapply(r,d,mean)
+rbarvar <- tapply(r, d, function(r) var(r)/length(r))
+rbar[2]-rbar[1]
+sqrt(sum(rbarvar))
+
+
+
+
+```
+
