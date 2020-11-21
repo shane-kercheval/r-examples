@@ -40,7 +40,7 @@ head(weekly_oj_sales)
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=price, y=sales, color = brand)) +
     geom_point(alpha=0.1) +
@@ -48,7 +48,7 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales), color = brand)) +
     geom_point(alpha=0.1) +
@@ -56,8 +56,7 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales), color = brand)) +
     geom_point(alpha=0.1) +
@@ -65,7 +64,7 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-- Sales decrease with price.
+- Sales decrease as prices increase.
 
 # Regression
 
@@ -234,11 +233,19 @@ https://bookdown.org/ndphillips/YaRrr/comparing-regression-models-with-anova.htm
 (This only make statistical sense if the models are nested.)
 
 ```{r}
-anova(lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
-      lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales))
+anova(
+      # simple model
+      lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
+      # more complex model (interaction)
+      lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales)
+)
 ```
 
-```{r}
+In this case, we conclude that the more complex model is significantly better than the simpler model, and thus favor the more complex model.
+
+## Plotting Effects
+
+```{r message=FALSE, warning=FALSE}
 #install.packages('effects')
 plot(effects::effect(c('log(price)', 'brand'), reg_results))
 ```
@@ -246,24 +253,24 @@ plot(effects::effect(c('log(price)', 'brand'), reg_results))
 ## Plot Assumptions
 
 ```{r}
-plot(reg_results) 
+plot(reg_results)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 plot_actual_vs_predicted(reg_results)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 plot_residual_vs_predicted(model=reg_results)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 plot_residual_vs_variable(model=reg_results,
                           predictor = 'price',
                           dataset = weekly_oj_sales %>% mutate(`log(price)` = log(price)))
 ```
 
-## Interpretation
+## Interpretation (OJ example)
 
 ### Elasticities (i.e. regression slopes)
 
@@ -272,7 +279,7 @@ plot_residual_vs_variable(model=reg_results,
 ```{r}
 reg_results <- lm(log(sales) ~ log(price), data = weekly_oj_sales)
 get_regression_equation(reg_results)
-coef(reg_results)['log(price)']
+(log_price_coefficient <- coef(reg_results)['log(price)'])
 ```
 
 This is an example of a log-log model, which have an interpretation of 
@@ -281,20 +288,18 @@ This is an example of a log-log model, which have an interpretation of
 
 Where `B` is the coefficient on price.
 
-So `sales` drop (i.e. increase by negative coefficient) by about ``r paste0(round(coef(reg_results)['log(price)'], 1), '%')`` for every `1%` increase in `price`.
+So `sales` drop (i.e. increase by negative coefficient) by about ``r paste0(round(abs(log_price_coefficient), 1), '%')`` for every `1%` increase in `price`.
 
-```{r}
-#breaks <- c(-0.5, 0, 0.5, 1, 1.5)
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales))) +
     geom_point(alpha=0.2) +
-    geom_smooth(method='lm')# +
-   # scale_x_continuous(breaks = breaks, labels = round(exp(breaks), 1))
+    geom_smooth(method='lm')
 ```
 
 ---
 
-`log(sales) = intercept + log(price) + brand + e` gives a regression line that has a different intercept for each brand, but the same price elasticities. This equation says "even though all brand sales have the same elasticity to price, at the same price they will have different expected sales." i.e. they have the same regression slope.
+`log(sales) = intercept + log(price) + brand + e`, below, gives a regression line that has a different intercept for each brand, but the same price elasticities. This equation says "even though all brand sales have the same elasticity to price, at the same price they will have different expected sales." i.e. they have the same regression slope.
 
 ```{r}
 reg_results <- lm(log(sales) ~ log(price) + brand, data = weekly_oj_sales)
@@ -308,15 +313,15 @@ tropicana_intercept <- coefficients(reg_results)['(Intercept)'] + coefficients(r
 get_regression_equation(reg_results)
 ```
 
-In this example, we see that when we control for brand, `sales` are expected to drop by about ``r paste0(round(abs(price_elasticity), 1), '%')`` for every `1%` increase in `price`.
+In this example, we see that when we control for brand, `sales` are expected to drop by about ``r paste0(round(abs(price_elasticity), 1), '%')`` for every `1%` increase in `price` across all brands (i.e. each brand has the same slope).
 
 Each brand is allowed to have it's own intercept, meaning that "even though all brand sales have the same elasticity to price, at the same price they will have different expected sales." (BDS pg 46)
 
-The intercept gives the value for `Dominick`'s log sales at a log price of 0 (i.e. when all variables have a value of zero i.e. `log(price)` = $0, `brandminute.maid` = 0, `brandtropicana` = 0)
+The intercept gives the value for `Dominick`'s `log-sales` at a `log-price` of `0` (i.e. `log(1) == 0` so intercept gives expected log-sales at a price of `$1`). In other words, when all other variables have a value of zero (i.e. `log(price)` = `0`, `brandminute.maid` = `0`, and `brandtropicana` = `0`).
 
-- Intercept for Dominicks: ``r dominicks_intercept``
-- Intercept for Minute Maid: ``r minute_maid_intercept``
-- Intercept for Tropicana: ``r tropicana_intercept``
+- Expected Log-Sales for Dominicks at $1 (i.e. log(1) == 0): ``r dominicks_intercept``
+- Expected Log-Sales for Minute Maid at $1 (i.e. log(1) == 0): ``r minute_maid_intercept``
+- Expected Log-Sales for Tropicana at $1 (i.e. log(1) == 0): ``r tropicana_intercept``
 
 ```{r}
 weekly_oj_sales %>%
@@ -331,7 +336,11 @@ As mentioned, all brands in this model share that same elasticity (regression sl
 
 ---
 
-`log(sales) = intercept + log(price) + brand + log(price)*brand + e` allows us to add an interaction term. (regression shorthand is: `log(sales) ~ log(price) * brand`). The result is a separate intercept (which we had in the last model) as well as a separate slope (elasticity) for each brand.
+`log(sales) = intercept + log(price) + brand + log(price)*brand + e` allows us to add an interaction term.
+
+The R regression shorthand is: `log(sales) ~ log(price) * brand`). 
+
+The result is a separate intercept for each brand (which we had in the last model) as well as a separate slope (elasticity) for each brand.
 
 ```{r}
 reg_results <- lm(log(sales) ~ log(price) * brand, data = weekly_oj_sales) # same as lm(log(sales) ~ log(price) + brand + log(price)*brand, data = weekly_oj_sales)
@@ -349,7 +358,7 @@ Now it no longer makes sense to talk about an overall elasticity number, but rat
 - Intercept for Minute Maid: ``r minute_maid_price_elasticity`` (`sales` are expected to drop by about ``r paste0(round(abs(minute_maid_price_elasticity), 1), '%')`` for every `1%` increase in `price`)
 - Intercept for Tropicana: ``r tropicana_price_elasticity`` (`sales` are expected to drop by about ``r paste0(round(abs(tropicana_price_elasticity), 1), '%')`` for every `1%` increase in `price`)
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales), color=brand)) +
     geom_point(alpha=0.2) +
@@ -399,7 +408,7 @@ Now it no longer makes sense to talk about an overall elasticity number for each
 |  No      | ``r dominicks_not_featured_price_elasticity`` |  ``r minute_maid_not_featured_price_elasticity`` | ``r topicana_not_featured_price_elasticity``  |
 |  Yes     | ``r dominicks_featured_price_elasticity`` |  ``r minute_maid_featured_price_elasticity`` | ``r topicana_featured_price_elasticity``  |
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales), color=brand)) +
     geom_point(alpha=0.2) +
@@ -409,7 +418,7 @@ weekly_oj_sales %>%
 
 ... "It could be that the demand curve is nonlinear" ....
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales), color=brand)) +
     geom_point(alpha=0.2) +
@@ -427,7 +436,7 @@ For example, "the usual standard errors will be wrong if there are heteroskedast
 
 Note that the HC procedure still assumes independence between observations. (Clustered Standard errors discussed in Chapter 5 of BDS  can be used.)
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(AER)
 reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
 coefficient_variances <- vcovHC(reg_results)
@@ -491,7 +500,7 @@ paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sam
 
 This isn't too bad actually, lets look at an example that is much worse (from BDS pg 72)
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 semi_conductors <- read.csv('data/semiconductor.csv')
 reg_results <- glm(FAIL ~ ., data=semi_conductors, family='binomial')
 (in_sample_r2 <- R2(y=semi_conductors$FAIL, pred = predict(reg_results, type='response'), family = 'binomial'))
