@@ -197,7 +197,7 @@ coef(reg_results_full)['selected']
 coef(reg_results_full_non_scaled)['selected']
 ```
 
-Before, the `selected` coefficient was the predicted difference in in selected vs not selected across all `numhh` values. Now, however, we've added an interaction term and, as a result, the difference between a selected vs not selected with the same `numhh` depends on what the `numhh` is. **So the coefficient for `selected` is the predicted difference between a selected vs not selected person who both have `numhh1` (1 person in the household).**
+Before, the `selected` coefficient was the predicted difference in `selected` vs `not selected` across all `numhh` values. Now, however, we've added an interaction term and, as a result, the difference between a `selected` vs `not selected` with the same `numhh` depends on what the `numhh` is. **So the coefficient for `selected` is the predicted difference between a `selected` vs `not selected` person who both have `numhh1` (1 person in the household), since that is the reference/holdout group.**
 
 > The implication is that, once you add interaction effects, the main effects may or may not be particularly interesting, at least as they stand, and you should be careful in how you interpret them... Once interaction terms are added, you are primarily interested in their significance, rather than the significance of the terms used to compute them. https://www3.nd.edu/~rwilliam/stats2/l53.pdf
 

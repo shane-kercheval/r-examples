@@ -3,8 +3,9 @@
     -   [Anova Table](#anova-table)
     -   [Amount of Variation Explained](#amount-of-variation-explained)
     -   [Anova to Compare Models](#anova-to-compare-models)
+    -   [Plotting Effects](#plotting-effects)
     -   [Plot Assumptions](#plot-assumptions)
-    -   [Interpretation](#interpretation)
+    -   [Interpretation (OJ example)](#interpretation-oj-example)
         -   [Elasticities (i.e. regression
             slopes)](#elasticities-i.e.regression-slopes)
     -   [Regression Coefficient
@@ -36,8 +37,6 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
 ![](regression_files/figure-markdown_github/unnamed-chunk-1-1.png)
 
 ``` r
@@ -47,8 +46,6 @@ weekly_oj_sales %>%
     geom_smooth() +
     facet_wrap(~ featured)
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-2-1.png)
 
@@ -60,11 +57,9 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-    ## `geom_smooth()` using formula 'y ~ x'
-
 ![](regression_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
--   Sales decrease with price.
+-   Sales decrease as prices increase.
 
 Regression
 ==========
@@ -388,8 +383,12 @@ Anova to Compare Models
 (This only make statistical sense if the models are nested.)
 
 ``` r
-anova(lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
-      lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales))
+anova(
+      # simple model
+      lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
+      # more complex model (interaction)
+      lm(log(sales) ~ log(price)*brand*featured, data = weekly_oj_sales)
+)
 ```
 
     ## Analysis of Variance Table
@@ -402,18 +401,16 @@ anova(lm(log(sales) ~ log(price)+brand+featured, data = weekly_oj_sales),
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+In this case, we conclude that the more complex model is significantly
+better than the simpler model, and thus favor the more complex model.
+
+Plotting Effects
+----------------
+
 ``` r
 #install.packages('effects')
 plot(effects::effect(c('log(price)', 'brand'), reg_results))
 ```
-
-    ## Warning in term == terms: longer object length is not a multiple of shorter
-    ## object length
-
-    ## Warning in term == names: longer object length is not a multiple of shorter
-    ## object length
-
-    ## NOTE: log(price)brand is not a high-order term in the model
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-25-1.png)
 
@@ -421,7 +418,7 @@ Plot Assumptions
 ----------------
 
 ``` r
-plot(reg_results) 
+plot(reg_results)
 ```
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-26-1.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-2.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-3.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-4.png)
@@ -430,15 +427,11 @@ plot(reg_results)
 plot_actual_vs_predicted(reg_results)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
 ![](regression_files/figure-markdown_github/unnamed-chunk-27-1.png)
 
 ``` r
 plot_residual_vs_predicted(model=reg_results)
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-28-1.png)
 
@@ -448,12 +441,10 @@ plot_residual_vs_variable(model=reg_results,
                           dataset = weekly_oj_sales %>% mutate(`log(price)` = log(price)))
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
 ![](regression_files/figure-markdown_github/unnamed-chunk-29-1.png)
 
-Interpretation
---------------
+Interpretation (OJ example)
+---------------------------
 
 ### Elasticities (i.e. regression slopes)
 
@@ -469,7 +460,7 @@ get_regression_equation(reg_results)
     ## [1] "log(sales) = 10.42(Intercept) + -1.6log(price) + error"
 
 ``` r
-coef(reg_results)['log(price)']
+(log_price_coefficient <- coef(reg_results)['log(price)'])
 ```
 
     ## log(price) 
@@ -482,32 +473,25 @@ This is an example of a log-log model, which have an interpretation of
 
 Where `B` is the coefficient on price.
 
-So `sales` drop (i.e. increase by negative coefficient) by about `-1.6%`
+So `sales` drop (i.e. increase by negative coefficient) by about `1.6%`
 for every `1%` increase in `price`.
 
 ``` r
-#breaks <- c(-0.5, 0, 0.5, 1, 1.5)
 weekly_oj_sales %>%
     ggplot(aes(x=log(price), y=log(sales))) +
     geom_point(alpha=0.2) +
-    geom_smooth(method='lm')# +
+    geom_smooth(method='lm')
 ```
-
-    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-31-1.png)
 
-``` r
-   # scale_x_continuous(breaks = breaks, labels = round(exp(breaks), 1))
-```
-
 ------------------------------------------------------------------------
 
-`log(sales) = intercept + log(price) + brand + e` gives a regression
-line that has a different intercept for each brand, but the same price
-elasticities. This equation says “even though all brand sales have the
-same elasticity to price, at the same price they will have different
-expected sales.” i.e. they have the same regression slope.
+`log(sales) = intercept + log(price) + brand + e`, below, gives a
+regression line that has a different intercept for each brand, but the
+same price elasticities. This equation says “even though all brand sales
+have the same elasticity to price, at the same price they will have
+different expected sales.” i.e. they have the same regression slope.
 
 ``` r
 reg_results <- lm(log(sales) ~ log(price) + brand, data = weekly_oj_sales)
@@ -524,19 +508,25 @@ get_regression_equation(reg_results)
     ## [1] "log(sales) = 10.83(Intercept) + -3.14log(price) + 0.87brandminute.maid + 1.53brandtropicana + error"
 
 In this example, we see that when we control for brand, `sales` are
-expected to drop by about `3.1%` for every `1%` increase in `price`.
+expected to drop by about `3.1%` for every `1%` increase in `price`
+across all brands (i.e. each brand has the same slope).
 
 Each brand is allowed to have it’s own intercept, meaning that “even
 though all brand sales have the same elasticity to price, at the same
 price they will have different expected sales.” (BDS pg 46)
 
-The intercept gives the value for `Dominick`’s log sales at a log price
-of 0 (i.e. when all variables have a value of zero i.e. `log(price)` =
-$0, `brandminute.maid` = 0, `brandtropicana` = 0)
+The intercept gives the value for `Dominick`’s `log-sales` at a
+`log-price` of `0` (i.e. `log(1) == 0` so intercept gives expected
+log-sales at a price of `$1`). In other words, when all other variables
+have a value of zero (i.e. `log(price)` = `0`, `brandminute.maid` = `0`,
+and `brandtropicana` = `0`).
 
--   Intercept for Dominicks: `10.8288216`
--   Intercept for Minute Maid: `11.6989962`
--   Intercept for Tropicana: `12.3587643`
+-   Expected Log-Sales for Dominicks at $1 (i.e. log(1) == 0):
+    `10.8288216`
+-   Expected Log-Sales for Minute Maid at $1 (i.e. log(1) == 0):
+    `11.6989962`
+-   Expected Log-Sales for Tropicana at $1 (i.e. log(1) == 0):
+    `12.3587643`
 
 ``` r
 weekly_oj_sales %>%
@@ -557,10 +547,12 @@ pg 47)
 ------------------------------------------------------------------------
 
 `log(sales) = intercept + log(price) + brand + log(price)*brand + e`
-allows us to add an interaction term. (regression shorthand is:
-`log(sales) ~ log(price) * brand`). The result is a separate intercept
-(which we had in the last model) as well as a separate slope
-(elasticity) for each brand.
+allows us to add an interaction term.
+
+The R regression shorthand is: `log(sales) ~ log(price) * brand`).
+
+The result is a separate intercept for each brand (which we had in the
+last model) as well as a separate slope (elasticity) for each brand.
 
 ``` r
 reg_results <- lm(log(sales) ~ log(price) * brand, data = weekly_oj_sales) # same as lm(log(sales) ~ log(price) + brand + log(price)*brand, data = weekly_oj_sales)
@@ -590,8 +582,6 @@ weekly_oj_sales %>%
     geom_point(alpha=0.2) +
     geom_smooth(method='lm')
 ```
-
-    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-35-1.png)
 
@@ -656,8 +646,6 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-    ## `geom_smooth()` using formula 'y ~ x'
-
 ![](regression_files/figure-markdown_github/unnamed-chunk-37-1.png)
 
 … “It could be that the demand curve is nonlinear” ….
@@ -669,8 +657,6 @@ weekly_oj_sales %>%
     geom_smooth() +
     facet_wrap(~ featured)
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-38-1.png)
 
@@ -695,46 +681,6 @@ can be used.)
 
 ``` r
 library(AER)
-```
-
-    ## Loading required package: car
-
-    ## Loading required package: carData
-
-    ## Registered S3 methods overwritten by 'car':
-    ##   method                          from
-    ##   influence.merMod                lme4
-    ##   cooks.distance.influence.merMod lme4
-    ##   dfbeta.influence.merMod         lme4
-    ##   dfbetas.influence.merMod        lme4
-
-    ## 
-    ## Attaching package: 'car'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     recode
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     some
-
-    ## Loading required package: lmtest
-
-    ## Loading required package: zoo
-
-    ## 
-    ## Attaching package: 'zoo'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.Date, as.Date.numeric
-
-    ## Loading required package: sandwich
-
-    ## Loading required package: survival
-
-``` r
 reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
 coefficient_variances <- vcovHC(reg_results)
 coefficient_variances[1:5, 1:5]
@@ -848,28 +794,28 @@ oos_validation %>%
 ```
 
     ##    fold r_squared_in_sample r_squared_out_sample percent_diff
-    ## 1     1           0.5371289            0.5192799 -0.033230279
-    ## 2     2           0.5345402            0.5428123  0.015475314
-    ## 3     3           0.5385905            0.5043855 -0.063508329
-    ## 4     4           0.5353722            0.5351422 -0.000429575
-    ## 5     5           0.5351627            0.5370490  0.003524622
-    ## 6     6           0.5403588            0.4871844 -0.098405832
-    ## 7     7           0.5336470            0.5496953  0.030072898
-    ## 8     8           0.5312011            0.5695607  0.072212891
-    ## 9     9           0.5349066            0.5393792  0.008361387
-    ## 10   10           0.5332898            0.5545497  0.039865633
+    ## 1     1           0.5356775            0.5325705 -0.005800236
+    ## 2     2           0.5359964            0.5296224 -0.011891863
+    ## 3     3           0.5328248            0.5573454  0.046019981
+    ## 4     4           0.5364556            0.5252595 -0.020870500
+    ## 5     5           0.5360158            0.5293132 -0.012504568
+    ## 6     6           0.5371512            0.5187154 -0.034321491
+    ## 7     7           0.5366591            0.5234184 -0.024672478
+    ## 8     8           0.5317914            0.5669183  0.066053968
+    ## 9     9           0.5369168            0.5216144 -0.028500447
+    ## 10   10           0.5347219            0.5410574  0.011848134
 
 ``` r
 mean(oos_validation$r_squared_out_sample)
 ```
 
-    ## [1] 0.5339038
+    ## [1] 0.5345835
 
 ``` r
 paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
 ```
 
-    ## [1] "-0.28%"
+    ## [1] "-0.15%"
 
 This isn’t too bad actually, lets look at an example that is much worse
 (from BDS pg 72)
@@ -877,11 +823,6 @@ This isn’t too bad actually, lets look at an example that is much worse
 ``` r
 semi_conductors <- read.csv('data/semiconductor.csv')
 reg_results <- glm(FAIL ~ ., data=semi_conductors, family='binomial')
-```
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-``` r
 (in_sample_r2 <- R2(y=semi_conductors$FAIL, pred = predict(reg_results, type='response'), family = 'binomial'))
 ```
 
@@ -912,16 +853,16 @@ oos_validation %>%
 ```
 
     ##    fold r_squared_in_sample r_squared_out_sample percent_diff
-    ## 1     1           0.5682969            -1.760973    -4.098684
-    ## 2     2           0.6040115            -1.363229    -3.256959
-    ## 3     3           0.6499188            -5.439187    -9.369025
-    ## 4     4           0.6481006            -2.870245    -5.428703
-    ## 5     5          -6.0407406           -13.263318     1.195644
-    ## 6     6           1.0000000           -22.727405   -23.727405
-    ## 7     7           0.7048856           -10.263166   -15.560045
-    ## 8     8           0.6212657            -2.921801    -5.702981
-    ## 9     9           0.6422018            -2.760530    -5.298540
-    ## 10   10           0.6066413            -2.595711    -5.278824
+    ## 1     1           0.7256901            -8.765578   -13.078954
+    ## 2     2          -6.1564796           -20.568213     2.340905
+    ## 3     3           0.6523541            -3.738738    -6.731148
+    ## 4     4           0.5899232            -1.910120    -4.237914
+    ## 5     5           0.6164673            -2.268080    -4.679157
+    ## 6     6           0.6971709            -7.584930   -11.879584
+    ## 7     7           0.6345495            -3.806328    -6.998473
+    ## 8     8           0.6050676            -4.710917    -8.785769
+    ## 9     9           0.6320833            -2.956758    -5.677798
+    ## 10   10           0.6251895            -2.090739    -4.344168
 
 ``` r
 in_sample_r2
@@ -933,10 +874,10 @@ in_sample_r2
 mean(oos_validation$r_squared_out_sample)
 ```
 
-    ## [1] -6.596556
+    ## [1] -5.84004
 
 ``` r
 paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
 ```
 
-    ## [1] "-1273.47%"
+    ## [1] "-1138.89%"
