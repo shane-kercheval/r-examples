@@ -131,8 +131,8 @@ R2(y=emails$spam, pred=predict(reg_results, type='response'), family = 'binomial
 ```{r}
 emails %>%
     mutate(spam = as.logical(spam),
-           predictions = predicted_values) %>%
-    ggplot(aes(x=spam, y=predicted_values, group=spam)) +
+           predictions = predict(reg_results, type='response')) %>%
+    ggplot(aes(x=spam, y=predictions, group=spam)) +
     geom_boxplot()
 ```
 
@@ -172,7 +172,9 @@ confusion_matrix <- function(actual_classes, predicted_classes, positive_class) 
     print(paste('error_rate:', round((false_positives + false_negatives) / total_observations, 4)))
     print(paste('prevalence:', round(actual_positives / total_observations, 4)))
 }
+```
 
+```{r}
 confusion_matrix(actual_classes=emails$spam,
                  predicted_classes=round(predict(reg_results, type='response')),
                  positive_class=1)
