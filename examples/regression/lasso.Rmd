@@ -34,7 +34,9 @@ plot_width_height_8 <- calculate_plot_width(8)
 
 # Web spending example
 
-```{r}
+## Data Processing
+
+```{r message=FALSE, warning=FALSE}
 ## Browsing History. 
 ## The table has three colums: [machine] id, site [id], [# of] visits
 web <- read.csv("data/browser-domains.csv")
@@ -43,50 +45,61 @@ sitenames <- scan("data/browser-sites.txt", what="character")
 web$site <- factor(web$site, levels=1:length(sitenames), labels=sitenames)
 ## also factor machine id
 web$id <- factor(web$id, levels=1:length(unique(web$id)))
-
 head(web)
+```
+
+```{r}
+web %>% select(id, site) %>% duplicated() %>% any()
+```
+
+```{r}
 ## get total visits per-machine and % of time on each site
 ## tapply(a,b,c) does c(a) for every level of factor b.
-web %>% count(id, wt=visits) %>% head()
-
+# same as web %>% count(id, wt=visits) %>% head()
 machinetotals <- as.vector(tapply(web$visits, web$id, sum))
-machinetotals[1:6]  # same as count above
+# machinetotals[1:6]  # same as count above
 visitpercent <- 100 * web$visits / machinetotals[web$id]
 
-web %>%
-    mutate(visit_percent = visitpercent) %>%
-    dplyr::select(-visits)
-
-# dplyr_web <- web %>%
-#     mutate(visit_percent = visitpercent) %>%
-#     dplyr::select(-visits)
 dplyr_web <- web %>%
     add_count(id, wt=visits, name='total_visits') %>%
     mutate(visit_percent = visits / total_visits * 100)
-head(dplyr_web)
-as.numeric(object.size(dplyr_web)) / 1024^2
+head(dplyr_web %>% arrange(id, desc(visits)), 10)
+```
 
+```{r}
+as.numeric(object.size(dplyr_web)) / 1024^2
+```
+
+
+```{r}
 # the end result is that each id should add up to 100%
 all(dplyr_web %>%
     group_by(id) %>%
     summarise(total_percent = sum(visit_percent)) %>%
     ungroup() %>%
     pull(total_percent) %>% round(9) == 100)
+```
 
+```{r}
 #this is the same thing as the sparse matrix below (only takes up more memory, presumably)
 dplyr_web <- dplyr_web %>%
     dplyr::select(-visits, -total_visits) %>%
     pivot_wider(names_from = site,
                 values_from = visit_percent)
-any(duplicated(dplyr_web$id))
 # more than doubles in size
-as.numeric(object.size(dplyr_web)) / 1024^2
 dplyr_web[1:10, 1:5]
+```
 
+```{r}
+as.numeric(object.size(dplyr_web)) / 1024^2
+any(duplicated(dplyr_web$id))
+```
+
+```{r}
 ## use this info in a sparse matrix
 ## this is something you'll be doing a lot; familiarize yourself.
 # this seems to auto arrange by web$id
-xweb <- sparseMatrix(
+xweb <- Matrix::sparseMatrix(
 	i=as.numeric(web$id),  # i = row = person; this will have duplicates as the same person can appear many times in the dataset (i.e may be assocaited with multiple websites)
 	j=as.numeric(web$site),  # j = column = website; this will also have duplicates as each person is associated with many websites and a website with many people
 	x=visitpercent,  # x = value at row i column j
@@ -97,25 +110,35 @@ xweb <- sparseMatrix(
 
 # smaller than both before/longer dplyr_web
 as.numeric(object.size(xweb)) / 1024^2
+```
 
+```{r}
 dplyr_web %>%
     filter(id == 1) %>%
     dplyr::select(`atdmt.com`, `yahoo.com`, `whenu.com`) %>%
     head()
-xweb[1, 1:3]
 ```
 
+```{r}
+xweb[1, 1:3]
+```
 
 ```{r}
 yspend <- read.csv("data/browser-totalspend.csv", row.names=1)  # us 1st column as row names
 yspend <- as.matrix(yspend) ## good practice to move from dataframe to matrix
-yspend
+head(yspend)
+```
+
+```{r message=FALSE, warning=FALSE}
+#install.packages('gamlr')
+library(gamlr)
+spender <- gamlr(xweb, log(yspend), verb=TRUE)
 ```
 
 ```{r}
-spender <- gamlr(xweb, log(yspend), verb=TRUE)
-plot(spender) ## path plot
+plot(spender)
 ```
+
 
 ```{r}
 head(coef(spender)) ## the coefficients selected under AICc
@@ -128,8 +151,12 @@ head(coef(spender, select=which.min(BIC(spender)))) ## and BIC instead
 
 ```{r}
 cv.spender <- cv.gamlr(xweb, log(yspend), verb=TRUE)
+```
+
+```{r}
 plot(cv.spender)
 ```
+
 
 ```{r}
 plot(cv.spender$gamlr)
@@ -148,25 +175,7 @@ log(cv.spender$lambda.min)
 head(coef(cv.spender, select="min")) ## min cv selection
 ```
 
-
 ```{r}
-fitted(cv.spender)
-predict(cv.spender, select="min")
+#fitted(cv.spender)
+#predict(cv.spender, select="min")
 ```
-
-
-# Hockey Example
-
-```{r data}
-library(gamlr) # loads Matrix as well
-#help(hockey) # describes the hockey data and shows an example regression
-# each record corresponds to every goal scored, with a binary for home/away team
-data(hockey) # load the data
-head(goal)
-head(player)
-# player, team, goal hae the same number of rows
-dim(player)
-nrow(goal)
-dim(team)
-```
-
