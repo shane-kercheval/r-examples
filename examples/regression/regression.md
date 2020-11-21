@@ -4,10 +4,12 @@
     -   [Amount of Variation Explained](#amount-of-variation-explained)
     -   [Anova to Compare Models](#anova-to-compare-models)
     -   [Plot Assumptions](#plot-assumptions)
-    -   [Out of Sample R-Squared](#out-of-sample-r-squared)
     -   [Interpretation](#interpretation)
         -   [Elasticities (i.e. regression
             slopes)](#elasticities-i.e.regression-slopes)
+    -   [Regression Coefficient
+        Uncertainty](#regression-coefficient-uncertainty)
+    -   [Out of Sample R-Squared](#out-of-sample-r-squared)
 
 This data contains weekly prices and sales for three OJ brands, as well
 as an indicator `feature` showing whether each brand was advertised (in
@@ -320,6 +322,14 @@ SSE / SST
 
     ## [1] 0.5353939
 
+``` r
+# can also use the R2 function provided by Taddy in Business Data Science pg 72
+# which will work for models beyond linear/logistic regression
+R2(y=log(weekly_oj_sales$sales), pred = predicted_values, family = 'gaussian')
+```
+
+    ## [1] 0.5353939
+
 However, R-squared will go up every time you add a new feature. So you
 can artificially inflate this number.
 
@@ -358,7 +368,7 @@ anova_table %>%
 plot_regression_variance_explained(reg_results)
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-22-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 Anova to Compare Models
 -----------------------
@@ -405,7 +415,7 @@ plot(effects::effect(c('log(price)', 'brand'), reg_results))
 
     ## NOTE: log(price)brand is not a high-order term in the model
 
-![](regression_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-25-1.png)
 
 Plot Assumptions
 ----------------
@@ -414,7 +424,7 @@ Plot Assumptions
 plot(reg_results) 
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-25-1.png)![](regression_files/figure-markdown_github/unnamed-chunk-25-2.png)![](regression_files/figure-markdown_github/unnamed-chunk-25-3.png)![](regression_files/figure-markdown_github/unnamed-chunk-25-4.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-26-1.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-2.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-3.png)![](regression_files/figure-markdown_github/unnamed-chunk-26-4.png)
 
 ``` r
 plot_actual_vs_predicted(reg_results)
@@ -422,7 +432,7 @@ plot_actual_vs_predicted(reg_results)
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](regression_files/figure-markdown_github/unnamed-chunk-26-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-27-1.png)
 
 ``` r
 plot_residual_vs_predicted(model=reg_results)
@@ -430,7 +440,7 @@ plot_residual_vs_predicted(model=reg_results)
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](regression_files/figure-markdown_github/unnamed-chunk-27-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-28-1.png)
 
 ``` r
 plot_residual_vs_variable(model=reg_results,
@@ -440,12 +450,7 @@ plot_residual_vs_variable(model=reg_results,
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](regression_files/figure-markdown_github/unnamed-chunk-28-1.png)
-
-Out of Sample R-Squared
------------------------
-
-r
+![](regression_files/figure-markdown_github/unnamed-chunk-29-1.png)
 
 Interpretation
 --------------
@@ -490,7 +495,7 @@ weekly_oj_sales %>%
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](regression_files/figure-markdown_github/unnamed-chunk-30-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-31-1.png)
 
 ``` r
    # scale_x_continuous(breaks = breaks, labels = round(exp(breaks), 1))
@@ -542,7 +547,7 @@ weekly_oj_sales %>%
     geom_abline(slope = price_elasticity, intercept = tropicana_intercept, color='blue', size=1.5)
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-32-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-33-1.png)
 
 As mentioned, all brands in this model share that same elasticity
 (regression slope). “This is unrealistic: money is less of an issue for
@@ -588,7 +593,7 @@ weekly_oj_sales %>%
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](regression_files/figure-markdown_github/unnamed-chunk-34-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-35-1.png)
 
 ------------------------------------------------------------------------
 
@@ -613,6 +618,11 @@ format_elasticity <- function(.x) {
 dominicks_not_featured_price_elasticity <- format_elasticity(coef(reg_results)['log(price)'])
 dominicks_featured_price_elasticity <- format_elasticity(coef(reg_results)['log(price)'] + coef(reg_results)['log(price):featuredTRUE'])
 
+# relevant coefficients
+# 'log(price)'
+# 'log(price):brandminute.maid'
+# 'log(price):brandminute.maid:featuredTRUE'
+# 'log(price):featuredTRUE'
 minute_maid_not_featured_price_elasticity <- coef(reg_results)['log(price)'] + coef(reg_results)['log(price):brandminute.maid']
 minute_maid_featured_price_elasticity <- format_elasticity(minute_maid_not_featured_price_elasticity + 
                                                                coef(reg_results)['log(price):brandminute.maid:featuredTRUE'] +
@@ -631,10 +641,302 @@ get_regression_equation(reg_results)
     ## [1] "log(sales) = 10.41(Intercept) + -2.77log(price) + 0.05brandminute.maid + 0.71brandtropicana + 1.09featuredTRUE + 0.78log(price):brandminute.maid + 0.74log(price):brandtropicana + -0.47log(price):featuredTRUE + 1.17brandminute.maid:featuredTRUE + 0.79brandtropicana:featuredTRUE + -1.11log(price):brandminute.maid:featuredTRUE + -0.99log(price):brandtropicana:featuredTRUE + error"
 
 Now it no longer makes sense to talk about an overall elasticity number
-for each brand,, but rather elasticity per brand depending on
-`featured`.
+for each brand, but rather elasticity per brand depending on `featured`.
 
 | Featured | Dominick’s | Minute Maid | Tropicana |
 |----------|------------|-------------|-----------|
 | No       | `-2.8%`    | `-2%`       | `-2%`     |
 | Yes      | `-3.2%`    | `-3.6%`     | `-3.5%`   |
+
+``` r
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_smooth(method='lm') +
+    facet_wrap(~ featured)
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](regression_files/figure-markdown_github/unnamed-chunk-37-1.png)
+
+… “It could be that the demand curve is nonlinear” ….
+
+``` r
+weekly_oj_sales %>%
+    ggplot(aes(x=log(price), y=log(sales), color=brand)) +
+    geom_point(alpha=0.2) +
+    geom_smooth() +
+    facet_wrap(~ featured)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](regression_files/figure-markdown_github/unnamed-chunk-38-1.png)
+
+Regression Coefficient Uncertainty
+----------------------------------
+
+BDS pg. 58
+
+For example, “the usual standard errors will be wrong if there are
+heteroskedastic errors” or “if there is any dependence betweeen
+observations”.
+
+“The `AER` package can be used to obtain HC standard errors with little
+effort.” “It turns out that, for OLS, the parameter variance estimates
+you get from the nonparametric bootstrap actually approximated by the HC
+procedure. That is, you can use the HC standard errors as a fast
+alternative to bootstrapping for OLS.”
+
+Note that the HC procedure still assumes independence between
+observations. (Clustered Standard errors discussed in Chapter 5 of BDS
+can be used.)
+
+``` r
+library(AER)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## Registered S3 methods overwritten by 'car':
+    ##   method                          from
+    ##   influence.merMod                lme4
+    ##   cooks.distance.influence.merMod lme4
+    ##   dfbeta.influence.merMod         lme4
+    ##   dfbetas.influence.merMod        lme4
+
+    ## 
+    ## Attaching package: 'car'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     recode
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     some
+
+    ## Loading required package: lmtest
+
+    ## Loading required package: zoo
+
+    ## 
+    ## Attaching package: 'zoo'
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     as.Date, as.Date.numeric
+
+    ## Loading required package: sandwich
+
+    ## Loading required package: survival
+
+``` r
+reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
+coefficient_variances <- vcovHC(reg_results)
+coefficient_variances[1:5, 1:5]
+```
+
+    ##                    (Intercept)   log(price) brandminute.maid brandtropicana
+    ## (Intercept)       0.0008883832 -0.001376418    -0.0008883832  -0.0008883832
+    ## log(price)       -0.0013764177  0.002398970     0.0013764177   0.0013764177
+    ## brandminute.maid -0.0008883832  0.001376418     0.0019660527   0.0008883832
+    ## brandtropicana   -0.0008883832  0.001376418     0.0008883832   0.0028934356
+    ## featuredTRUE     -0.0008883832  0.001376418     0.0008883832   0.0008883832
+    ##                   featuredTRUE
+    ## (Intercept)      -0.0008883832
+    ## log(price)        0.0013764177
+    ## brandminute.maid  0.0008883832
+    ## brandtropicana    0.0008883832
+    ## featuredTRUE      0.0023737098
+
+“This is the sampling covariance matrix of the coefficients; variances
+are along the diagonal. To get the standard error, which is the sampling
+standard deviation, you need to take the square root of the diagnal
+variance estimate.” BDS pg 60
+
+``` r
+coefficient_names <- colnames(coefficient_variances) %>% rtools::rt_remove_val('(Intercept)')
+coefficient_starndard_errors <- map_dbl(coefficient_names, ~sqrt(coefficient_variances[ ., .]))
+names(coefficient_starndard_errors) <- coefficient_names
+coefficient_starndard_errors
+```
+
+    ##                               log(price) 
+    ##                               0.04897928 
+    ##                         brandminute.maid 
+    ##                               0.04434019 
+    ##                           brandtropicana 
+    ##                               0.05379066 
+    ##                             featuredTRUE 
+    ##                               0.04872073 
+    ##              log(price):brandminute.maid 
+    ##                               0.06235611 
+    ##                log(price):brandtropicana 
+    ##                               0.06362280 
+    ##                  log(price):featuredTRUE 
+    ##                               0.11397218 
+    ##            brandminute.maid:featuredTRUE 
+    ##                               0.09043499 
+    ##              brandtropicana:featuredTRUE 
+    ##                               0.09262110 
+    ## log(price):brandminute.maid:featuredTRUE 
+    ##                               0.15541262 
+    ##   log(price):brandtropicana:featuredTRUE 
+    ##                               0.14357603
+
+``` r
+reg_results %>%
+    tidy() %>%
+    filter(term != '(Intercept)') %>%
+    dplyr::select(term, `std.error`) %>%
+    rename(original_standard_errors = std.error) %>%
+    mutate(new_standard_errors = coefficient_starndard_errors,
+           perc_diff = percent((coefficient_starndard_errors - original_standard_errors) / original_standard_errors))
+```
+
+    ## # A tibble: 11 x 4
+    ##    term                        original_standard_er… new_standard_err… perc_diff
+    ##    <chr>                                       <dbl>             <dbl> <chr>    
+    ##  1 log(price)                                 0.0388            0.0490 26.14%   
+    ##  2 brandminute.maid                           0.0466            0.0443 -4.91%   
+    ##  3 brandtropicana                             0.0508            0.0538 5.89%    
+    ##  4 featuredTRUE                               0.0381            0.0487 27.86%   
+    ##  5 log(price):brandminute.maid                0.0614            0.0624 1.55%    
+    ##  6 log(price):brandtropicana                  0.0568            0.0636 11.94%   
+    ##  7 log(price):featuredTRUE                    0.0741            0.114  53.83%   
+    ##  8 brandminute.maid:featuredT…                0.0820            0.0904 10.35%   
+    ##  9 brandtropicana:featuredTRUE                0.0987            0.0926 -6.20%   
+    ## 10 log(price):brandminute.mai…                0.122             0.155  27.13%   
+    ## 11 log(price):brandtropicana:…                0.124             0.144  15.69%
+
+Out of Sample R-Squared
+-----------------------
+
+``` r
+reg_results <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales)
+(in_sample_r2 <- R2(y=log(weekly_oj_sales$sales), pred = predict(reg_results), family = 'gaussian'))
+```
+
+    ## [1] 0.5353939
+
+``` r
+num_records <- nrow(weekly_oj_sales)
+k_folds <- 10
+fold_id <- sample.int(k_folds, num_records, replace = TRUE)
+oos_validation <- data.frame(fold = 1:k_folds, r_squared_in_sample=rep(NA, k_folds), r_squared_out_sample=rep(NA, k_folds))
+
+for(fold in 1:k_folds) {
+    train_indices <- which(fold_id != fold)
+    
+    fold_model <- lm(log(sales) ~ log(price) * brand * featured, data = weekly_oj_sales[train_indices,])
+    
+    in_sample_actuals <- log(weekly_oj_sales[train_indices, ]$sales)
+    in_sample_predictions <- predict(fold_model)
+    
+    out_sample_actuals <- log(weekly_oj_sales[-train_indices,]$sales)
+    out_sample_predictions <- predict(fold_model, newdata = weekly_oj_sales[-train_indices,])
+    
+    oos_validation[fold, 'r_squared_in_sample'] <- R2(y=in_sample_actuals, pred=in_sample_predictions, family = 'gaussian')
+    oos_validation[fold, 'r_squared_out_sample'] <- R2(y=out_sample_actuals, pred=out_sample_predictions, family = 'gaussian')
+}
+oos_validation %>%
+    mutate(percent_diff = (r_squared_out_sample - r_squared_in_sample) / r_squared_in_sample)
+```
+
+    ##    fold r_squared_in_sample r_squared_out_sample percent_diff
+    ## 1     1           0.5371289            0.5192799 -0.033230279
+    ## 2     2           0.5345402            0.5428123  0.015475314
+    ## 3     3           0.5385905            0.5043855 -0.063508329
+    ## 4     4           0.5353722            0.5351422 -0.000429575
+    ## 5     5           0.5351627            0.5370490  0.003524622
+    ## 6     6           0.5403588            0.4871844 -0.098405832
+    ## 7     7           0.5336470            0.5496953  0.030072898
+    ## 8     8           0.5312011            0.5695607  0.072212891
+    ## 9     9           0.5349066            0.5393792  0.008361387
+    ## 10   10           0.5332898            0.5545497  0.039865633
+
+``` r
+mean(oos_validation$r_squared_out_sample)
+```
+
+    ## [1] 0.5339038
+
+``` r
+paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
+```
+
+    ## [1] "-0.28%"
+
+This isn’t too bad actually, lets look at an example that is much worse
+(from BDS pg 72)
+
+``` r
+semi_conductors <- read.csv('data/semiconductor.csv')
+reg_results <- glm(FAIL ~ ., data=semi_conductors, family='binomial')
+```
+
+    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+``` r
+(in_sample_r2 <- R2(y=semi_conductors$FAIL, pred = predict(reg_results, type='response'), family = 'binomial'))
+```
+
+    ## [1] 0.5621432
+
+``` r
+num_records <- nrow(semi_conductors)
+k_folds <- 10
+fold_id <- sample.int(k_folds, num_records, replace = TRUE)
+oos_validation <- data.frame(fold = 1:k_folds, r_squared_in_sample=rep(NA, k_folds), r_squared_out_sample=rep(NA, k_folds))
+
+for(fold in 1:k_folds) {
+    train_indices <- which(fold_id != fold)
+    
+    fold_model <- suppressWarnings(glm(FAIL ~ ., data=semi_conductors[train_indices, ], family='binomial'))
+    
+    in_sample_actuals <- semi_conductors[train_indices, ]$FAIL
+    in_sample_predictions <- predict(fold_model, type='response')
+    
+    out_sample_actuals <- semi_conductors[-train_indices,]$FAIL
+    out_sample_predictions <- predict(fold_model, newdata = semi_conductors[-train_indices,], type='response')
+    
+    oos_validation[fold, 'r_squared_in_sample'] <- R2(y=in_sample_actuals, pred=in_sample_predictions, family = 'binomial')
+    oos_validation[fold, 'r_squared_out_sample'] <- R2(y=out_sample_actuals, pred=out_sample_predictions, family = 'binomial')
+}
+oos_validation %>%
+    mutate(percent_diff = (r_squared_out_sample - r_squared_in_sample) / r_squared_in_sample)
+```
+
+    ##    fold r_squared_in_sample r_squared_out_sample percent_diff
+    ## 1     1           0.5682969            -1.760973    -4.098684
+    ## 2     2           0.6040115            -1.363229    -3.256959
+    ## 3     3           0.6499188            -5.439187    -9.369025
+    ## 4     4           0.6481006            -2.870245    -5.428703
+    ## 5     5          -6.0407406           -13.263318     1.195644
+    ## 6     6           1.0000000           -22.727405   -23.727405
+    ## 7     7           0.7048856           -10.263166   -15.560045
+    ## 8     8           0.6212657            -2.921801    -5.702981
+    ## 9     9           0.6422018            -2.760530    -5.298540
+    ## 10   10           0.6066413            -2.595711    -5.278824
+
+``` r
+in_sample_r2
+```
+
+    ## [1] 0.5621432
+
+``` r
+mean(oos_validation$r_squared_out_sample)
+```
+
+    ## [1] -6.596556
+
+``` r
+paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
+```
+
+    ## [1] "-1273.47%"
