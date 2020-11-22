@@ -286,4 +286,3 @@ reg_results %>%
     tidy() %>%
     filter(!str_detect(term, 'dma'))
 ```
-```
