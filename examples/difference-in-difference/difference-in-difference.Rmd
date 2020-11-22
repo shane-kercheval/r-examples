@@ -106,7 +106,7 @@ sem %>%
     scale_x_date() +
     scale_y_continuous(labels=rt_pretty_axes) +
     geom_smooth(method='lm', aes(group=treatment_period)) +
-    labs(title = "Log Difference of Total Average (Treatment - Control)",
+    labs(title = "Log Difference of Average Average (Treatment - Control)",
          subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
          y = "Log Difference (Treatment - Control)",
          x = 'Date')
@@ -128,7 +128,7 @@ sem %>%
     scale_x_date() +
     scale_y_continuous(labels=rt_pretty_axes) +
     geom_smooth(method='lm', aes(group=treatment_period)) +
-    labs(title = "Difference of Total Revenue (Treatment - Control)",
+    labs(title = "Difference of Average Revenue (Treatment - Control)",
          subtitle = "Note: as compared with log difference, no change in trend is found,\nbecause we are comparing a change within a smaller group to no change in a larger group\n(i.e. additive difference), whereas we want to know the multiplicative difference.",
          y = "Difference (Treatment - Control)",
          x = 'Date')
