@@ -44,7 +44,9 @@ sem <- sem %>%
 head(sem)
 ```
 
-```{r}
+Here is the overall data, because the treatment is much smaller in total revenue, it is difficult to see if there is a noticable drop after Adwords was shut off.
+
+```{r message=FALSE, warning=FALSE}
 sem %>%
     count(date, variant, wt=revenue, name='revenue') %>%
     ggplot(aes(x=date, y=revenue, color=variant, group=variant)) +
@@ -52,11 +54,14 @@ sem %>%
     geom_line() +
     scale_x_date() +
     scale_y_continuous(labels=rt_pretty_axes) +
-    geom_smooth()
+    geom_smooth() +
+    labs(title="Daily Revenue",
+         subtitle="The 'Control' are the DMAs where adwords will be left on.\nThe 'Treatment' are the DMAs where adwords is turned off.\nWe could expect a drop in the Treatment as compared to the Control.")
 ```
 
+Using log() makes it easier to visualize.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 sem %>%
     count(date, variant, wt=revenue, name='revenue') %>%
     ggplot(aes(x=date, y=log(revenue), color=variant, group=variant)) +
@@ -67,12 +72,12 @@ sem %>%
     geom_smooth()
 ```
 
-> Here we will focus on differences in log revenue because we anticipate that the treatment and control groups are related on percentage scale. BDS pg 143.
+> Here we will focus on differences in `log` revenue because we anticipate that the treatment and control groups are related on percentage scale. BDS pg 143.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 sem %>%
     group_by(date) %>%
-    summarise(difference = log(sum(revenue[variant == 'Treatment'])) - log(sum(revenue[variant == 'Control']))) %>%
+    summarise(difference = log(mean(revenue[variant == 'Treatment'])) - log(mean(revenue[variant == 'Control']))) %>%
     ungroup() %>%
     ggplot(aes(x=date, y=difference)) +
     geom_vline(xintercept = ymd('2012-05-22')) +
@@ -80,7 +85,26 @@ sem %>%
     scale_x_date() +
     scale_y_continuous(labels=rt_pretty_axes) +
     geom_smooth() +
-    labs(title = "Log Difference of Total Revenue (Treatment - Control)",
+    labs(title = "Log Difference of Average Revenue (Treatment - Control)",
+         subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
+         y = "Log Difference (Treatment - Control)",
+         x = 'Date')
+```
+
+Same but using separate `lm` on before vs. after.
+
+```{r message=FALSE, warning=FALSE}
+sem %>%
+    group_by(date, treatment_period) %>%
+    summarise(difference = log(mean(revenue[variant == 'Treatment'])) - log(mean(revenue[variant == 'Control']))) %>%
+    ungroup() %>%
+    ggplot(aes(x=date, y=difference)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth(method='lm', aes(group=treatment_period)) +
+    labs(title = "Log Difference of Total Average (Treatment - Control)",
          subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
          y = "Log Difference (Treatment - Control)",
          x = 'Date')
@@ -88,12 +112,12 @@ sem %>%
 
 ## Quick Refresher & Example with Logs
 
-If we would not have used log differences, here is what we would have had
+If we would not have used log differences, here is what we would have had. The difference is dominated by the larger group (control).
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 sem %>%
-    group_by(date) %>%
-    summarise(difference = sum(revenue[variant == 'Treatment']) - sum(revenue[variant == 'Control'])) %>%
+    group_by(date, treatment_period) %>%
+    summarise(difference = mean(revenue[variant == 'Treatment']) - mean(revenue[variant == 'Control'])) %>%
     ungroup() %>%
     #pivot_longer(-date, names_to=)
     ggplot(aes(x=date, y=difference)) +
@@ -101,7 +125,7 @@ sem %>%
     geom_line() +
     scale_x_date() +
     scale_y_continuous(labels=rt_pretty_axes) +
-    geom_smooth() +
+    geom_smooth(method='lm', aes(group=treatment_period)) +
     labs(title = "Difference of Total Revenue (Treatment - Control)",
          subtitle = "Note: as compared with log difference, no change in trend is found,\nbecause we are comparing a change within a smaller group to no change in a larger group\n(i.e. additive difference), whereas we want to know the multiplicative difference.",
          y = "Difference (Treatment - Control)",
@@ -176,80 +200,90 @@ summary(reg_results)
 ```
 
 ```{r}
-reg_results <- lm(y ~ treatment_period * variant, data=sem_per_dma)
-summary(reg_results)
-```
-
-```{r}
 get_regression_equation(reg_results, .round_by = 5)
 ```
 
-
 ```{r}
-
-## quick summary: total revenue by date and treatment/controls
-totalrev <- tapply(sem$revenue, sem[,c("date","search.stays.on")], sum)
-## for plotting, we'll convert the row `dates' to R Date class
-## see http://www.statmethods.net/input/dates.html for format codes.
-asdate <- as.Date(rownames(totalrev), format="%d-%b-%y")
-## order everything by date
-totalrev <- totalrev[order(asdate),]
-asdate <- sort(asdate)
-
-## plot the revenues by group
-plot(asdate, totalrev[,'0'], type="l", bty="n", col=2,
-	ylim=range(totalrev), log="y", xlab="", ylab="revenue")
-lines(asdate, totalrev[,'1'], type="l")
-legend("right",col=c(1,2), lwd=2, bty="n",
-	legend=c("control (search stays on)", "treatment (search goes off)"))
-abline(v=as.Date("2012-05-22"), lty=2)
-## and the difference between groups
-plot(asdate, log(totalrev[,'1'])-log(totalrev[,'0']), 
-	type="l", bty="n", col=3,lwd=2, xlab="", 
-	ylab="log(rev_control) - log(rev_treat)")
-abline(v=as.Date("2012-05-22"), lty=2,lwd=2)
-
-######  Actual Analysis #######
-## we'll make use of the data.table package
-library(data.table)
-sem <- as.data.table(sem)
-semavg <- sem[, 
-			list(d=mean(1-search.stays.on), y=mean(log(revenue))), 
-			by=c("dma","treatment_period")]
-setnames(semavg, "treatment_period", "t") # names to match slides
-semavg <- as.data.frame(semavg)
-
-# same thing with dplyr
-sem %>%
-    rename(t = treatment_period, d = search.stays.on) %>%
-    mutate(d = 1 - d) %>%
-    group_by(dma, t, d) %>%
-    summarise(y = mean(log(revenue))) %>%
-    as.data.frame() %>%
-    head(10)
-semavg %>% arrange(dma, t) %>% head(10)
-
-library(AER)
-
-semreg <- glm(y ~ d*t, data=semavg)
-summary(semreg)
-sqrt(vcovCL(semreg, cluster=semavg$dma)['d:t','d:t'])
-
-head(semavg)
-dmareg <- glm(y ~ dma + d*t, data=semavg)
-summary(dmareg)$coef["d:t",]
-
-## just to confirm: 
-##   we get the same thing just viewing this as a sample of n_dma differences.
-r <- tapply(semavg$y, semavg$dma, function(y) y[2]-y[1])
-d <- semavg[match(names(r),semavg$dma),"d"]  # get corresponding d
-rbar <- tapply(r,d,mean)
-rbarvar <- tapply(r, d, function(r) var(r)/length(r))
-rbar[2]-rbar[1]
-sqrt(sum(rbarvar))
-
-
-
-
+(interaction_coeff <- coefficients(reg_results)['treatment_period:variantTreatment'])
+(interaction_coeff <- paste0(round(interaction_coeff * 100, 2), '%'))
 ```
 
+Intercept coefficient is the average log(revenue) of control before applying treatment 
+
+```{r}
+sem_per_dma %>%
+    filter(variant == 'Control' & treatment_period == 0) %>%
+    pull(y) %>%
+    mean()
+ coefficients(reg_results)['(Intercept)']
+```
+
+The coefficient for `treatment_period` is the predicted difference before/after for the `control`
+
+```{r}
+sem_per_dma %>%
+    filter(variant == 'Control') %>%
+    group_by(treatment_period) %>%
+    summarise(mean_y = mean(y)) %>%
+    ungroup() %>%
+    summarise(diff = mean_y[treatment_period == 1] - mean_y[treatment_period == 0]) %>%
+    pull(diff)
+ coefficients(reg_results)['treatment_period']
+```
+
+The coefficient for `treatment_period` is the predicted difference before/after for the `control`
+
+```{r}
+sem_per_dma %>%
+    filter(variant == 'Control') %>%
+    group_by(treatment_period) %>%
+    summarise(mean_y = mean(y)) %>%
+    ungroup() %>%
+    summarise(diff = mean_y[treatment_period == 1] - mean_y[treatment_period == 0]) %>%
+    pull(diff)
+ coefficients(reg_results)['treatment_period']
+```
+
+The coefficient for `variantTreatment` is the predicted difference between the control & variant during the treatment_period of 0.
+
+```{r}
+sem_per_dma %>%
+    filter(treatment_period == 0) %>%
+    group_by(variant) %>%
+    summarise(mean_y = mean(y)) %>%
+    ungroup() %>%
+    summarise(diff = mean_y[variant == 'Treatment'] - mean_y[variant == 'Control']) %>%
+    pull(diff)
+ coefficients(reg_results)['variantTreatment']
+```
+
+The coefficient for `treatment_period:variantTreatment`, is the difference over tim ein the average difference of (average) revenue in the two groups.
+
+```{r}
+sem %>%
+    group_by(treatment_period, variant) %>%
+    summarise(y = mean(log(revenue))) %>%
+    ungroup() %>%
+    summarise(diff = (y[variant == 'Treatment' & treatment_period == 1] -
+                      y[variant == 'Control' & treatment_period == 1]) - 
+                     (y[variant == 'Treatment' & treatment_period == 0] -
+                      y[variant == 'Control' & treatment_period == 0]))
+```
+
+```{r}
+coefficients(reg_results)['treatment_period:variantTreatment']
+```
+
+```{r}
+summary(reg_results)
+```
+
+> Note that these rwos of data do not satisfy the standard independence assumption: each two observations on the same DMA will be correlated. ... you can use clustered starndard error, or you can get a similar result by controlling for the DMA-specific revenue levels in the regression equation. BDS pg 144-145
+
+```{r}
+reg_results <- lm(y ~ dma + treatment_period * variant, data=sem_per_dma)
+reg_results %>%
+    tidy() %>%
+    filter(!str_detect(term, 'dma'))
+```
+```
