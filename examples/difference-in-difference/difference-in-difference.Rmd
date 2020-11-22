@@ -23,6 +23,8 @@ library(knitr)
 options(scipen=999) # non-scientific notation
 options(dplyr.summarise.inform=F)
 
+source('../regression/regression_helpers.R')
+
 theme_set(theme_light())
 
 calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
@@ -194,6 +196,8 @@ sem_per_dma <- sem %>%
 head(sem_per_dma)
 ```
 
+## Create Model
+
 ```{r}
 reg_results <- lm(y ~ treatment_period * variant, data=sem_per_dma)
 summary(reg_results)
@@ -207,6 +211,8 @@ get_regression_equation(reg_results, .round_by = 5)
 (interaction_coeff <- coefficients(reg_results)['treatment_period:variantTreatment'])
 (interaction_coeff <- paste0(round(interaction_coeff * 100, 2), '%'))
 ```
+
+## Coefficient interpretation
 
 Intercept coefficient is the average log(revenue) of control before applying treatment 
 
@@ -273,6 +279,8 @@ sem %>%
 ```{r}
 coefficients(reg_results)['treatment_period:variantTreatment']
 ```
+
+## Controlling for DMA-sepciic revenue levels
 
 ```{r}
 summary(reg_results)
