@@ -47,7 +47,6 @@ head(descr)
 #head(prgm)
 #head(s12)
 
-
 # nicely organized, one row per person
 stopifnot(all(s12$person_id == descr$person_id))
 stopifnot(all(s12$person_id == prgm$person_id))
