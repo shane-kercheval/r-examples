@@ -1,0 +1,142 @@
+---
+title: ""
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+library(rtools)
+# library(scales)
+# library(stringr)
+library(lubridate)
+# library(ggrepel)
+# library(forecast)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+source('../regression/regression_helpers.R')
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+# Instrumental Variables
+
+> It is common that you wan to know the treatment effect for a policy that has not been directly randomirandom_errored but rather has been indirectly randomized through experiments on variables that influence policy selection. These indirect randomizers, or upstream sources of randomization, are called instrumental variables (IVs). They form the basis for much of applied econometrics. (Business Data Science pg 153.)
+
+> The single IV is the randomization group assignment (whether or not a subject has access to the drug). You are able to take advantage of this randomization by tracking how it changes the probability that a user takes the drug. AN IV analysis models how this change in probabilities affecs the patient outcomes (e.g. survival or other health metrics). By connecting the response to portion of treatment that is directly controlled by randomization (i.e, the treatment probabilities dictated by the IV), you can recover how the reponse changes that randomized component of treatment status. This allows you to model counterfactuals dependent upon whether the patient actually takes the drug. (BDS pg 153)
+
+## Demnad Analysis
+
+Example in Business Data Science pg 155
+
+Consider a simple linear demand system where demand shocks `e` and prices `p` increase and decrase sales.
+
+Demand shocks will be random and independent.
+
+```{r}
+sales_simulation <- function(demand_shocks, prices){
+	y <- 2 + (10 * demand_shocks - 3 * prices) + rnorm(length(demand_shocks),0,.1)
+	y[y < 0] <- 0
+	return(y)
+}
+
+demand_shocks <- rgamma(100,1,1)
+random_error <- rgamma(100,1,1)
+```
+
+```{r}
+hist(demand_shocks)
+```
+
+We will create two separate price sets.
+
+In the first "observed" case (which simulates the type of pattern and emand curve you would observe in "real" data), imagine that you have past data from a price setter who was able to execute targeted price discrimination - they charged prices that were positively correlated with the demand shocks.
+
+i.e. when they observed a demand increased, they manually increased the price, accordingly; meaning that the price is being affected
+by demand (and price still affects sales), and demand also directly affects sales.
+
+i.e.
+
+demand -> price -> sales
+demand -> sales
+
+This is reflected in the the equations below (price is set to increase with demand (and a litte random noise)). Notice in the next equation, `prices_counterfactual` does NOT depend on price.
+
+```{r}
+prices_observed <- demand_shocks + random_error # i.e. price increase with demand
+sales_observed <- sales_simulation(demand_shocks, prices_observed) # sales are a function of demand and price
+```
+
+```{r eval=FALSE, include=FALSE}
+demand_shocks[1]
+random_error[1]
+prices_observed[1]
+sales_observed[1]
+```
+
+This is what you would see in real data.
+
+> If you regress sales on prices, you will find a positive relationship: sales increase with higher prices. This is the economist's dreaded "upward sloping demand curve." Such results are garbage, they don't describe any real economic system. (BDS pg 155)
+
+```{r message=FALSE, warning=FALSE}
+data.frame(prices_observed, sales_observed)  %>%
+    ggplot(aes(x=prices_observed, y=sales_observed)) +
+    geom_point() +
+    geom_smooth(method='lm')
+```
+
+```{r}
+# in the second cae, imagine you were able to run an experiment where prices are completely randomized
+prices_counterfactual <- rgamma(100,2,1)  # here, prices do not depend on demand, like a random experiment
+# same sales function
+sales_counterfactual <- sales_simulation(demand_shocks, prices_counterfactual)  # sales are a function of demand and price
+```
+
+```{r message=FALSE, warning=FALSE}
+data.frame(prices_counterfactual, sales_counterfactual)  %>%
+    ggplot(aes(x=prices_counterfactual, y=sales_counterfactual)) +
+    geom_point() +
+    geom_smooth(method='lm')
+```
+
+This is a simulation of the type of demand curve we would expected to find if we were to set random prices and observe natural supply demand (sales decrease as prices increase).
+
+The IV used is the `random_error` i.e. we were able to reocver the correct price/sales relationship by taking advantage of the random variation in prices. In an actual IV analysis, we won't have access to the random error, but hope to take advantage of the random variation through a different variable.
+
+```{r}
+first_stage_regression <- lm(prices_observed ~ random_error)
+price_predictions <- predict(first_stage_regression, data.frame(random_error=random_error))
+lin2SLS <- lm(sales_observed ~ price_predictions)
+```
+
+```{r message=FALSE, warning=FALSE}
+data.frame(prices_observed, sales_observed)  %>%
+    ggplot(aes(x=prices_observed, y=sales_observed)) +
+    geom_point() +
+    geom_smooth(method='lm', se = FALSE) +
+    geom_smooth(data=data.frame(prices_counterfactual, sales_counterfactual),
+                aes(x=prices_counterfactual, y=sales_counterfactual), method='lm', se = FALSE, color='orange') +
+    geom_abline(aes(intercept = lin2SLS$coefficients['(Intercept)'],
+                    slope = lin2SLS$coefficients['price_predictions']),
+                color = 'red') +
+    geom_text(aes(x=5.5, y=19, label='OLS (Observed)'), color='blue') +
+    geom_text(aes(x=3, y=7, label='OLS (Counterfactual)'), color='orange') +
+    geom_text(aes(x=3, y=3, label='2SLS (Observed)'), color='red')
+```
+
+## 
+
