@@ -121,6 +121,7 @@ The IV used is the `random_error` i.e. we were able to reocver the correct price
 first_stage_regression <- lm(prices_observed ~ random_error)
 price_predictions <- predict(first_stage_regression, data.frame(random_error=random_error))
 lin2SLS <- lm(sales_observed ~ price_predictions)
+summary(lin2SLS)
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -138,5 +139,65 @@ data.frame(prices_observed, sales_observed)  %>%
     geom_text(aes(x=3, y=3, label='2SLS (Observed)'), color='red')
 ```
 
-## 
+Can use `AER::ivreg`
+
+```{r}
+summary(AER::ivreg(sales_observed ~ prices_observed | random_error))
+```
+
+Compare to manual.
+
+```{r}
+summary(lin2SLS)
+```
+
+## Oregon Insurance Experiment
+
+```{r}
+library(foreign)
+
+descr <- read.dta("../average-treatment-effects-regression/data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_descriptive_vars.dta")
+prgm <- read.dta("../average-treatment-effects-regression/data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_stateprograms_vars.dta")
+s12 <- read.dta("../average-treatment-effects-regression/data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_survey12m_vars.dta")
+
+#head(descr)
+#head(prgm)
+#head(s12)
+
+# nicely organized, one row per person
+stopifnot(all(s12$person_id == descr$person_id))
+stopifnot(all(s12$person_id == prgm$person_id))
+
+P <- descr[,c("person_id","household_id", "numhh_list")]
+P <- P %>% rename(numhh = numhh_list)
+P$medicaid <- as.numeric(prgm[,"ohp_all_ever_firstn_30sep2009"]=="Enrolled")
+P$selected <- as.numeric(descr[,"treatment"]=="Selected")
+P$weight <- s12$weight_12m
+P$doc_any_12m <- as.numeric(s12$doc_any_12m == "Yes")
+levels(P$numhh) <- c("1","2","3+")
+
+P <- P[complete.cases(P),]
+head(P)
+```
+
+What if we just stuck everything in a regression?
+
+```{r}
+summary(lm(doc_any_12m ~ medicaid + selected + numhh, data=P))
+```
+
+```{r}
+stage1 <- lm(medicaid ~ selected + numhh, data=P)
+phat <- predict(stage1, newdata = P)
+stage2 <- lm(doc_any_12m ~ phat + numhh, data=P, x=TRUE) # WTF is x=TRUE; doesn't change anything that i can see
+summary(stage2)
+```
+
+```{r}
+summary(AER::ivreg(doc_any_12m ~ medicaid + numhh | selected + numhh, data=P))
+```
+
+Great artical: https://blog.twitch.tv/en/2017/06/30/two-stage-least-squares-for-a-b-tests-669d07f904f7/
+
+
 
