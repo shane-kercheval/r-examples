@@ -33,7 +33,125 @@ plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
-```{r}
+# Linear Treatment Effects (LTE)
 
+> when `x` is simple and low dimensional, say with dimension p << n you don't nee dot worry about etimating the second line of Equation 6.2. You just include confounders in the regression. Problems start arising only when you have so many variables to control for that the assumption of n >> p no longer applies. However, it is almost always the case the you have many confounders. The only reason that analysts are able to use low-dimensional OLS is because they have **selected** a smaller dinsion. Almost all treatment effect estimation problems are high dimensional problems when viewed from a high level.(Business Data Science pg 166)
+
+## Example
+
+```{r}
+# abortion.R in BSD repo, modified to be readable
+# https://github.com/TaddyLab/BDS
+
+####### donohue and levitt 2001/2008: abortion and crime
+
+## example reading non csv data: this is a dump from STATA
+## skip says skip the first line of the file, sep="/t" says 'tab separated'
+data <- read.table("data/abortion.dat", skip=1, sep="\t")
+names(data) <- c("state","year","pop","y_viol","y_prop","y_murd",
+	"a_murd","a_viol","a_prop",'prison','police',
+	'ur','inc','pov','afdc','gun','beer')
+
+## prison: log of lagged prisoners per capita
+## police: the log of lagged police per capita
+## ur: the unemployment rate
+## inc: per-capita income
+## pov: the poerty rate
+## AFDC: generosity at year t-15
+## gun: dummy for concealed weapons law
+## beer: beer consumption per capita 
+
+data <- data[!(data$state%in%c(2, 9, 12)), ] # AK, DC, HA are strange places
+data <- data[data$year > 84 & data$year < 98, ] # incomplete data outside these years
+data$pop <- log(data$pop)
+time_trend <- data$year - 85
+state_fixed_effects <- factor(data$state) ## the states are numbered alphabetically
+
+controls <- data.frame(data[, c(3, 10:17)])
+## y is de-trended log crime rate, a is as described below
+## note we also have violent and property crime versions
+murder_rate <- data$y_murd
+abortion_rate <- data$a_murd  # abortion rate
+
+## The abortion 'a_' variables are weighted average of abortion rates where
+## weights are determined by the fraction of the type of crime committed by
+## various age groups. For example, if 60% of violent crime were committed by 18
+## year olds and 40% were committed by 19 year olds in state i, the abortion rate
+## for violent crime at time t in state i would be constructed as .6 times the
+## abortion rate in state i at time t − 18 plus .4 times the abortion rate in
+## state i at time t − 19. See Donohue and Levitt (2001) for further detail.
 ```
 
+```{r}
+## we'll just look at murder
+## note for convenience here I've made y,d,t, global: they are not in controls.
+# `.` is controls
+## we'll just look at murder
+## note for convenience here I've made y,d,t, global: they are not in controls.
+reg_model <- orig <- glm(murder_rate ~ abortion_rate + time_trend + state_fixed_effects + ., data=controls)
+reg_model %>%
+    tidy() %>%
+    filter(!str_detect(term, 'state_'))
+```
+
+This is actually **logged** murder rate which means that one more abortion per ten live births (the units of abortion-rate) leads to a 
+
+```{r}
+summary(reg_model)$coef['abortion_rate', ]
+rt_pretty_percent(1 - exp(summary(reg_model)$coef['abortion_rate', 'Estimate']))
+```
+
+Are skeptical? You probably should be.
+
+
+hmm.. i don't get the author's use of cell phones **combined** with abortion rates. Cell phones and abortion rates, from Figure 6.1 are highly correlated, when he does `glm(y ~ d + t + phone*s + .^2)` he's introducing multicollinearity which can make coefficient estimates change randomly/wildly. And then he goes on to use this in the LTE model. So I get why he is substituting abortions with other things to show that the results can't be trusted, but why then include it in the rest of the models? It would be like if I created abortion_rate2 which is highly correlated with abortion rate, it will fuck up the model.
+
+```{r}
+cell <- read.csv("data/us_cellphone.csv")
+# center on 1985 and scale by 1997-1985
+cellrate <- 5*cell[,2]/(1000*cell[,3]) 
+cor(cellrate, tapply(abortion_rate, time_trend, mean))
+```
+
+```{r}
+set.seed(11111)
+abortion_rate2 <- abortion_rate + runif(length(time_trend), min=-0.02, max=0.02)
+cor(abortion_rate, abortion_rate2)
+```
+
+
+```{r}
+new_model <- glm(murder_rate ~ abortion_rate + time_trend + abortion_rate2*state_fixed_effects + .^2, data=controls)
+new_model %>%
+    tidy() %>%
+    filter(!str_detect(term, 'state_'))
+```
+
+What if we do the same LTE procedure but without `phone` variable. 
+
+
+First, start with 'naive' lasso.
+
+```{r}
+library(gamlr)
+x <- sparse.model.matrix(~ time_trend + state_fixed_effects + .^2, controls)[, -1]
+naive <- cv.gamlr(cbind(abortion_rate, x), murder_rate)
+coef(naive)["abortion_rate",]
+```
+
+Now, LTE lasso.
+
+```{r}
+treat <- cv.gamlr(x=x, y=abortion_rate, lmr=1e-5)
+#plot(treat)
+abortion_predictions <- drop(predict(treat, x, type='response'))
+cor(abortion_rate, abortion_predictions) # less than the .987 that the model with cell_phones gave, which is good because it apparently means that there is a little independent movement of abortion rates to measure as effecting crime.
+```
+
+```{r}
+#free=2 so that we can include abortion_predictions without penalty.
+casual <- gamlr(x=cbind(abortion_rate, abortion_predictions, x), y=murder_rate, free=2, lmr=1e-4)
+coef(casual)['abortion_rate', ]
+```
+
+even worse.. not sure.
