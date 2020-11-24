@@ -198,6 +198,3 @@ summary(AER::ivreg(doc_any_12m ~ medicaid + numhh | selected + numhh, data=P))
 ```
 
 Great artical: https://blog.twitch.tv/en/2017/06/30/two-stage-least-squares-for-a-b-tests-669d07f904f7/
-
-
-
