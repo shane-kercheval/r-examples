@@ -270,6 +270,26 @@ plot_residual_vs_variable(model=reg_results,
                           dataset = weekly_oj_sales %>% mutate(`log(price)` = log(price)))
 ```
 
+## Residuals
+
+Residuals contain infomratino that the model doesn't pick up.
+
+Example
+
+```{r}
+price_regression <- lm(log(price) ~ brand, data=weekly_oj_sales)
+# the residuals are log(weekly_oj_sales$price) - predict(price_regression, newdata=weekly_oj_sales)
+price_residuals <- residuals(price_regression)
+# remember, residuals contain the information
+coef(lm(log(sales) ~ price_residuals, data=weekly_oj_sales))['price_residuals']
+```
+
+Since residuals contain the information tha the model doesn't pick up, these residuals contain price information after removing the effects of brand. If we run a regression on `log(sales)` using these residuals, the coefficient should match what we would get for the price coefficient if we ran a regression predicting `log(sales)` from `log(price)` and `brand`, since both refer to `log(price)`'s effect on `log(sales)` after removing the effects of `brand` i.e. "controlling for `brand`.
+
+```{r}
+coef(lm(log(sales) ~ log(price) + brand, data=weekly_oj_sales))['log(price)']
+```
+
 ## Interpretation (OJ example)
 
 ### Elasticities (i.e. regression slopes)

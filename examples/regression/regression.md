@@ -5,6 +5,7 @@
     -   [Anova to Compare Models](#anova-to-compare-models)
     -   [Plotting Effects](#plotting-effects)
     -   [Plot Assumptions](#plot-assumptions)
+    -   [Residuals](#residuals)
     -   [Interpretation (OJ example)](#interpretation-oj-example)
         -   [Elasticities (i.e. regression
             slopes)](#elasticities-i.e.regression-slopes)
@@ -443,6 +444,39 @@ plot_residual_vs_variable(model=reg_results,
 
 ![](regression_files/figure-markdown_github/unnamed-chunk-29-1.png)
 
+Residuals
+---------
+
+Residuals contain infomratino that the model doesn’t pick up.
+
+Example
+
+``` r
+price_regression <- lm(log(price) ~ brand, data=weekly_oj_sales)
+# the residuals are log(weekly_oj_sales$price) - predict(price_regression, newdata=weekly_oj_sales)
+price_residuals <- residuals(price_regression)
+# remember, residuals contain the information
+coef(lm(log(sales) ~ price_residuals, data=weekly_oj_sales))['price_residuals']
+```
+
+    ## price_residuals 
+    ##       -3.138691
+
+Since residuals contain the information tha the model doesn’t pick up,
+these residuals contain price information after removing the effects of
+brand. If we run a regression on `log(sales)` using these residuals, the
+coefficient should match what we would get for the price coefficient if
+we ran a regression predicting `log(sales)` from `log(price)` and
+`brand`, since both refer to `log(price)`’s effect on `log(sales)` after
+removing the effects of `brand` i.e. "controlling for `brand`.
+
+``` r
+coef(lm(log(sales) ~ log(price) + brand, data=weekly_oj_sales))['log(price)']
+```
+
+    ## log(price) 
+    ##  -3.138691
+
 Interpretation (OJ example)
 ---------------------------
 
@@ -483,7 +517,7 @@ weekly_oj_sales %>%
     geom_smooth(method='lm')
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-31-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-33-1.png)
 
 ------------------------------------------------------------------------
 
@@ -537,7 +571,7 @@ weekly_oj_sales %>%
     geom_abline(slope = price_elasticity, intercept = tropicana_intercept, color='blue', size=1.5)
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-33-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-35-1.png)
 
 As mentioned, all brands in this model share that same elasticity
 (regression slope). “This is unrealistic: money is less of an issue for
@@ -583,7 +617,7 @@ weekly_oj_sales %>%
     geom_smooth(method='lm')
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-35-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-37-1.png)
 
 ------------------------------------------------------------------------
 
@@ -646,7 +680,7 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-37-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-39-1.png)
 
 … “It could be that the demand curve is nonlinear” ….
 
@@ -658,7 +692,7 @@ weekly_oj_sales %>%
     facet_wrap(~ featured)
 ```
 
-![](regression_files/figure-markdown_github/unnamed-chunk-38-1.png)
+![](regression_files/figure-markdown_github/unnamed-chunk-40-1.png)
 
 Regression Coefficient Uncertainty
 ----------------------------------
@@ -794,22 +828,22 @@ oos_validation %>%
 ```
 
     ##    fold r_squared_in_sample r_squared_out_sample percent_diff
-    ## 1     1           0.5356775            0.5325705 -0.005800236
-    ## 2     2           0.5359964            0.5296224 -0.011891863
-    ## 3     3           0.5328248            0.5573454  0.046019981
-    ## 4     4           0.5364556            0.5252595 -0.020870500
-    ## 5     5           0.5360158            0.5293132 -0.012504568
-    ## 6     6           0.5371512            0.5187154 -0.034321491
-    ## 7     7           0.5366591            0.5234184 -0.024672478
-    ## 8     8           0.5317914            0.5669183  0.066053968
-    ## 9     9           0.5369168            0.5216144 -0.028500447
-    ## 10   10           0.5347219            0.5410574  0.011848134
+    ## 1     1           0.5317954            0.5657359  0.063822476
+    ## 2     2           0.5341069            0.5466151  0.023418860
+    ## 3     3           0.5361390            0.5279182 -0.015333333
+    ## 4     4           0.5358617            0.5308910 -0.009276109
+    ## 5     5           0.5366611            0.5239387 -0.023706601
+    ## 6     6           0.5354246            0.5348576 -0.001058906
+    ## 7     7           0.5358583            0.5309191 -0.009217261
+    ## 8     8           0.5374287            0.5158148 -0.040217218
+    ## 9     9           0.5344993            0.5434769  0.016796176
+    ## 10   10           0.5363854            0.5257841 -0.019764359
 
 ``` r
 mean(oos_validation$r_squared_out_sample)
 ```
 
-    ## [1] 0.5345835
+    ## [1] 0.5345951
 
 ``` r
 paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
@@ -853,16 +887,16 @@ oos_validation %>%
 ```
 
     ##    fold r_squared_in_sample r_squared_out_sample percent_diff
-    ## 1     1           0.7256901            -8.765578   -13.078954
-    ## 2     2          -6.1564796           -20.568213     2.340905
-    ## 3     3           0.6523541            -3.738738    -6.731148
-    ## 4     4           0.5899232            -1.910120    -4.237914
-    ## 5     5           0.6164673            -2.268080    -4.679157
-    ## 6     6           0.6971709            -7.584930   -11.879584
-    ## 7     7           0.6345495            -3.806328    -6.998473
-    ## 8     8           0.6050676            -4.710917    -8.785769
-    ## 9     9           0.6320833            -2.956758    -5.677798
-    ## 10   10           0.6251895            -2.090739    -4.344168
+    ## 1     1          -6.0445365          -13.0614188    1.1608636
+    ## 2     2           0.6907772           -7.0989702  -11.2767872
+    ## 3     3           0.5920358           -0.9017796   -2.5231842
+    ## 4     4           0.6490839           -3.5151832   -6.4156065
+    ## 5     5           0.6280984           -2.9458886   -5.6901708
+    ## 6     6           0.6664260           -5.9389813   -9.9116886
+    ## 7     7          -6.7871241          -13.5552043    0.9971941
+    ## 8     8           0.5867978           -2.9263651   -5.9870072
+    ## 9     9           0.6690095           -5.1265398   -8.6628806
+    ## 10   10           0.5910584           -2.6253586   -5.4417921
 
 ``` r
 in_sample_r2
@@ -874,10 +908,10 @@ in_sample_r2
 mean(oos_validation$r_squared_out_sample)
 ```
 
-    ## [1] -5.84004
+    ## [1] -5.769569
 
 ``` r
 paste0(round((mean(oos_validation$r_squared_out_sample) - in_sample_r2) / in_sample_r2 * 100, 2), '%')
 ```
 
-    ## [1] "-1138.89%"
+    ## [1] "-1126.35%"
