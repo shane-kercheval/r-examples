@@ -32,3 +32,8 @@ plot_width_height_6 <- calculate_plot_width(6)
 plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
+
+```{r}
+
+```
+
