@@ -86,6 +86,9 @@ Turn `1` column into `x` columns based on regex
 
 ### regex\_left\_join
 
+Example from David Robinson Tidy-Tuesday Screencast
+(<a href="https://youtu.be/KiqpX-gNIS4?t=1715" class="uri">https://youtu.be/KiqpX-gNIS4?t=1715</a>)
+
 Join data.frames based on matching regex.
 
 In this example, we will create categories and add them to our
@@ -576,7 +579,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fad3fc42e48
+    ## env:  0x7fe0586a8208
 
     ## [1] 61.875
 
@@ -748,7 +751,7 @@ d %>%
 
 ### spinogram
 
-From David Robinson Tidy-Tuesday Screencast
+Example from David Robinson Tidy-Tuesday Screencast
 (<a href="https://youtu.be/KiqpX-gNIS4?t=1244" class="uri">https://youtu.be/KiqpX-gNIS4?t=1244</a>)
 
 We will use `geom_area` but need to fill in the missing data with

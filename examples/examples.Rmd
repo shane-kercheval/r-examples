@@ -81,6 +81,8 @@ Turn `1` column into `x` columns based on regex
 
 ### regex_left_join
 
+Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=1715)
+
 Join data.frames based on matching regex.
 
 In this example, we will create categories and add them to our data.frame based on regex.
@@ -469,7 +471,7 @@ d %>%
 
 ### spinogram
 
-From David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=1244)
+Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=1244)
 
 We will use `geom_area` but need to fill in the missing data with `complete`
 
