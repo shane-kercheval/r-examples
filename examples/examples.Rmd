@@ -91,8 +91,9 @@ In this example, we will create categories and add them to our data.frame based 
 #install.packages('fuzzyjoin')
 library(fuzzyjoin)
 
-cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% select(-X1)
-
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
+    select(-X1) %>%
+    mutate(birthYear = as.numeric(birthYear))
 cetaceans <- cetaceans_raw %>% select(species, originLocation)
 head(cetaceans)
 ```
@@ -525,4 +526,79 @@ cateaceans_acquisition_by_decade_complete %>%
     theme_minimal() +
     labs(x = "year",
        y = "% of dolphins recorded")
+```
+
+
+# Advanced
+
+## Survival Analysis
+
+Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=2424)
+
+Context is dolphins. Are some dolphins living longer than they used to? This is hard because some dolphins in are dataset are still alive.
+
+```{r}
+library(survival)
+cetaceans <- cetaceans_raw
+dolphin_survival <- cetaceans %>%
+  filter(status %in% c("Alive", "Died")) %>%
+  mutate(deathYear = ifelse(status == "Alive", 2017, year(statusDate)),
+         status = ifelse(status == "Alive", 0, 1),  # note: alive == 0
+         age = deathYear - birthYear) %>%
+  filter(!is.na(deathYear)) %>%
+  select(birthYear, deathYear, status, sex, age, acquisition, species) %>%
+  filter(deathYear >= birthYear) %>%
+  filter(sex != "U")
+head(dolphin_survival)
+```
+
+`status` is `0` if `alive`, `1` if `died`
+
+So the followin gives the median age of death, by sex, with confidence intervals.
+
+```{r}
+model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
+model
+```
+
+```{r}
+broom::tidy(model) %>%
+  ggplot(aes(time, estimate, color = strata)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+How can we tell if sex is actually meaningful (i.e. the survival rate is actual different and not due to chance?)
+
+We can use a `Cox proportional hazards regression model`
+
+```{r}
+survival::coxph(Surv(age, status) ~ sex, dolphin_survival) %>%
+  tidy()
+```
+
+p.value is not statistically significant (confience intervals include 0) so we can say that there is an actual difference.
+
+We can do the same thing for acquisition.
+
+```{r}
+model <- survival::survfit(Surv(age, status) ~ acquisition, dolphin_survival)
+broom::tidy(model) %>%
+  filter(strata != "acquisition=Unknown") %>%
+  ggplot(aes(time, estimate, color = strata)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+If we do `coxph` it looks like the holdout group is `Born` and each category is being compared to that. `Capture` is not statistically significant, but `Rescue` and `Unknown` are.
+
+```{r}
+survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
+  tidy()
 ```
