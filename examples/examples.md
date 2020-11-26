@@ -3,6 +3,7 @@
     -   [General](#general)
         -   [`clean_names()`](#clean_names)
         -   [`extract()`](#extract)
+        -   [regex\_left\_join](#regex_left_join)
     -   [Aggregation](#aggregation)
         -   [`group_by() & which.max()`](#group_by-which.max)
         -   [`group_by()` & `top_n()`](#group_by-top_n)
@@ -10,6 +11,7 @@
         -   [`summarise_at()`](#summarise_at)
         -   [`add_count`](#add_count)
 -   [dplyr/tidyverse](#dplyrtidyverse)
+    -   [`join` `suffix`](#join-suffix)
     -   [`semi-join`](#semi-join)
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
@@ -20,6 +22,7 @@
     -   [`reorder_within()`](#reorder_within)
     -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
     -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
+    -   [spinogram](#spinogram)
 
 Packages
 ========
@@ -78,6 +81,88 @@ Turn `1` column into `x` columns based on regex
     ## 7          S3E1      3       1
     ## 8          S3E2      3       2
     ## 9          S3E3      3       3
+
+------------------------------------------------------------------------
+
+### regex\_left\_join
+
+Join data.frames based on matching regex.
+
+In this example, we will create categories and add them to our
+data.frame based on regex.
+
+``` r
+#install.packages('fuzzyjoin')
+library(fuzzyjoin)
+
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% select(-X1)
+
+cetaceans <- cetaceans_raw %>% select(species, originLocation)
+head(cetaceans)
+```
+
+    ## # A tibble: 6 x 2
+    ##   species    originLocation         
+    ##   <chr>      <chr>                  
+    ## 1 Bottlenose Marineland Florida     
+    ## 2 Bottlenose Dolphin Research Center
+    ## 3 Bottlenose SeaWorld San Diego     
+    ## 4 Bottlenose SeaWorld Orlando       
+    ## 5 Bottlenose SeaWorld Orlando       
+    ## 6 Bottlenose SeaWorld San Diego
+
+``` r
+regexes <- tribble(
+  ~ regex, ~ category,
+  "Unknown", "Unknown",
+  "Gulf of Mexico", "Gulf of Mexico",
+  "Florida|FL", "Florida",
+  "Texas|TX", "Texas",
+  "SeaWorld", "SeaWorld",
+  "Pacific", "Pacific Ocean",
+  "Atlantic", "Atlantic Ocean"
+)
+
+cetaceans %>%
+    # left-join will create multiple rows if there are muliple matches
+    # so create a row number to track unique rows
+    mutate(unique_id = row_number()) %>%
+    # join on regexes, based on regex
+    regex_left_join(regexes, c(originLocation = "regex")) %>%
+    # only keep the unique/distinct rows from the data.frame
+    # If there are multiple rows for a given combination of inputs, only the first row will be preserved.
+    # If omitted, will use all variables.
+    # .keep_all:  If TRUE, keep all variables in .data.
+    distinct(unique_id, .keep_all = TRUE) %>%
+    # coalesce gets the first value that is not NA
+    # so if category is not NA then use category, else use originLocation
+    mutate(category = coalesce(category, originLocation)) %>%
+    head(20)
+```
+
+    ## # A tibble: 20 x 5
+    ##    species    originLocation          unique_id regex     category              
+    ##    <chr>      <chr>                       <int> <chr>     <chr>                 
+    ##  1 Bottlenose Marineland Florida              1 Florida|… Florida               
+    ##  2 Bottlenose Dolphin Research Center         2 <NA>      Dolphin Research Cent…
+    ##  3 Bottlenose SeaWorld San Diego              3 SeaWorld  SeaWorld              
+    ##  4 Bottlenose SeaWorld Orlando                4 SeaWorld  SeaWorld              
+    ##  5 Bottlenose SeaWorld Orlando                5 SeaWorld  SeaWorld              
+    ##  6 Bottlenose SeaWorld San Diego              6 SeaWorld  SeaWorld              
+    ##  7 Bottlenose SeaWorld San Diego              7 SeaWorld  SeaWorld              
+    ##  8 Bottlenose SeaWorld Orlando                8 SeaWorld  SeaWorld              
+    ##  9 Bottlenose SeaWorld San Diego              9 SeaWorld  SeaWorld              
+    ## 10 Bottlenose SeaWorld San Diego             10 SeaWorld  SeaWorld              
+    ## 11 Bottlenose Marineland Florida             11 Florida|… Florida               
+    ## 12 Bottlenose SeaWorld San Diego             12 SeaWorld  SeaWorld              
+    ## 13 Bottlenose SeaWorld Orlando               13 SeaWorld  SeaWorld              
+    ## 14 Bottlenose Dolphin Research Center        14 <NA>      Dolphin Research Cent…
+    ## 15 Bottlenose Dolphin Research Center        15 <NA>      Dolphin Research Cent…
+    ## 16 Bottlenose Dolphin Research Center        16 <NA>      Dolphin Research Cent…
+    ## 17 Bottlenose Dolphin Connection             17 <NA>      Dolphin Connection    
+    ## 18 Bottlenose SeaWorld Orlando               18 SeaWorld  SeaWorld              
+    ## 19 Bottlenose SeaWorld Orlando               19 SeaWorld  SeaWorld              
+    ## 20 Bottlenose SeaWorld San Diego             20 SeaWorld  SeaWorld
 
 ------------------------------------------------------------------------
 
@@ -234,6 +319,22 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 dplyr/tidyverse
 ===============
+
+`join` `suffix`
+---------------
+
+``` r
+band_members %>%
+    inner_join(band_members, by = 'name',
+               suffix = c('.x', '.y'))
+```
+
+    ## # A tibble: 3 x 3
+    ##   name  band.x  band.y 
+    ##   <chr> <chr>   <chr>  
+    ## 1 Mick  Stones  Stones 
+    ## 2 John  Beatles Beatles
+    ## 3 Paul  Beatles Beatles
 
 `semi-join`
 -----------
@@ -475,7 +576,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fa915cc2ee0
+    ## env:  0x7fad3fc42e48
 
     ## [1] 61.875
 
@@ -601,7 +702,9 @@ iris_gathered %>%
     facet_wrap(~ metric, scales = 'free_x')
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-28-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-31-1.png)
+
+------------------------------------------------------------------------
 
 ### `scale_x_log10()` with seconds
 
@@ -616,7 +719,9 @@ ggplot(aes(x='', y=value)) +
                   labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-29-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-32-1.png)
+
+------------------------------------------------------------------------
 
 ### ggplot2 with `interaction()`
 
@@ -637,4 +742,86 @@ d %>%
     geom_line()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-30-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-33-1.png)
+
+------------------------------------------------------------------------
+
+### spinogram
+
+From David Robinson Tidy-Tuesday Screencast
+(<a href="https://youtu.be/KiqpX-gNIS4?t=1244" class="uri">https://youtu.be/KiqpX-gNIS4?t=1244</a>)
+
+We will use `geom_area` but need to fill in the missing data with
+`complete`
+
+First, here is what it would look like if we didn’t use `complete`.
+
+Notice the missing gaps. That is because we have missing years.
+
+``` r
+cetaceans <- cetaceans_raw
+
+cateaceans_acquisition_by_decade <- cetaceans %>%
+  filter(originDate >= "1960-01-01") %>%
+  count(acquisition,
+        decade = 5 * (year(originDate) %/% 5))
+
+cateaceans_acquisition_by_decade %>%
+    mutate(acquisition = fct_reorder(acquisition, n, sum)) %>%
+    group_by(decade) %>%
+    mutate(percent = n / sum(n)) %>%
+    ungroup() %>%
+    ggplot(aes(decade, percent, fill = acquisition)) +
+    geom_area() +
+    scale_y_continuous(labels = percent_format()) +
+    scale_fill_manual(values=rtools::rt_colors()) +
+    theme_minimal() +
+    labs(x = "year",
+       y = "% of dolphins recorded")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-34-1.png)
+
+This shows everything in `cateaceans_acquisition_by_decade_complete`
+that is not in `cateaceans_acquisition_by_decade`. `complete` filled in
+the gabs.
+
+``` r
+cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>%
+  complete(acquisition, decade, fill = list(n = 0))
+
+cateaceans_acquisition_by_decade_complete %>%
+    anti_join(cateaceans_acquisition_by_decade, by = c("acquisition", "decade", "n")) %>%
+    head(10)
+```
+
+    ## # A tibble: 10 x 3
+    ##    acquisition decade     n
+    ##    <chr>        <dbl> <dbl>
+    ##  1 Born          1960     0
+    ##  2 Born          1965     0
+    ##  3 Capture       2000     0
+    ##  4 Capture       2005     0
+    ##  5 Capture       2010     0
+    ##  6 Capture       2015     0
+    ##  7 Miscarriage   1960     0
+    ##  8 Miscarriage   1965     0
+    ##  9 Miscarriage   1970     0
+    ## 10 Miscarriage   1975     0
+
+``` r
+cateaceans_acquisition_by_decade_complete %>%
+    mutate(acquisition = fct_reorder(acquisition, n, sum)) %>%
+    group_by(decade) %>%
+    mutate(percent = n / sum(n)) %>%
+    ungroup() %>%
+    ggplot(aes(decade, percent, fill = acquisition)) +
+    geom_area() +
+    scale_y_continuous(labels = percent_format()) +
+    scale_fill_manual(values=rtools::rt_colors()) +
+    theme_minimal() +
+    labs(x = "year",
+       y = "% of dolphins recorded")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-36-1.png)
