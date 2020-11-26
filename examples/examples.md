@@ -24,6 +24,8 @@
     -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
     -   [spinogram](#spinogram)
 -   [Advanced](#advanced)
+    -   [Confidence Intervals w/
+        t-tests](#confidence-intervals-w-t-tests)
     -   [Survival Analysis](#survival-analysis)
 
 Packages
@@ -582,7 +584,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f95760d5ee8
+    ## env:  0x7fda0b3906d8
 
     ## [1] 61.875
 
@@ -835,6 +837,284 @@ cateaceans_acquisition_by_decade_complete %>%
 Advanced
 ========
 
+Confidence Intervals w/ t-tests
+-------------------------------
+
+Example from David Robinson Tidy-Tuesday Screencast
+(<a href="https://youtu.be/em4FXPf4H-Y?t=1783" class="uri">https://youtu.be/em4FXPf4H-Y?t=1783</a>)
+
+``` r
+restaurant_inspections_by_dba <- readRDS('data/restaurant_inspections_by_dba.RDS')
+head(restaurant_inspections_by_dba, 109)
+```
+
+    ## # A tibble: 109 x 5
+    ##    dba                 cuisine                  locations avg_score median_score
+    ##    <chr>               <chr>                        <int>     <dbl>        <dbl>
+    ##  1 DUNKIN'             Donuts                         340      9.07          8.5
+    ##  2 STARBUCKS           Café/Coffee/Tea                244      7.95          7  
+    ##  3 SUBWAY              Sandwiches                     179     11.5          10  
+    ##  4 MCDONALD'S          Hamburgers                     106      9.35          9  
+    ##  5 DUNKIN', BASKIN RO… Donuts                          79     10.8           9  
+    ##  6 POPEYES             Chicken                         71     10.5          10  
+    ##  7 MCDONALD'S          American                        60      9.33          9  
+    ##  8 BURGER KING         Hamburgers                      58     10.9          10  
+    ##  9 SUBWAY              Sandwiches/Salads/Mixed…        54     11.3           7.5
+    ## 10 KENNEDY FRIED CHIC… Chicken                         51     15.8          13  
+    ## # … with 99 more rows
+
+`nest(data=-cuisine)` groups by cuisine and creates a data-frame
+(tibble) out of all of the rest of the columns. That is, it `nests` the
+all of the data (a data.frame) with each row corresponding to a cuisine.
+
+Then we take each of those data.frames, and run a `t.test` of
+`ave_score`.
+
+``` r
+library(broom)
+cuisine_conf_ints <- restaurant_inspections_by_dba %>%
+    add_count(cuisine) %>%
+    filter(n > 100) %>%
+    nest(data=-cuisine) %>%
+    mutate(model = map(data, ~ t.test(.$avg_score))) %>%
+    mutate(model = map(model, ~ tidy(.))) %>%
+    unnest(model)
+head(cuisine_conf_ints, 10)
+```
+
+    ## # A tibble: 10 x 10
+    ##    cuisine data  estimate statistic   p.value parameter conf.low conf.high
+    ##    <chr>   <lis>    <dbl>     <dbl>     <dbl>     <dbl>    <dbl>     <dbl>
+    ##  1 Café/C… <tib…    12.1       39.2 7.96e-205      1003    11.5       12.8
+    ##  2 Chicken <tib…    16.5       16.0 1.36e- 36       181    14.4       18.5
+    ##  3 Americ… <tib…    13.5       90.5 0.             4698    13.2       13.8
+    ##  4 Sandwi… <tib…    11.4       14.8 5.12e- 28       111     9.87      12.9
+    ##  5 Mexican <tib…    16.1       37.6 7.50e-172       720    15.3       16.9
+    ##  6 Caribb… <tib…    18.5       29.5 3.94e-116       559    17.3       19.8
+    ##  7 Pizza   <tib…    14.3       38.7 2.52e-184       785    13.6       15.0
+    ##  8 Ice Cr… <tib…     9.95      17.0 9.72e- 40       185     8.80      11.1
+    ##  9 Bakery  <tib…    13.4       31.0 1.66e-125       584    12.5       14.2
+    ## 10 Juice,… <tib…    12.1       22.2 4.08e- 63       274    11.0       13.2
+    ## # … with 2 more variables: method <chr>, alternative <chr>
+
+``` r
+cuisine_conf_ints %>%
+  mutate(cuisine = str_remove(cuisine, " \\(.*"),
+         cuisine = fct_reorder(cuisine, estimate)) %>%
+  ggplot(aes(estimate, cuisine)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low,
+                     xmax = conf.high)) +
+  labs(x = "Average inspection score (higher means more violations)",
+       y = "Type of cuisine",
+       title = "Average inspection score by type of cuisine in NYC",
+       subtitle = "Each restaurant chain was counted once based on its average score")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-40-1.png)
+
+``` r
+df <- tibble(x = c(1, 1, 1, 2, 2, 3), y = 1:6, z = 6:1)
+# Note that we get one row of output for each unique combination of
+# non-nested variables
+df %>% nest(data = c(y, z))
+```
+
+    ## # A tibble: 3 x 2
+    ##       x data            
+    ##   <dbl> <list>          
+    ## 1     1 <tibble [3 × 2]>
+    ## 2     2 <tibble [2 × 2]>
+    ## 3     3 <tibble [1 × 2]>
+
+``` r
+# chop does something similar, but retains individual columns
+df %>% chop(c(y, z))
+```
+
+    ## # A tibble: 3 x 3
+    ##       x           y           z
+    ##   <dbl> <list<int>> <list<int>>
+    ## 1     1         [3]         [3]
+    ## 2     2         [2]         [2]
+    ## 3     3         [1]         [1]
+
+``` r
+# use tidyselect syntax and helpers, just like in dplyr::select()
+df %>% nest(data = one_of("y", "z"))
+```
+
+    ## # A tibble: 3 x 2
+    ##       x data            
+    ##   <dbl> <list>          
+    ## 1     1 <tibble [3 × 2]>
+    ## 2     2 <tibble [2 × 2]>
+    ## 3     3 <tibble [1 × 2]>
+
+``` r
+iris %>% nest(data = -Species)
+```
+
+    ## # A tibble: 3 x 2
+    ##   Species    data             
+    ##   <fct>      <list>           
+    ## 1 setosa     <tibble [50 × 4]>
+    ## 2 versicolor <tibble [50 × 4]>
+    ## 3 virginica  <tibble [50 × 4]>
+
+``` r
+nest_vars <- names(iris)[1:4]
+iris %>% nest(data = one_of(nest_vars))
+```
+
+    ## # A tibble: 3 x 2
+    ##   Species    data             
+    ##   <fct>      <list>           
+    ## 1 setosa     <tibble [50 × 4]>
+    ## 2 versicolor <tibble [50 × 4]>
+    ## 3 virginica  <tibble [50 × 4]>
+
+``` r
+iris %>%
+  nest(petal = starts_with("Petal"), sepal = starts_with("Sepal"))
+```
+
+    ## # A tibble: 3 x 3
+    ##   Species    petal             sepal            
+    ##   <fct>      <list>            <list>           
+    ## 1 setosa     <tibble [50 × 2]> <tibble [50 × 2]>
+    ## 2 versicolor <tibble [50 × 2]> <tibble [50 × 2]>
+    ## 3 virginica  <tibble [50 × 2]> <tibble [50 × 2]>
+
+``` r
+iris %>%
+  nest(width = contains("Width"), length = contains("Length"))
+```
+
+    ## # A tibble: 3 x 3
+    ##   Species    width             length           
+    ##   <fct>      <list>            <list>           
+    ## 1 setosa     <tibble [50 × 2]> <tibble [50 × 2]>
+    ## 2 versicolor <tibble [50 × 2]> <tibble [50 × 2]>
+    ## 3 virginica  <tibble [50 × 2]> <tibble [50 × 2]>
+
+``` r
+# Nesting a grouped data frame nests all variables apart from the group vars
+library(dplyr)
+fish_encounters %>%
+  group_by(fish) %>%
+  nest()
+```
+
+    ## # A tibble: 19 x 2
+    ## # Groups:   fish [19]
+    ##    fish  data             
+    ##    <fct> <list>           
+    ##  1 4842  <tibble [11 × 2]>
+    ##  2 4843  <tibble [11 × 2]>
+    ##  3 4844  <tibble [11 × 2]>
+    ##  4 4845  <tibble [5 × 2]> 
+    ##  5 4847  <tibble [3 × 2]> 
+    ##  6 4848  <tibble [4 × 2]> 
+    ##  7 4849  <tibble [2 × 2]> 
+    ##  8 4850  <tibble [6 × 2]> 
+    ##  9 4851  <tibble [2 × 2]> 
+    ## 10 4854  <tibble [2 × 2]> 
+    ## 11 4855  <tibble [5 × 2]> 
+    ## 12 4857  <tibble [9 × 2]> 
+    ## 13 4858  <tibble [11 × 2]>
+    ## 14 4859  <tibble [5 × 2]> 
+    ## 15 4861  <tibble [11 × 2]>
+    ## 16 4862  <tibble [9 × 2]> 
+    ## 17 4863  <tibble [2 × 2]> 
+    ## 18 4864  <tibble [2 × 2]> 
+    ## 19 4865  <tibble [3 × 2]>
+
+``` r
+# Nesting is often useful for creating per group models
+mtcars %>%
+  group_by(cyl) %>%
+  nest() %>%
+  mutate(models = lapply(data, function(df) lm(mpg ~ wt, data = df)))
+```
+
+    ## # A tibble: 3 x 3
+    ## # Groups:   cyl [3]
+    ##     cyl data               models
+    ##   <dbl> <list>             <list>
+    ## 1     6 <tibble [7 × 10]>  <lm>  
+    ## 2     4 <tibble [11 × 10]> <lm>  
+    ## 3     8 <tibble [14 × 10]> <lm>
+
+``` r
+# unnest() is primarily designed to work with lists of data frames
+df <- tibble(
+  x = 1:3,
+  y = list(
+    NULL,
+    tibble(a = 1, b = 2),
+    tibble(a = 1:3, b = 3:1)
+  )
+)
+df %>% unnest(y)
+```
+
+    ## # A tibble: 4 x 3
+    ##       x     a     b
+    ##   <int> <dbl> <dbl>
+    ## 1     2     1     2
+    ## 2     3     1     3
+    ## 3     3     2     2
+    ## 4     3     3     1
+
+``` r
+df %>% unnest(y, keep_empty = TRUE)
+```
+
+    ## # A tibble: 5 x 3
+    ##       x     a     b
+    ##   <int> <dbl> <dbl>
+    ## 1     1    NA    NA
+    ## 2     2     1     2
+    ## 3     3     1     3
+    ## 4     3     2     2
+    ## 5     3     3     1
+
+``` r
+# If you have lists of lists, or lists of atomic vectors, instead
+# see hoist(), unnest_wider(), and unnest_longer()
+
+#' # You can unnest multiple columns simultaneously
+df <- tibble(
+ a = list(c("a", "b"), "c"),
+ b = list(1:2, 3),
+ c = c(11, 22)
+)
+df %>% unnest(c(a, b))
+```
+
+    ## # A tibble: 3 x 3
+    ##   a         b     c
+    ##   <chr> <dbl> <dbl>
+    ## 1 a         1    11
+    ## 2 b         2    11
+    ## 3 c         3    22
+
+``` r
+# Compare with unnesting one column at a time, which generates
+# the Cartesian product
+df %>% unnest(a) %>% unnest(b)
+```
+
+    ## # A tibble: 5 x 3
+    ##   a         b     c
+    ##   <chr> <dbl> <dbl>
+    ## 1 a         1    11
+    ## 2 a         2    11
+    ## 3 b         1    11
+    ## 4 b         2    11
+    ## 5 c         3    22
+
 Survival Analysis
 -----------------
 
@@ -895,7 +1175,7 @@ broom::tidy(model) %>%
        x = "Age of Dolphin")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-39-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-45-1.png)
 
 How can we tell if sex is actually meaningful (i.e. the survival rate is
 actual different and not due to chance?)
@@ -929,7 +1209,7 @@ broom::tidy(model) %>%
        x = "Age of Dolphin")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-41-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-47-1.png)
 
 If we do `coxph` it looks like the holdout group is `Born` and each
 category is being compared to that. `Capture` is not statistically
