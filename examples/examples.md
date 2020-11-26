@@ -23,6 +23,8 @@
     -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
     -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
     -   [spinogram](#spinogram)
+-   [Advanced](#advanced)
+    -   [Survival Analysis](#survival-analysis)
 
 Packages
 ========
@@ -98,8 +100,9 @@ data.frame based on regex.
 #install.packages('fuzzyjoin')
 library(fuzzyjoin)
 
-cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% select(-X1)
-
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
+    select(-X1) %>%
+    mutate(birthYear = as.numeric(birthYear))
 cetaceans <- cetaceans_raw %>% select(species, originLocation)
 head(cetaceans)
 ```
@@ -579,7 +582,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fe0586a8208
+    ## env:  0x7f95760d5ee8
 
     ## [1] 61.875
 
@@ -828,3 +831,118 @@ cateaceans_acquisition_by_decade_complete %>%
 ```
 
 ![](examples_files/figure-markdown_github/unnamed-chunk-36-1.png)
+
+Advanced
+========
+
+Survival Analysis
+-----------------
+
+Example from David Robinson Tidy-Tuesday Screencast
+(<a href="https://youtu.be/KiqpX-gNIS4?t=2424" class="uri">https://youtu.be/KiqpX-gNIS4?t=2424</a>)
+
+Context is dolphins. Are some dolphins living longer than they used to?
+This is hard because some dolphins in are dataset are still alive.
+
+``` r
+library(survival)
+cetaceans <- cetaceans_raw
+dolphin_survival <- cetaceans %>%
+  filter(status %in% c("Alive", "Died")) %>%
+  mutate(deathYear = ifelse(status == "Alive", 2017, year(statusDate)),
+         status = ifelse(status == "Alive", 0, 1),  # note: alive == 0
+         age = deathYear - birthYear) %>%
+  filter(!is.na(deathYear)) %>%
+  select(birthYear, deathYear, status, sex, age, acquisition, species) %>%
+  filter(deathYear >= birthYear) %>%
+  filter(sex != "U")
+head(dolphin_survival)
+```
+
+    ## # A tibble: 6 x 7
+    ##   birthYear deathYear status sex     age acquisition species   
+    ##       <dbl>     <dbl>  <dbl> <chr> <dbl> <chr>       <chr>     
+    ## 1      1989      2017      0 F        28 Born        Bottlenose
+    ## 2      1973      2017      0 F        44 Born        Bottlenose
+    ## 3      1978      2017      0 M        39 Born        Bottlenose
+    ## 4      1979      2017      0 F        38 Born        Bottlenose
+    ## 5      1979      2017      0 M        38 Born        Bottlenose
+    ## 6      1980      2017      0 F        37 Born        Bottlenose
+
+`status` is `0` if `alive`, `1` if `died`
+
+So the followin gives the median age of death, by sex, with confidence
+intervals.
+
+``` r
+model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
+model
+```
+
+    ## Call: survfit(formula = Surv(age, status) ~ sex, data = dolphin_survival)
+    ## 
+    ##         n events median 0.95LCL 0.95UCL
+    ## sex=F 743    503     18      16      20
+    ## sex=M 645    429     16      14      18
+
+``` r
+broom::tidy(model) %>%
+  ggplot(aes(time, estimate, color = strata)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-39-1.png)
+
+How can we tell if sex is actually meaningful (i.e. the survival rate is
+actual different and not due to chance?)
+
+We can use a `Cox proportional hazards regression model`
+
+``` r
+survival::coxph(Surv(age, status) ~ sex, dolphin_survival) %>%
+  tidy()
+```
+
+    ## # A tibble: 1 x 7
+    ##   term  estimate std.error statistic p.value conf.low conf.high
+    ##   <chr>    <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+    ## 1 sexM    0.0982    0.0659      1.49   0.136  -0.0310     0.227
+
+p.value is not statistically significant (confience intervals include 0)
+so we can say that there is an actual difference.
+
+We can do the same thing for acquisition.
+
+``` r
+model <- survival::survfit(Surv(age, status) ~ acquisition, dolphin_survival)
+broom::tidy(model) %>%
+  filter(strata != "acquisition=Unknown") %>%
+  ggplot(aes(time, estimate, color = strata)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-41-1.png)
+
+If we do `coxph` it looks like the holdout group is `Born` and each
+category is being compared to that. `Capture` is not statistically
+significant, but `Rescue` and `Unknown` are.
+
+``` r
+survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
+  tidy()
+```
+
+    ## # A tibble: 3 x 7
+    ##   term               estimate std.error statistic p.value conf.low conf.high
+    ##   <chr>                 <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+    ## 1 acquisitionCapture  -0.0727    0.0753    -0.965 0.334   -0.220      0.0749
+    ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211  0.182      0.825 
+    ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474   0.00334    0.582
