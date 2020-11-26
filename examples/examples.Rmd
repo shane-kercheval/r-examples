@@ -11,11 +11,11 @@ output:
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 #devtools::install_github('shane-kercheval/rtools')
 #library(rtools)
-# library(scales)
 # library(stringr)
-# library(lubridate)
 # library(ggrepel)
 # library(forecast)
+library(scales)
+library(lubridate)
 library(tidyverse)
 library(ggplot2)
 library(knitr)
@@ -79,6 +79,53 @@ Turn `1` column into `x` columns based on regex
 
 ---
 
+### regex_left_join
+
+Join data.frames based on matching regex.
+
+In this example, we will create categories and add them to our data.frame based on regex.
+
+```{r message=FALSE, warning=FALSE}
+#install.packages('fuzzyjoin')
+library(fuzzyjoin)
+
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% select(-X1)
+
+cetaceans <- cetaceans_raw %>% select(species, originLocation)
+head(cetaceans)
+```
+
+```{r}
+
+regexes <- tribble(
+  ~ regex, ~ category,
+  "Unknown", "Unknown",
+  "Gulf of Mexico", "Gulf of Mexico",
+  "Florida|FL", "Florida",
+  "Texas|TX", "Texas",
+  "SeaWorld", "SeaWorld",
+  "Pacific", "Pacific Ocean",
+  "Atlantic", "Atlantic Ocean"
+)
+
+cetaceans %>%
+    # left-join will create multiple rows if there are muliple matches
+    # so create a row number to track unique rows
+    mutate(unique_id = row_number()) %>%
+    # join on regexes, based on regex
+    regex_left_join(regexes, c(originLocation = "regex")) %>%
+    # only keep the unique/distinct rows from the data.frame
+    # If there are multiple rows for a given combination of inputs, only the first row will be preserved.
+    # If omitted, will use all variables.
+    # .keep_all:  If TRUE, keep all variables in .data.
+    distinct(unique_id, .keep_all = TRUE) %>%
+    # coalesce gets the first value that is not NA
+    # so if category is not NA then use category, else use originLocation
+    mutate(category = coalesce(category, originLocation)) %>%
+    head(20)
+```
+
+---
 
 ## Aggregation
 
@@ -382,6 +429,8 @@ iris_gathered %>%
     facet_wrap(~ metric, scales = 'free_x')
 ```
 
+---
+
 ### `scale_x_log10()` with seconds
 
 	* scales the x-axis ticks but keeps the actual values the same
@@ -394,6 +443,8 @@ ggplot(aes(x='', y=value)) +
     scale_y_log10(breaks = c(0, 60 ^ (0:4)),
                   labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
 ```
+
+---
 
 ### ggplot2 with `interaction()`
 
@@ -414,5 +465,62 @@ d %>%
     geom_line()
 ```
 
+---
 
+### spinogram
 
+From David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=1244)
+
+We will use `geom_area` but need to fill in the missing data with `complete`
+
+First, here is what it would look like if we didn't use `complete`.
+
+Notice the missing gaps. That is because we have missing years.
+
+```{r message=FALSE, warning=FALSE}
+cetaceans <- cetaceans_raw
+
+cateaceans_acquisition_by_decade <- cetaceans %>%
+  filter(originDate >= "1960-01-01") %>%
+  count(acquisition,
+        decade = 5 * (year(originDate) %/% 5))
+
+cateaceans_acquisition_by_decade %>%
+    mutate(acquisition = fct_reorder(acquisition, n, sum)) %>%
+    group_by(decade) %>%
+    mutate(percent = n / sum(n)) %>%
+    ungroup() %>%
+    ggplot(aes(decade, percent, fill = acquisition)) +
+    geom_area() +
+    scale_y_continuous(labels = percent_format()) +
+    scale_fill_manual(values=rtools::rt_colors()) +
+    theme_minimal() +
+    labs(x = "year",
+       y = "% of dolphins recorded")
+```
+
+This shows everything in `cateaceans_acquisition_by_decade_complete` that is not in `cateaceans_acquisition_by_decade`. `complete` filled in the gabs.
+
+```{r}
+cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>%
+  complete(acquisition, decade, fill = list(n = 0))
+
+cateaceans_acquisition_by_decade_complete %>%
+    anti_join(cateaceans_acquisition_by_decade, by = c("acquisition", "decade", "n")) %>%
+    head(10)
+```
+
+```{r}
+cateaceans_acquisition_by_decade_complete %>%
+    mutate(acquisition = fct_reorder(acquisition, n, sum)) %>%
+    group_by(decade) %>%
+    mutate(percent = n / sum(n)) %>%
+    ungroup() %>%
+    ggplot(aes(decade, percent, fill = acquisition)) +
+    geom_area() +
+    scale_y_continuous(labels = percent_format()) +
+    scale_fill_manual(values=rtools::rt_colors()) +
+    theme_minimal() +
+    labs(x = "year",
+       y = "% of dolphins recorded")
+```
