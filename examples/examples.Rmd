@@ -696,7 +696,7 @@ life_expectency_pairwise_cor <- gapminder %>%
 head(life_expectency_pairwise_cor)
 ```
 
-```{r fig.height=5, fig.width=5}
+```{r fig.height=7, fig.width=7}
 life_expectency_pairwise_cor %>%
     mutate(item1=factor(item1, ordered = TRUE),
            item2=factor(item2, ordered = TRUE)) %>%
@@ -813,7 +813,7 @@ beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
 beta_distribution %>%
     ggplot(aes(x=x, y=y)) +
     geom_line() +
-    labs(title="Beta Distribution using Alpha/Beta from Calucalted Priors",
+    labs(title="Beta Distribution using Alpha/Beta from Calculated Priors",
          subtitle = glue::glue("({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 
 career %>%
@@ -822,7 +822,7 @@ career %>%
     geom_histogram(bins = 50) +
     geom_line(data=beta_distribution, aes(x=x, y=y*17), color='red') +
     labs(title="Batting Average Distribution of Players with >500 At-Bats",
-         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calucalted Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calculated Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
 > The second step of empirical Bayes analysis is updating each observation based on the overall statistical model. Based on the philosophy of the broom package, this is achieved with the augment() function. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)

@@ -587,7 +587,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fab2a6faa18
+    ## env:  0x7ff188b7e450
 
     ## [1] 61.875
 
@@ -1191,7 +1191,7 @@ beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
 beta_distribution %>%
     ggplot(aes(x=x, y=y)) +
     geom_line() +
-    labs(title="Beta Distribution using Alpha/Beta from Calucalted Priors",
+    labs(title="Beta Distribution using Alpha/Beta from Calculated Priors",
          subtitle = glue::glue("({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
@@ -1204,7 +1204,7 @@ career %>%
     geom_histogram(bins = 50) +
     geom_line(data=beta_distribution, aes(x=x, y=y*17), color='red') +
     labs(title="Batting Average Distribution of Players with >500 At-Bats",
-         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calucalted Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calculated Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
 ![](examples_files/figure-markdown_github/unnamed-chunk-53-2.png)
