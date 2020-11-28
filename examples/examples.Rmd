@@ -779,6 +779,9 @@ career %>%
     labs(title='Batting Average Distribution of Players with >500 At-Bats')
 ```
 
+
+### Prior Distribution
+
 ```{r message=FALSE, warning=FALSE}
 library(ebbr)
 prior <- career %>%
@@ -825,11 +828,15 @@ career %>%
          subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calculated Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
+### Updating Observations based on Priors
+
 > The second step of empirical Bayes analysis is updating each observation based on the overall statistical model. Based on the philosophy of the broom package, this is achieved with the augment() function. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
 ```{r}
 head(augment(prior, data = career))
 ```
+
+### `add_ebb_estimate`
 
 > Notice we've now added several columns to the original data, each beginning with . (which is a convention of the augment verb to avoid rewriting existing columns). We have the .alpha1 and .beta1 columns as the parameters for each player's posterior distribution, as well as .fitted representing the new posterior mean (the "shrunken average"). We often want to run these two steps in sequence: estimating a model, then using it as a prior for each observation. The ebbr package provides a shortcut, combining them into one step with add_ebb_estimate(). (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
