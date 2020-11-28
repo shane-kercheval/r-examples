@@ -722,7 +722,168 @@ life_expectency_pairwise_cor <- life_expectency_pairwise_cor %>%
 life_expectency_pairwise_cor[1:5, 1:5]
 ```
 
-```{r}
+## `ebbr` package: Empirical Bayes on the Binomial in R
 
+> Methods for empirical Bayes shrinkage and estimation on data with many observations of success/total counts.
+
+https://github.com/dgrtwo/ebbr
+
+Examples from `Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
+
+```{r example_11.1, echo=FALSE}
+#devtools::install_github("dgrtwo/ebbr")
+#install.packages('Lahman')
+library(Lahman)
+
+# Grab career batting average of non-pitchers
+# (allow players that have pitched <= 3 games, like Ty Cobb)
+pitchers <- Pitching %>%
+    group_by(playerID) %>%
+    summarize(gamesPitched = sum(G)) %>%
+    filter(gamesPitched > 3)
+
+# Add player names
+player_names <- Master %>%
+    tibble::as_tibble() %>%
+    dplyr::select(playerID, nameFirst, nameLast, bats) %>%
+    unite(name, nameFirst, nameLast, sep = " ")
+
+# include the "bats" (handedness) and "year" column for later
+career_full <- Batting %>%
+    filter(AB > 0) %>%
+    # remove pitchers
+    anti_join(pitchers, by = "playerID") %>%
+    group_by(playerID) %>%
+    summarize(H = sum(H),
+              AB = sum(AB),
+              year = mean(yearID)) %>%
+    ungroup() %>%
+    inner_join(player_names, by = "playerID") %>%
+    filter(!is.na(bats)) %>%
+    rename(hits=H, at_bats=AB) %>%
+    mutate(batting_average = hits / at_bats)
+# We don't need all this data for every step
+career <- career_full %>% 
+    select(playerID, name, hits, at_bats, batting_average)
+
+head(career)
 ```
+
+> In Chapter 3, we noticed that the distribution of player batting averages looked roughly like a beta distribution (Figure 11.1). We thus wanted to estimate the beta prior for the overall dataset, which is the first step of empirical Bayes analysis. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+career %>%
+    filter(at_bats > 500) %>%
+    ggplot(aes(x=batting_average)) +
+    geom_histogram(bins = 50) +
+    labs(title='Batting Average Distribution of Players with >500 At-Bats')
+```
+
+```{r message=FALSE, warning=FALSE}
+library(ebbr)
+prior <- career %>%
+  filter(at_bats >= 500) %>%
+  ebb_fit_prior(hits, at_bats)
+
+prior
+```
+
+I'm not sure how `tidy(prior)$mean` is calculated.
+
+```{r}
+as.numeric(tidy(prior)$mean)
+
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(sum(hits) / sum(at_bats))
+
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(mean(batting_average))
+
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(median(batting_average))
+```
+
+```{r}
+beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
+    mutate(y=dbeta(x, prior$parameters$alpha, prior$parameters$beta))
+
+beta_distribution %>%
+    ggplot(aes(x=x, y=y)) +
+    geom_line() +
+    labs(title="Beta Distribution using Alpha/Beta from Calucalted Priors",
+         subtitle = glue::glue("({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+
+career %>%
+    filter(at_bats > 500) %>%
+    ggplot(aes(x=batting_average)) +
+    geom_histogram(bins = 50) +
+    geom_line(data=beta_distribution, aes(x=x, y=y*17), color='red') +
+    labs(title="Batting Average Distribution of Players with >500 At-Bats",
+         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calucalted Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+```
+
+> The second step of empirical Bayes analysis is updating each observation based on the overall statistical model. Based on the philosophy of the broom package, this is achieved with the augment() function. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+head(augment(prior, data = career))
+```
+
+> Notice we've now added several columns to the original data, each beginning with . (which is a convention of the augment verb to avoid rewriting existing columns). We have the .alpha1 and .beta1 columns as the parameters for each player's posterior distribution, as well as .fitted representing the new posterior mean (the "shrunken average"). We often want to run these two steps in sequence: estimating a model, then using it as a prior for each observation. The ebbr package provides a shortcut, combining them into one step with add_ebb_estimate(). (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+eb_career <- career %>%
+  add_ebb_estimate(hits, at_bats,
+                   prior_subset = at_bats >= 500)
+```
+
+```{r}
+all(eb_career$batting_average == eb_career$.raw)
+```
+
+> This was one of the most important visualizations in Chapter 3. I like how it captures what empirical Bayes estimation is doing: moving all batting averages towards the prior mean (the dashed red line), but moving them less if there is a lot of information about that player (high at_bats). (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+The red line represents points where the raw batting average and the estimated batting average are identical.
+
+The dashed red line represents the "prior mean" which is similar, but doesn't seem to be exactly, the average of the batting averages (of people with >= 500 at-bats).
+
+So for example, look at the dots/people to the left of the graph. These are people that had very few at-bats (dark color), had a very low batting average (near 0 on x-axis), but we shifted from their raw batting average to the prior mean batting average (i.e. shifted from solid red line to dashed red line).
+
+The people with a lot of at bats, tend to have estimated batting average that is very close to the raw batting average.
+
+```{r}
+eb_career %>%
+    ggplot(aes(x=.raw, y=.fitted, color = at_bats)) +
+    geom_point() +
+    geom_abline(color = "red") +
+    scale_color_continuous(trans = "log", breaks = c(1, 10, 100, 1000)) +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    coord_cartesian(xlim = c(0, .6), ylim=c(0, 0.6)) +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    scale_y_continuous(breaks = pretty_breaks()) +
+    labs(x = "Raw batting average",
+       y = "Shrunken batting average")
+```
+
+```{r}
+eb_career %>%
+    head(10) %>%
+    mutate(name = reorder(name, .fitted)) %>%
+    ggplot(aes(x=.fitted, y=name)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = .low, xmax = .high)) +
+    geom_point(aes(x=.raw), color='red') +
+    geom_text(aes(x=.raw, label=glue::glue("({ hits } / { at_bats })")), vjust=-0.7, size=3) +
+    labs(x = "Estimated batting average (w/ 95% confidence interval)",
+         y = "Player")
+```
+
+
+
+
+
+
+
 

@@ -28,6 +28,8 @@
         t-tests](#confidence-intervals-w-t-tests)
     -   [Survival Analysis](#survival-analysis)
     -   [Pairwise Correlation](#pairwise-correlation)
+    -   [`ebbr` package: Empirical Bayes on the Binomial in
+        R](#ebbr-package-empirical-bayes-on-the-binomial-in-r)
 
 Packages
 ========
@@ -585,7 +587,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fb78393d938
+    ## env:  0x7fab2a6faa18
 
     ## [1] 61.875
 
@@ -986,10 +988,10 @@ survival::coxph(Surv(age, status) ~ sex, dolphin_survival) %>%
   tidy()
 ```
 
-    ## # A tibble: 1 x 7
-    ##   term  estimate std.error statistic p.value conf.low conf.high
-    ##   <chr>    <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
-    ## 1 sexM    0.0982    0.0659      1.49   0.136  -0.0310     0.227
+    ## # A tibble: 1 x 5
+    ##   term  estimate std.error statistic p.value
+    ##   <chr>    <dbl>     <dbl>     <dbl>   <dbl>
+    ## 1 sexM    0.0982    0.0659      1.49   0.136
 
 p.value is not statistically significant (confience intervals include 0)
 so we can say that there is an actual difference.
@@ -1019,12 +1021,12 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
   tidy()
 ```
 
-    ## # A tibble: 3 x 7
-    ##   term               estimate std.error statistic p.value conf.low conf.high
-    ##   <chr>                 <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
-    ## 1 acquisitionCapture  -0.0727    0.0753    -0.965 0.334   -0.220      0.0749
-    ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211  0.182      0.825 
-    ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474   0.00334    0.582
+    ## # A tibble: 3 x 5
+    ##   term               estimate std.error statistic p.value
+    ##   <chr>                 <dbl>     <dbl>     <dbl>   <dbl>
+    ## 1 acquisitionCapture  -0.0727    0.0753    -0.965 0.334  
+    ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211
+    ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474
 
 Pairwise Correlation
 --------------------
@@ -1086,3 +1088,221 @@ life_expectency_pairwise_cor[1:5, 1:5]
     ## 3 Brazil        0.997   0.989 NA      0.998
     ## 4 Canada        0.997   0.994  0.998 NA    
     ## 5 Chile         0.991   0.990  0.992  0.994
+
+`ebbr` package: Empirical Bayes on the Binomial in R
+----------------------------------------------------
+
+> Methods for empirical Bayes shrinkage and estimation on data with many
+> observations of success/total counts.
+
+<a href="https://github.com/dgrtwo/ebbr" class="uri">https://github.com/dgrtwo/ebbr</a>
+
+Examples from
+`Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
+
+    ## # A tibble: 6 x 5
+    ##   playerID  name            hits at_bats batting_average
+    ##   <chr>     <chr>          <int>   <int>           <dbl>
+    ## 1 aaronha01 Hank Aaron      3771   12364          0.305 
+    ## 2 aaronto01 Tommie Aaron     216     944          0.229 
+    ## 3 abadan01  Andy Abad          2      21          0.0952
+    ## 4 abadijo01 John Abadie       11      49          0.224 
+    ## 5 abbated01 Ed Abbaticchio   772    3044          0.254 
+    ## 6 abbeych01 Charlie Abbey    493    1756          0.281
+
+> In Chapter 3, we noticed that the distribution of player batting
+> averages looked roughly like a beta distribution (Figure 11.1). We
+> thus wanted to estimate the beta prior for the overall dataset, which
+> is the first step of empirical Bayes analysis. (Robinson, David.
+> Introduction to Empirical Bayes: Examples from Baseball Statistics .
+> Kindle Edition.)
+
+``` r
+career %>%
+    filter(at_bats > 500) %>%
+    ggplot(aes(x=batting_average)) +
+    geom_histogram(bins = 50) +
+    labs(title='Batting Average Distribution of Players with >500 At-Bats')
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-50-1.png)
+
+``` r
+library(ebbr)
+prior <- career %>%
+  filter(at_bats >= 500) %>%
+  ebb_fit_prior(hits, at_bats)
+
+prior
+```
+
+    ## Empirical Bayes binomial fit with method mle 
+    ## Parameters:
+    ## # A tibble: 1 x 2
+    ##   alpha  beta
+    ##   <dbl> <dbl>
+    ## 1  97.8  278.
+
+I’m not sure how `tidy(prior)$mean` is calculated.
+
+``` r
+as.numeric(tidy(prior)$mean)
+```
+
+    ## [1] 0.2603578
+
+``` r
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(sum(hits) / sum(at_bats))
+```
+
+    ## # A tibble: 1 x 1
+    ##   `sum(hits)/sum(at_bats)`
+    ##                      <dbl>
+    ## 1                    0.269
+
+``` r
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(mean(batting_average))
+```
+
+    ## # A tibble: 1 x 1
+    ##   `mean(batting_average)`
+    ##                     <dbl>
+    ## 1                   0.259
+
+``` r
+career %>%
+    filter(at_bats >= 500) %>%
+    summarise(median(batting_average))
+```
+
+    ## # A tibble: 1 x 1
+    ##   `median(batting_average)`
+    ##                       <dbl>
+    ## 1                     0.259
+
+``` r
+beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
+    mutate(y=dbeta(x, prior$parameters$alpha, prior$parameters$beta))
+
+beta_distribution %>%
+    ggplot(aes(x=x, y=y)) +
+    geom_line() +
+    labs(title="Beta Distribution using Alpha/Beta from Calucalted Priors",
+         subtitle = glue::glue("({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-53-1.png)
+
+``` r
+career %>%
+    filter(at_bats > 500) %>%
+    ggplot(aes(x=batting_average)) +
+    geom_histogram(bins = 50) +
+    geom_line(data=beta_distribution, aes(x=x, y=y*17), color='red') +
+    labs(title="Batting Average Distribution of Players with >500 At-Bats",
+         subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calucalted Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-53-2.png)
+
+> The second step of empirical Bayes analysis is updating each
+> observation based on the overall statistical model. Based on the
+> philosophy of the broom package, this is achieved with the augment()
+> function. (Robinson, David. Introduction to Empirical Bayes: Examples
+> from Baseball Statistics . Kindle Edition.)
+
+``` r
+head(augment(prior, data = career))
+```
+
+    ## # A tibble: 6 x 11
+    ##   playerID name   hits at_bats batting_average .alpha1 .beta1 .fitted   .raw
+    ##   <chr>    <chr> <int>   <int>           <dbl>   <dbl>  <dbl>   <dbl>  <dbl>
+    ## 1 aaronha… Hank…  3771   12364          0.305   3869.   8871.   0.304 0.305 
+    ## 2 aaronto… Tomm…   216     944          0.229    314.   1006.   0.238 0.229 
+    ## 3 abadan01 Andy…     2      21          0.0952    99.8   297.   0.252 0.0952
+    ## 4 abadijo… John…    11      49          0.224    109.    316.   0.256 0.224 
+    ## 5 abbated… Ed A…   772    3044          0.254    870.   2550.   0.254 0.254 
+    ## 6 abbeych… Char…   493    1756          0.281    591.   1541.   0.277 0.281 
+    ## # … with 2 more variables: .low <dbl>, .high <dbl>
+
+> Notice we’ve now added several columns to the original data, each
+> beginning with . (which is a convention of the augment verb to avoid
+> rewriting existing columns). We have the .alpha1 and .beta1 columns as
+> the parameters for each player’s posterior distribution, as well as
+> .fitted representing the new posterior mean (the “shrunken average”).
+> We often want to run these two steps in sequence: estimating a model,
+> then using it as a prior for each observation. The ebbr package
+> provides a shortcut, combining them into one step with
+> add\_ebb\_estimate(). (Robinson, David. Introduction to Empirical
+> Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+``` r
+eb_career <- career %>%
+  add_ebb_estimate(hits, at_bats,
+                   prior_subset = at_bats >= 500)
+```
+
+``` r
+all(eb_career$batting_average == eb_career$.raw)
+```
+
+    ## [1] TRUE
+
+> This was one of the most important visualizations in Chapter 3. I like
+> how it captures what empirical Bayes estimation is doing: moving all
+> batting averages towards the prior mean (the dashed red line), but
+> moving them less if there is a lot of information about that player
+> (high at\_bats). (Robinson, David. Introduction to Empirical Bayes:
+> Examples from Baseball Statistics . Kindle Edition.)
+
+The red line represents points where the raw batting average and the
+estimated batting average are identical.
+
+The dashed red line represents the “prior mean” which is similar, but
+doesn’t seem to be exactly, the average of the batting averages (of
+people with &gt;= 500 at-bats).
+
+So for example, look at the dots/people to the left of the graph. These
+are people that had very few at-bats (dark color), had a very low
+batting average (near 0 on x-axis), but we shifted from their raw
+batting average to the prior mean batting average (i.e. shifted from
+solid red line to dashed red line).
+
+The people with a lot of at bats, tend to have estimated batting average
+that is very close to the raw batting average.
+
+``` r
+eb_career %>%
+    ggplot(aes(x=.raw, y=.fitted, color = at_bats)) +
+    geom_point() +
+    geom_abline(color = "red") +
+    scale_color_continuous(trans = "log", breaks = c(1, 10, 100, 1000)) +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    coord_cartesian(xlim = c(0, .6), ylim=c(0, 0.6)) +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    scale_y_continuous(breaks = pretty_breaks()) +
+    labs(x = "Raw batting average",
+       y = "Shrunken batting average")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-57-1.png)
+
+``` r
+eb_career %>%
+    head(10) %>%
+    mutate(name = reorder(name, .fitted)) %>%
+    ggplot(aes(x=.fitted, y=name)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = .low, xmax = .high)) +
+    geom_point(aes(x=.raw), color='red') +
+    geom_text(aes(x=.raw, label=glue::glue("({ hits } / { at_bats })")), vjust=-0.7, size=3) +
+    labs(x = "Estimated batting average (w/ 95% confidence interval)",
+         y = "Player")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-58-1.png)
