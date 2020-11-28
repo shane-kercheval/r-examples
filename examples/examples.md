@@ -27,6 +27,7 @@
     -   [Confidence Intervals w/
         t-tests](#confidence-intervals-w-t-tests)
     -   [Survival Analysis](#survival-analysis)
+    -   [Pairwise Correlation](#pairwise-correlation)
 
 Packages
 ========
@@ -584,7 +585,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fafa9e89bd8
+    ## env:  0x7fb78393d938
 
     ## [1] 61.875
 
@@ -1024,3 +1025,64 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
     ## 1 acquisitionCapture  -0.0727    0.0753    -0.965 0.334   -0.220      0.0749
     ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211  0.182      0.825 
     ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474   0.00334    0.582
+
+Pairwise Correlation
+--------------------
+
+``` r
+library(gapminder)
+library(widyr)
+
+life_expectency_pairwise_cor <- gapminder %>% 
+         filter(continent == 'Americas') %>%
+         pairwise_cor(country, year, lifeExp, sort = TRUE)
+
+head(life_expectency_pairwise_cor)
+```
+
+    ## # A tibble: 6 x 3
+    ##   item1     item2     correlation
+    ##   <fct>     <fct>           <dbl>
+    ## 1 Nicaragua Brazil          0.999
+    ## 2 Brazil    Nicaragua       0.999
+    ## 3 Nicaragua Guatemala       0.999
+    ## 4 Guatemala Nicaragua       0.999
+    ## 5 Guatemala Brazil          0.999
+    ## 6 Brazil    Guatemala       0.999
+
+``` r
+life_expectency_pairwise_cor %>%
+    mutate(item1=factor(item1, ordered = TRUE),
+           item2=factor(item2, ordered = TRUE)) %>%
+    filter(item1 < item2) %>%
+    ggplot(aes(item1, item2, fill= correlation)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    theme(axis.text.x=element_text(angle=90, hjust=1)) +
+    labs(title='Which countries tend to have similar life-expectencies, over time?',
+         subtitle = '(Americas)',
+         x=NULL,
+         y=NULL)
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-48-1.png)
+
+``` r
+life_expectency_pairwise_cor <- life_expectency_pairwise_cor %>%
+    mutate(item1=factor(item1),
+           item2=factor(item2)) %>%
+    arrange(item2) %>%
+    pivot_wider(names_from = item2, values_from = correlation) %>%
+    arrange(item1)
+
+life_expectency_pairwise_cor[1:5, 1:5]
+```
+
+    ## # A tibble: 5 x 5
+    ##   item1     Argentina Bolivia Brazil Canada
+    ##   <fct>         <dbl>   <dbl>  <dbl>  <dbl>
+    ## 1 Argentina    NA       0.993  0.997  0.997
+    ## 2 Bolivia       0.993  NA      0.989  0.994
+    ## 3 Brazil        0.997   0.989 NA      0.998
+    ## 4 Canada        0.997   0.994  0.998 NA    
+    ## 5 Chile         0.991   0.990  0.992  0.994

@@ -682,3 +682,47 @@ If we do `coxph` it looks like the holdout group is `Born` and each category is 
 survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
   tidy()
 ```
+
+## Pairwise Correlation
+
+```{r message=FALSE, warning=FALSE}
+library(gapminder)
+library(widyr)
+
+life_expectency_pairwise_cor <- gapminder %>% 
+         filter(continent == 'Americas') %>%
+         pairwise_cor(country, year, lifeExp, sort = TRUE)
+
+head(life_expectency_pairwise_cor)
+```
+
+```{r fig.height=5, fig.width=5}
+life_expectency_pairwise_cor %>%
+    mutate(item1=factor(item1, ordered = TRUE),
+           item2=factor(item2, ordered = TRUE)) %>%
+    filter(item1 < item2) %>%
+    ggplot(aes(item1, item2, fill= correlation)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    theme(axis.text.x=element_text(angle=90, hjust=1)) +
+    labs(title='Which countries tend to have similar life-expectencies, over time?',
+         subtitle = '(Americas)',
+         x=NULL,
+         y=NULL)
+```
+
+```{r}
+life_expectency_pairwise_cor <- life_expectency_pairwise_cor %>%
+    mutate(item1=factor(item1),
+           item2=factor(item2)) %>%
+    arrange(item2) %>%
+    pivot_wider(names_from = item2, values_from = correlation) %>%
+    arrange(item1)
+
+life_expectency_pairwise_cor[1:5, 1:5]
+```
+
+```{r}
+
+```
+
