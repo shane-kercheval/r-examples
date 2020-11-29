@@ -1092,7 +1092,7 @@ compare_piazza %>%
 
 > Just like the one-sample test, the function has added .pep and .qvalue columns. From this we can see a few players who we're extremely confident are better than Piazza. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-# Tidy Text
+## Tidy Text
 
 ```{r message=FALSE, warning=FALSE}
 mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
@@ -1115,7 +1115,7 @@ ingredient_pairs <- mr_boston %>%
 head(ingredient_pairs)
 ```
 
-```{r}
+```{r pairwise_correlations_cocktails}
 ingredient_pairs %>%
   filter(item1 %in% c("Gin", "Tequila", "Absinthe",
                       "Mezcal", "Bourbon whiskey",
@@ -1197,7 +1197,7 @@ What pairs of ingrediants would never appear in the same 'type' of cocktail toge
 
 This would look better if we removed duplicate ingrediants (e.g. combine `Fresh lemon juice` and `Juice of a Lemon`)
 
-```{r}
+```{r singular_value_decomposition_ingrediants}
 ingredient_svd <- mr_boston %>%
     distinct(ingredient, name) %>%
     mutate(value = 1) %>%
@@ -1220,7 +1220,7 @@ ingredient_svd %>%
          title = "What are the sources of variation in ingredients?")
 ```
 
-```{r}
+```{r singular_value_decomposition_recipes}
 recipe_svd <- mr_boston %>%
   distinct(name, ingredient) %>%
   mutate(value = 1) %>%
@@ -1239,4 +1239,97 @@ recipe_svd %>%
   labs(x = "Principal component value",
        y = "Ingredient",
        title = "What are the sources of variation in recipes?")
+```
+
+## Logistic Regression
+
+```{r message=FALSE, warning=FALSE}
+beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
+  mutate(state = str_to_upper(state),
+         medal = fct_relevel(medal, c("Bronze", "Silver")))
+
+head(beer_awards)
+```
+
+
+```{r}
+awards_by_year_state <- beer_awards %>%
+  add_count(year, name = "total_yearly_awards") %>%
+  mutate(state = fct_lump(state, 9)) %>%
+  count(year, state, total_yearly_awards, name='awards_won', sort = TRUE) %>%
+  mutate(pct_awards_won = awards_won / total_yearly_awards,
+         awards_not_won = total_yearly_awards - awards_won)
+
+head(awards_by_year_state)
+```
+
+```{r beer_awards_by_year_state}
+awards_by_year_state %>%
+  filter(state != "Other") %>%
+  ggplot(aes(year, pct_awards_won, color = state)) +
+  geom_line() +
+  expand_limits(y = 0) +
+  scale_y_continuous(labels = percent) +
+  facet_wrap(~ state)
+```
+
+How has the probability of successes vs failtures (i.e. awards vs not awards) changed over time?
+
+See https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md
+
+> Logistic Regression is a linear model for log odds. The odds of an event are the probability that it happens over the probability that it doesn’t.
+
+> `log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
+
+
+`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
+
+```{r}
+wi_model <- awards_by_year_state %>%
+    filter(state == "WI") %>%
+    # cbind(successes, failures)
+    glm(cbind(awards_won, awards_not_won) ~ year,
+      data = .,
+      family = "binomial")
+
+wi_model %>% summary()
+```
+
+What do the coefficients mean?
+
+> This is a log-odds ratio. So this is how much the log-odds ratio changes each year.  (https://youtu.be/BV_afpCDQ70?t=3001)
+
+```{r}
+(.log_odds <- coef(wi_model)['year'])
+(.odds <- -1 / exp(.log_odds))
+```
+
+- http://had.co.nz/notes/modelling/logistic-regression.html
+- https://www.flutterbys.com.au/stats/tut/tut10.5a.html
+
+```{r}
+library(broom)
+models_by_state <- awards_by_year_state %>%
+  filter(state != "Other") %>%
+  mutate(state = state.name[match(state, state.abb)]) %>%
+  group_by(state) %>%
+  summarize(model = list(glm(cbind(awards_won, awards_not_won) ~ year, family = "binomial"))) %>%
+  mutate(tidied = map(model, tidy, conf.int = TRUE)) %>%
+  unnest(tidied) %>%
+  filter(term == "year") %>%
+  mutate(#p.value = format.pval(p.value),
+         state = fct_reorder(state, estimate))
+
+models_by_state %>% mutate_if(is.numeric, function(.x) {round(.x, 3)})
+```
+
+```{r logistic_regression_coefficients_beer_awards}
+models_by_state %>%
+  ggplot(aes(estimate, state, color=p.value < .05)) +
+  geom_point() +
+  geom_vline(xintercept = 0, lty = 2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = .2) +
+  labs(x = "Estimated slope",
+       title = "Which states become more or less frequent medal winners?",
+       y = "")
 ```

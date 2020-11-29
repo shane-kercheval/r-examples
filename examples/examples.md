@@ -37,6 +37,12 @@
         -   [Hierarchical Modeling](#hierarchical-modeling)
         -   [Hypothesis Testing](#hypothesis-testing)
             -   [Player-Player AB-test](#player-player-ab-test)
+    -   [Tidy Text](#tidy-text)
+    -   [Pairwise Correlations (again)](#pairwise-correlations-again)
+    -   [Network Graph](#network-graph)
+    -   [Singular Value Decomposition
+        (PCA)](#singular-value-decomposition-pca)
+    -   [Logistic Regression](#logistic-regression)
 
 Packages
 ========
@@ -594,7 +600,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fae41435038
+    ## env:  0x7f8215e319a0
 
     ## [1] 61.875
 
@@ -1683,3 +1689,400 @@ compare_piazza %>%
 > columns. From this we can see a few players who we’re extremely
 > confident are better than Piazza. (Robinson, David. Introduction to
 > Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+Tidy Text
+---------
+
+``` r
+mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
+
+head(mr_boston)
+```
+
+    ## # A tibble: 6 x 6
+    ##   name         category        row_id ingredient_number ingredient       measure
+    ##   <chr>        <chr>            <dbl>             <dbl> <chr>            <chr>  
+    ## 1 Gauguin      Cocktail Class…      1                 1 Light Rum        2 oz   
+    ## 2 Gauguin      Cocktail Class…      1                 2 Passion Fruit S… 1 oz   
+    ## 3 Gauguin      Cocktail Class…      1                 3 Lemon Juice      1 oz   
+    ## 4 Gauguin      Cocktail Class…      1                 4 Lime Juice       1 oz   
+    ## 5 Fort Lauder… Cocktail Class…      2                 1 Light Rum        1 1/2 …
+    ## 6 Fort Lauder… Cocktail Class…      2                 2 Sweet Vermouth   1/2 oz
+
+Pairwise Correlations (again)
+-----------------------------
+
+Example from David Robinson screencase
+(<a href="https://youtu.be/EC0SVkFB2OU?t=1234" class="uri">https://youtu.be/EC0SVkFB2OU?t=1234</a>)
+
+``` r
+library(widyr)
+library(tidytext)
+ingredient_pairs <- mr_boston %>%
+  add_count(ingredient) %>%
+  filter(n >= 10) %>%
+  pairwise_cor(ingredient, name, sort = TRUE)
+
+head(ingredient_pairs)
+```
+
+    ## # A tibble: 6 x 3
+    ##   item1                  item2                  correlation
+    ##   <chr>                  <chr>                        <dbl>
+    ## 1 Juice of a Lemon       Powdered Sugar               0.462
+    ## 2 Powdered Sugar         Juice of a Lemon             0.462
+    ## 3 Coffee-flavored brandy half-and-half                0.375
+    ## 4 half-and-half          Coffee-flavored brandy       0.375
+    ## 5 Whole Egg              Powdered Sugar               0.365
+    ## 6 Powdered Sugar         Whole Egg                    0.365
+
+``` r
+ingredient_pairs %>%
+  filter(item1 %in% c("Gin", "Tequila", "Absinthe",
+                      "Mezcal", "Bourbon whiskey",
+                      "Vodka")) %>%
+  group_by(item1) %>%
+  top_n(10, correlation) %>%
+  mutate(item2 = reorder_within(item2, correlation, item1)) %>%
+  ggplot(aes(correlation, item2)) +
+  geom_col() +
+  facet_wrap(~ item1, scales = "free_y") +
+  scale_y_reordered() +
+  labs(title = "What ingredients are most correlated with particular ingredients?")
+```
+
+![](examples_files/figure-markdown_github/pairwise_correlations_cocktails-1.png)
+
+Network Graph
+-------------
+
+``` r
+mr_boston_parsed <- mr_boston %>%
+    extract(measure, "amount", regex = "(.*) oz", remove = FALSE) %>%
+    extract(amount, "ones", regex = "(^\\d+$|^\\d+ )", convert = TRUE, remove = FALSE) %>%
+    extract(amount, c("numerator", "denominator"),
+          regex = "(\\d+)\\/(\\d+)", convert = TRUE, remove = FALSE) %>%
+    replace_na(list(ones = 0, numerator = 0, denominator = 1)) %>%
+    mutate(oz = ones + numerator / denominator,
+         oz = na_if(oz, 0))
+
+
+ingredients_summarized <- mr_boston_parsed %>%
+    # first, groupr by drink name so that we can create a percentile (based off of ingredient number) for all ingrediates within their drink
+    group_by(name) %>%
+    mutate(percentile = row_number() / n()) %>%
+    ungroup() %>%
+    # now group by ingredient.
+    group_by(ingredient) %>%
+    summarize(n = n(),
+            n_with_oz = sum(!is.na(oz)),
+            avg_position = mean(percentile),
+            avg_serving = mean(oz, na.rm = TRUE)) %>%
+    arrange(desc(n))
+
+head(ingredients_summarized)
+```
+
+    ## # A tibble: 6 x 5
+    ##   ingredient            n n_with_oz avg_position avg_serving
+    ##   <chr>             <int>     <int>        <dbl>       <dbl>
+    ## 1 Gin                 176       176        0.577       1.35 
+    ## 2 Fresh lemon juice   138       138        0.728       0.696
+    ## 3 Simple Syrup        115       115        0.810       0.635
+    ## 4 Vodka               114       114        0.351       1.41 
+    ## 5 Light Rum           113       113        0.396       1.33 
+    ## 6 Dry Vermouth        107       107        0.662       0.806
+
+`avg_position` is the step number that the ingredient, on average, shows
+up when mixing the drink.
+
+<a href="https://youtu.be/EC0SVkFB2OU?t=1269" class="uri">https://youtu.be/EC0SVkFB2OU?t=1269</a>
+
+``` r
+library(ggraph)
+library(igraph)
+```
+
+    ## 
+    ## Attaching package: 'igraph'
+
+    ## The following objects are masked from 'package:dplyr':
+    ## 
+    ##     as_data_frame, groups, union
+
+    ## The following objects are masked from 'package:purrr':
+    ## 
+    ##     compose, simplify
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     crossing
+
+    ## The following object is masked from 'package:tibble':
+    ## 
+    ##     as_data_frame
+
+    ## The following objects are masked from 'package:lubridate':
+    ## 
+    ##     %--%, union
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     decompose, spectrum
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     union
+
+``` r
+top_cors <- ingredient_pairs %>% head(150)  # most correlated cocktail ingrediants
+ingredient_info <- ingredients_summarized %>% filter(ingredient %in% top_cors$item1)
+
+set.seed(2)
+top_cors %>%
+  graph_from_data_frame(vertices = ingredient_info) %>%
+  ggraph(layout = "fr") +
+  geom_edge_link() +
+  geom_node_text(aes(label = name), repel = TRUE) +
+  geom_node_point(aes(size = 1.1 * n)) +
+  geom_node_point(aes(size = n, color = avg_position)) +
+  scale_color_gradient2(low = "red", high = "blue", midpoint = .5,
+                        labels = scales::percent_format()) +
+  labs(size = "# of recipes",
+       color = "Avg position in drink",
+       title = "The constellations of cocktail ingredients",
+       subtitle = "Connected ingredients tend to appear in the same recipes. Red ingredients are early in the recipe, blue tend to be later")
+```
+
+![](examples_files/figure-markdown_github/network_graph_cocktails-1.png)
+
+Singular Value Decomposition (PCA)
+----------------------------------
+
+<a href="https://youtu.be/EC0SVkFB2OU?t=3009" class="uri">https://youtu.be/EC0SVkFB2OU?t=3009</a>
+
+What dimensions drive a lot of the variation among cocktails?
+
+Here we have broken the data down by dimensions.
+
+What pairs of ingrediants would never appear in the same ‘type’ of
+cocktail together?
+
+This would look better if we removed duplicate ingrediants (e.g. combine
+`Fresh lemon juice` and `Juice of a Lemon`)
+
+``` r
+ingredient_svd <- mr_boston %>%
+    distinct(ingredient, name) %>%
+    mutate(value = 1) %>%
+    # we're interested in components by intgrediate across name
+    widely_svd(ingredient, name, value)
+
+ingredient_svd %>%
+    filter(dimension > 1, 
+           dimension <= 5) %>%
+    mutate(dimension = paste0("PC", dimension)) %>%
+    group_by(dimension) %>%
+    top_n(16, abs(value)) %>%
+    mutate(ingredient = reorder_within(ingredient, value, dimension)) %>%
+    ggplot(aes(value, ingredient, fill = value > 0)) +
+    geom_col(show.legend = FALSE) +
+    scale_y_reordered() +
+    facet_wrap(~ dimension, scales = "free_y") +
+    labs(x = "Principal component value",
+         y = "Ingredient",
+         title = "What are the sources of variation in ingredients?")
+```
+
+![](examples_files/figure-markdown_github/singular_value_decomposition_ingrediants-1.png)
+
+``` r
+recipe_svd <- mr_boston %>%
+  distinct(name, ingredient) %>%
+  mutate(value = 1) %>%
+  widely_svd(name, ingredient, value)
+
+recipe_svd %>%
+  filter(dimension > 1, dimension <= 5) %>%
+  mutate(dimension = paste0("PC", dimension)) %>%
+  group_by(dimension) %>%
+  top_n(16, abs(value)) %>%
+  mutate(recipe = reorder_within(name, value, dimension)) %>%
+  ggplot(aes(value, recipe, fill = value > 0)) +
+  geom_col(show.legend = FALSE) +
+  scale_y_reordered() +
+  facet_wrap(~ dimension, scales = "free_y") +
+  labs(x = "Principal component value",
+       y = "Ingredient",
+       title = "What are the sources of variation in recipes?")
+```
+
+![](examples_files/figure-markdown_github/singular_value_decomposition_recipes-1.png)
+
+Logistic Regression
+-------------------
+
+``` r
+beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
+  mutate(state = str_to_upper(state),
+         medal = fct_relevel(medal, c("Bronze", "Silver")))
+
+head(beer_awards)
+```
+
+    ## # A tibble: 6 x 7
+    ##   medal  beer_name        brewery          city      state category         year
+    ##   <fct>  <chr>            <chr>            <chr>     <chr> <chr>           <dbl>
+    ## 1 Gold   Volksbier Vienna Wibby Brewing    Longmont  CO    American Amber…  2020
+    ## 2 Silver Oktoberfest      Founders Brewin… Grand Ra… MI    American Amber…  2020
+    ## 3 Bronze Amber Lager      Skipping Rock B… Staunton  VA    American Amber…  2020
+    ## 4 Gold   Lager at World'… Epidemic Ales    Concord   CA    American Lager   2020
+    ## 5 Silver Seismic Tremor   Seismic Brewing… Santa Ro… CA    American Lager   2020
+    ## 6 Bronze Lite Thinking    Pollyanna Brewi… Lemont    IL    American Lager   2020
+
+``` r
+awards_by_year_state <- beer_awards %>%
+  add_count(year, name = "total_yearly_awards") %>%
+  mutate(state = fct_lump(state, 9)) %>%
+  count(year, state, total_yearly_awards, name='awards_won', sort = TRUE) %>%
+  mutate(pct_awards_won = awards_won / total_yearly_awards,
+         awards_not_won = total_yearly_awards - awards_won)
+
+head(awards_by_year_state)
+```
+
+    ## # A tibble: 6 x 6
+    ##    year state total_yearly_awards awards_won pct_awards_won awards_not_won
+    ##   <dbl> <fct>               <int>      <int>          <dbl>          <int>
+    ## 1  2019 Other                 257        105          0.409            152
+    ## 2  2018 Other                 246         98          0.398            148
+    ## 3  2017 Other                 246         96          0.390            150
+    ## 4  2020 Other                 218         84          0.385            134
+    ## 5  2016 Other                 237         83          0.350            154
+    ## 6  2014 Other                 213         78          0.366            135
+
+``` r
+awards_by_year_state %>%
+  filter(state != "Other") %>%
+  ggplot(aes(year, pct_awards_won, color = state)) +
+  geom_line() +
+  expand_limits(y = 0) +
+  scale_y_continuous(labels = percent) +
+  facet_wrap(~ state)
+```
+
+![](examples_files/figure-markdown_github/beer_awards_by_year_state-1.png)
+
+How has the probability of successes vs failtures (i.e. awards vs not
+awards) changed over time?
+
+See
+<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md</a>
+
+> Logistic Regression is a linear model for log odds. The odds of an
+> event are the probability that it happens over the probability that it
+> doesn’t.
+
+> `log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
+
+`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
+
+``` r
+wi_model <- awards_by_year_state %>%
+    filter(state == "WI") %>%
+    # cbind(successes, failures)
+    glm(cbind(awards_won, awards_not_won) ~ year,
+      data = .,
+      family = "binomial")
+
+wi_model %>% summary()
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = cbind(awards_won, awards_not_won) ~ year, family = "binomial", 
+    ##     data = .)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.8307  -0.9103  -0.2001   0.4765   2.4040  
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error z value            Pr(>|z|)    
+    ## (Intercept) 133.006996  14.904298   8.924 <0.0000000000000002 ***
+    ## year         -0.067822   0.007441  -9.115 <0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 130.098  on 33  degrees of freedom
+    ## Residual deviance:  46.238  on 32  degrees of freedom
+    ## AIC: 172.72
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+What do the coefficients mean?
+
+> This is a log-odds ratio. So this is how much the log-odds ratio
+> changes each year.
+> (<a href="https://youtu.be/BV_afpCDQ70?t=3001" class="uri">https://youtu.be/BV_afpCDQ70?t=3001</a>)
+
+``` r
+(.log_odds <- coef(wi_model)['year'])
+```
+
+    ##        year 
+    ## -0.06782239
+
+``` r
+(.odds <- -1 / exp(.log_odds))
+```
+
+    ##      year 
+    ## -1.070175
+
+-   <a href="http://had.co.nz/notes/modelling/logistic-regression.html" class="uri">http://had.co.nz/notes/modelling/logistic-regression.html</a>
+-   <a href="https://www.flutterbys.com.au/stats/tut/tut10.5a.html" class="uri">https://www.flutterbys.com.au/stats/tut/tut10.5a.html</a>
+
+``` r
+library(broom)
+models_by_state <- awards_by_year_state %>%
+  filter(state != "Other") %>%
+  mutate(state = state.name[match(state, state.abb)]) %>%
+  group_by(state) %>%
+  summarize(model = list(glm(cbind(awards_won, awards_not_won) ~ year, family = "binomial"))) %>%
+  mutate(tidied = map(model, tidy, conf.int = TRUE)) %>%
+  unnest(tidied) %>%
+  filter(term == "year") %>%
+  mutate(#p.value = format.pval(p.value),
+         state = fct_reorder(state, estimate))
+
+models_by_state %>% mutate_if(is.numeric, function(.x) {round(.x, 3)})
+```
+
+    ## # A tibble: 9 x 9
+    ##   state      model term  estimate std.error statistic p.value conf.low conf.high
+    ##   <fct>      <lis> <chr>    <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+    ## 1 California <glm> year     0.008     0.004     1.93    0.054    0         0.016
+    ## 2 Colorado   <glm> year     0.011     0.005     2.30    0.022    0.002     0.021
+    ## 3 Illinois   <glm> year     0.005     0.01      0.454   0.65    -0.015     0.025
+    ## 4 Oregon     <glm> year     0.009     0.007     1.39    0.165   -0.004     0.023
+    ## 5 Pennsylva… <glm> year    -0.033     0.008    -4.19    0       -0.049    -0.018
+    ## 6 Texas      <glm> year    -0.022     0.008    -2.94    0.003   -0.037    -0.007
+    ## 7 Virginia   <glm> year     0.043     0.013     3.37    0.001    0.018     0.068
+    ## 8 Washington <glm> year    -0.006     0.009    -0.671   0.502   -0.023     0.011
+    ## 9 Wisconsin  <glm> year    -0.068     0.007    -9.12    0       -0.082    -0.053
+
+``` r
+models_by_state %>%
+  ggplot(aes(estimate, state, color=p.value < .05)) +
+  geom_point() +
+  geom_vline(xintercept = 0, lty = 2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = .2) +
+  labs(x = "Estimated slope",
+       title = "Which states become more or less frequent medal winners?",
+       y = "")
+```
+
+![](examples_files/figure-markdown_github/logistic_regression_coefficients_beer_awards-1.png)
