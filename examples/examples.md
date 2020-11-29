@@ -594,7 +594,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fa66a96ea20
+    ## env:  0x7f8502a8bb40
 
     ## [1] 61.875
 
@@ -720,7 +720,7 @@ iris_gathered %>%
     facet_wrap(~ metric, scales = 'free_x')
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-31-1.png)
+![](examples_files/figure-markdown_github/reorder_within_iris-1.png)
 
 ------------------------------------------------------------------------
 
@@ -737,7 +737,7 @@ ggplot(aes(x='', y=value)) +
                   labels = c("0", "Second", "Minute", "Hour", "2.5 Days", "120 Days"))
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-32-1.png)
+![](examples_files/figure-markdown_github/scale_x_log10_seconds-1.png)
 
 ------------------------------------------------------------------------
 
@@ -760,7 +760,7 @@ d %>%
     geom_line()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-33-1.png)
+![](examples_files/figure-markdown_github/interaction-1.png)
 
 ------------------------------------------------------------------------
 
@@ -798,7 +798,7 @@ cateaceans_acquisition_by_decade %>%
        y = "% of dolphins recorded")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-34-1.png)
+![](examples_files/figure-markdown_github/spinogram_dolphins_v1-1.png)
 
 This shows everything in `cateaceans_acquisition_by_decade_complete`
 that is not in `cateaceans_acquisition_by_decade`. `complete` filled in
@@ -842,7 +842,7 @@ cateaceans_acquisition_by_decade_complete %>%
        y = "% of dolphins recorded")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-36-1.png)
+![](examples_files/figure-markdown_github/spinogram_dolphins_v2-1.png)
 
 Advanced
 ========
@@ -883,29 +883,36 @@ Then we take each of those data.frames, and run a `t.test` of
 ``` r
 library(broom)
 cuisine_conf_ints <- restaurant_inspections_by_dba %>%
-    add_count(cuisine) %>%
-    filter(n > 100) %>%
-    nest(data=-cuisine) %>%
+    add_count(cuisine) %>%  # adds number of dbas for each cuisine
+    filter(n > 100) %>%  # only keep cuisines that have >100 invidual DBAs
+    nest(data=-cuisine) %>%  # take all columns except for cuisine and collapse the resulting data.frame into the row's cell
+    mutate(num_dbas = map_int(data, ~ nrow(.))) %>%
+    mutate(mean_avg_score = map_dbl(data, ~ mean(.$avg_score))) %>%
     mutate(model = map(data, ~ t.test(.$avg_score))) %>%
     mutate(model = map(model, ~ tidy(.))) %>%
     unnest(model)
-head(cuisine_conf_ints, 10)
+# note: the p-value is meaningless, the null hypothesis is that the mean is equal to 0
+# we are just using this to get us confidence intervals
+
+round_2 <- function(.x) {round(.x, 2)}
+head(cuisine_conf_ints %>% mutate_if(is.numeric, round_2), 10)
 ```
 
-    ## # A tibble: 10 x 10
-    ##    cuisine data  estimate statistic   p.value parameter conf.low conf.high
-    ##    <chr>   <lis>    <dbl>     <dbl>     <dbl>     <dbl>    <dbl>     <dbl>
-    ##  1 Café/C… <tib…    12.1       39.2 7.96e-205      1003    11.5       12.8
-    ##  2 Chicken <tib…    16.5       16.0 1.36e- 36       181    14.4       18.5
-    ##  3 Americ… <tib…    13.5       90.5 0.             4698    13.2       13.8
-    ##  4 Sandwi… <tib…    11.4       14.8 5.12e- 28       111     9.87      12.9
-    ##  5 Mexican <tib…    16.1       37.6 7.50e-172       720    15.3       16.9
-    ##  6 Caribb… <tib…    18.5       29.5 3.94e-116       559    17.3       19.8
-    ##  7 Pizza   <tib…    14.3       38.7 2.52e-184       785    13.6       15.0
-    ##  8 Ice Cr… <tib…     9.95      17.0 9.72e- 40       185     8.80      11.1
-    ##  9 Bakery  <tib…    13.4       31.0 1.66e-125       584    12.5       14.2
-    ## 10 Juice,… <tib…    12.1       22.2 4.08e- 63       274    11.0       13.2
-    ## # … with 2 more variables: method <chr>, alternative <chr>
+    ## # A tibble: 10 x 12
+    ##    cuisine data  num_dbas mean_avg_score estimate statistic p.value parameter
+    ##    <chr>   <lis>    <dbl>          <dbl>    <dbl>     <dbl>   <dbl>     <dbl>
+    ##  1 Café/C… <tib…     1004          12.1     12.1       39.2       0      1003
+    ##  2 Chicken <tib…      182          16.5     16.5       16.0       0       181
+    ##  3 Americ… <tib…     4699          13.5     13.5       90.5       0      4698
+    ##  4 Sandwi… <tib…      112          11.4     11.4       14.8       0       111
+    ##  5 Mexican <tib…      721          16.1     16.1       37.6       0       720
+    ##  6 Caribb… <tib…      560          18.5     18.5       29.5       0       559
+    ##  7 Pizza   <tib…      786          14.3     14.3       38.7       0       785
+    ##  8 Ice Cr… <tib…      186           9.95     9.95      17.0       0       185
+    ##  9 Bakery  <tib…      585          13.4     13.4       31.0       0       584
+    ## 10 Juice,… <tib…      275          12.1     12.1       22.2       0       274
+    ## # … with 4 more variables: conf.low <dbl>, conf.high <dbl>, method <chr>,
+    ## #   alternative <chr>
 
 ``` r
 cuisine_conf_ints %>%
@@ -921,7 +928,7 @@ cuisine_conf_ints %>%
        subtitle = "Each restaurant chain was counted once based on its average score")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-40-1.png)
+![](examples_files/figure-markdown_github/t_test_confidence_intervals-1.png)
 
 Survival Analysis
 -----------------
@@ -937,6 +944,7 @@ library(survival)
 cetaceans <- cetaceans_raw
 dolphin_survival <- cetaceans %>%
   filter(status %in% c("Alive", "Died")) %>%
+         # deathYear needs a value even if they didn't die (status will indicate if they did die)
   mutate(deathYear = ifelse(status == "Alive", 2017, year(statusDate)),
          status = ifelse(status == "Alive", 0, 1),  # note: alive == 0
          age = deathYear - birthYear) %>%
@@ -959,7 +967,32 @@ head(dolphin_survival)
 
 `status` is `0` if `alive`, `1` if `died`
 
-So the followin gives the median age of death, by sex, with confidence
+So the followin gives the median age of death, with confidence
+intervals.
+
+``` r
+model <- survival::survfit(Surv(age, status) ~ 1, dolphin_survival)
+model
+```
+
+    ## Call: survfit(formula = Surv(age, status) ~ 1, data = dolphin_survival)
+    ## 
+    ##       n  events  median 0.95LCL 0.95UCL 
+    ##    1388     932      17      16      18
+
+``` r
+broom::tidy(model) %>%
+  ggplot(aes(time, estimate)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+![](examples_files/figure-markdown_github/survival_dolphins-1.png)
+
+The followin gives the median age of death, by sex, with confidence
 intervals.
 
 ``` r
@@ -983,7 +1016,7 @@ broom::tidy(model) %>%
        x = "Age of Dolphin")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-43-1.png)
+![](examples_files/figure-markdown_github/survival_dolphins_sex-1.png)
 
 How can we tell if sex is actually meaningful (i.e. the survival rate is
 actual different and not due to chance?)
@@ -1017,7 +1050,7 @@ broom::tidy(model) %>%
        x = "Age of Dolphin")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-45-1.png)
+![](examples_files/figure-markdown_github/survival_dolphins_acquisition-1.png)
 
 If we do `coxph` it looks like the holdout group is `Born` and each
 category is being compared to that. `Capture` is not statistically
@@ -1074,7 +1107,7 @@ life_expectency_pairwise_cor %>%
          y=NULL)
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-48-1.png)
+![](examples_files/figure-markdown_github/pairwise_correlations_country_life_expectencies-1.png)
 
 ``` r
 life_expectency_pairwise_cor <- life_expectency_pairwise_cor %>%
@@ -1132,7 +1165,7 @@ career %>%
     labs(title='Batting Average Distribution of Players with >500 At-Bats')
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-50-1.png)
+![](examples_files/figure-markdown_github/ebb_batting_average_distribution-1.png)
 
 ### Prior Distribution
 
@@ -1204,7 +1237,7 @@ beta_distribution %>%
          subtitle = glue::glue("({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-53-1.png)
+![](examples_files/figure-markdown_github/ebb_beta_distribution_prior-1.png)
 
 ``` r
 career %>%
@@ -1216,7 +1249,7 @@ career %>%
          subtitle=glue::glue("Red Line is Beta Distribution using Alpha/Beta from Calculated Priors ({ round(prior$parameters$alpha, 2) }, { round(prior$parameters$beta, 2) })"))
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-53-2.png)
+![](examples_files/figure-markdown_github/ebb_beta_distribution_prior-2.png)
 
 ### Updating Observations based on Priors
 
@@ -1304,7 +1337,7 @@ eb_career %>%
        y = "Shrunken batting average")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-57-1.png)
+![](examples_files/figure-markdown_github/ebb_raw_vs_shrunken-1.png)
 
 ``` r
 eb_career %>%
@@ -1319,7 +1352,7 @@ eb_career %>%
     scale_x_log10()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-58-1.png)
+![](examples_files/figure-markdown_github/ebb_raw_vs_shurnked_at_bats-1.png)
 
 This graph shows that we are shrinking people with a low number of at
 bats toward the prior mean (red dotted line) rather than towards the
@@ -1342,7 +1375,7 @@ eb_career %>%
          y = "Player")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-59-1.png)
+![](examples_files/figure-markdown_github/ebb_estimated_batting_average-1.png)
 
 ### Hierarchical Modeling
 
@@ -1368,7 +1401,7 @@ career %>%
   scale_x_log10()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-60-1.png)
+![](examples_files/figure-markdown_github/ebb_at_bats_regression-1.png)
 
 This graphs shows that the more at-bats someone has, the better their
 batting average tends to be, which makes sense. This is the line that we
@@ -1418,7 +1451,7 @@ eb_career_ab %>%
     scale_x_log10()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-62-1.png)
+![](examples_files/figure-markdown_github/ebb_at_bats_raw_vs_shrunken-1.png)
 
 Now, we are shrinking the players with fewer at-bats to a lower batting
 average.
@@ -1436,7 +1469,7 @@ eb_career_ab %>%
          y = "Player")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-63-1.png)
+![](examples_files/figure-markdown_github/ebb_estimated_batting_average_at_bats-1.png)
 
 Now, Andy Abad and Dan Abbot have much lower estimated batting-averages
 compared to the graph above. In the graph above Dan Abbot was estimated
@@ -1527,7 +1560,7 @@ augment(eb_career_prior, newdata = fake_data) %>%
     ylab("Prior distribution (mean + 95% quantiles)")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-65-1.png)
+![](examples_files/figure-markdown_github/ebb_gamlss_splines-1.png)
 
 ### Hypothesis Testing
 
