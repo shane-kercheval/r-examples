@@ -1344,7 +1344,6 @@ Example from David Robinson's screencast (https://youtu.be/lY0YLDZhT88?t=2977)
 head(.ikea)
 ```
 
-
 ```{r}
 .ikea_volume <- .ikea %>%
   mutate(volume_m3 = depth * height * width / 1e6) %>%
