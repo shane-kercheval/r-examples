@@ -46,7 +46,7 @@ ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/
     mutate(price_usd = 0.27 * price,
            short_description = str_squish(short_description)) %>%
     add_count(category, name = "category_total") %>%
-    select(item_id, name, price_usd, category, category_total, short_description, depth, height, width)
+    select(item_id, name, price_usd, category, category_total, short_description, depth, height, width, other_colors)
 
 mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
 
@@ -490,9 +490,7 @@ First, here is what it would look like if we didn't use `complete`.
 Notice the missing gaps. That is because we have missing years.
 
 ```{r spinogram_dolphins_v1, message=FALSE, warning=FALSE}
-cetaceans <- cetaceans_raw
-
-cateaceans_acquisition_by_decade <- cetaceans %>%
+cateaceans_acquisition_by_decade <- cetaceans_raw %>%
   filter(originDate >= "1960-01-01") %>%
   count(acquisition,
         decade = 5 * (year(originDate) %/% 5))
@@ -516,7 +514,13 @@ This shows everything in `cateaceans_acquisition_by_decade_complete` that is not
 ```{r}
 cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>%
   complete(acquisition, decade, fill = list(n = 0))
+```
 
+What did `complete()` do? Lets look at the rows that were added (i.e. the rows in _complete that are not in _decade i.e. `anti_join`)?
+
+`complete` filled in the missing combinations with a default value of `n` = `1`
+
+```{r}
 cateaceans_acquisition_by_decade_complete %>%
     anti_join(cateaceans_acquisition_by_decade, by = c("acquisition", "decade", "n")) %>%
     head(10)
@@ -537,12 +541,48 @@ cateaceans_acquisition_by_decade_complete %>%
        y = "% of dolphins recorded")
 ```
 
+### Joy Plot
+
+Example from David Robinson's screencast (https://youtu.be/lY0YLDZhT88?t=665)
+
+```{r}
+ikea %>% select(category, name, price_usd) %>% head()
+```
+
+```{r}
+library(ggridges)
+ikea %>%
+  mutate(category = glue::glue("{ category } ({ category_total })"),
+         category = fct_reorder(category, price_usd)) %>%
+  ggplot(aes(price_usd, category)) +
+  geom_density_ridges() +
+  # geom_jitter(width = 0, height = .1, alpha = .25) +
+  scale_x_log10(labels = dollar) +
+  labs(x = "Price (USD)",
+       y = "",
+       title = "How much do items in each category cost?")
+```
+
+```{r}
+ikea %>%
+  mutate(category = glue::glue("{ category } ({ category_total })"),
+         category = fct_reorder(category, price_usd)) %>%
+  ggplot(aes(price_usd, category, fill = other_colors)) +
+  geom_density_ridges(alpha = .5) +
+  # geom_jitter(width = 0, height = .1, alpha = .25) +
+  scale_x_log10(labels = dollar) +
+  labs(x = "Price (USD)",
+       y = "",
+       title = "How much do items in each category cost?")
+```
+
+> "If we were building a predictive model, we'd probably include both category and other_colors"
+
 # Advanced
 
 ## Confidence Intervals w/ t-tests
 
 Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/em4FXPf4H-Y?t=1783)
-
 
 ```{r}
 head(restaurant_inspections_by_dba, 10)
@@ -1213,7 +1253,6 @@ recipe_svd %>%
 head(beer_awards)
 ```
 
-
 ```{r}
 awards_by_year_state <- beer_awards %>%
   add_count(year, name = "total_yearly_awards") %>%
@@ -1294,6 +1333,91 @@ models_by_state %>%
   labs(x = "Estimated slope",
        title = "Which states become more or less frequent medal winners?",
        y = "")
+```
+
+## Nested Regression
+
+Example from David Robinson's screencast (https://youtu.be/lY0YLDZhT88?t=2977)
+
+```{r}
+.ikea <- ikea %>% select(price_usd, category, other_colors, depth, height, width)
+head(.ikea)
+```
+
+
+```{r}
+.ikea_volume <- .ikea %>%
+  mutate(volume_m3 = depth * height * width / 1e6) %>%
+  filter(!is.na(volume_m3),
+         volume_m3 >= .001) %>%
+  arrange(desc(volume_m3)) %>%
+  add_count(category, name = "category_total")
+
+head(.ikea_volume)
+```
+
+```{r}
+.ikea_model <-lm(log2(price_usd) ~ log2(volume_m3), data = .ikea_volume)
+```
+
+If we were to predict price based on only the volumn (cubic meters).
+
+```{r}
+.ikea_model %>% summary()
+```
+
+Then what this says that our Intercept (which is where `log2(volume_m3)` is `0`; or in other words when the volumn_m3 is 1 (cubic meter) because `log2(1)` equals `0`) ...
+
+```{r}
+log2(1)
+```
+
+then `log2(price_usd)` is ``r coef(.ikea_model)['(Intercept)']`` 
+
+```{r}
+coef(.ikea_model)['(Intercept)']
+```
+
+In other words, the price is ``r 2 ^ coef(.ikea_model)['(Intercept)']``
+
+```{r}
+2 ^ coef(.ikea_model)['(Intercept)']
+```
+
+Putting it together, when the volume of the furniture is 1 cubic meter, we would predict that the price is `$`r 2 ^ coef(.ikea_model)['(Intercept)']``
+
+For each increase in `log2(volume_m3)` we would expect an increase in `log2(price_usd)` by ``r coef(.ikea_model)['log2(volume_m3)']``
+
+```{r}
+coef(.ikea_model)['log2(volume_m3)']
+```
+
+i.e. every time we doulbe in cubic meters we would expect an increase to the price by a factor of ``r 2 ^ coef(.ikea_model)['log2(volume_m3)']``
+
+```{r}
+2 ^ coef(.ikea_model)['log2(volume_m3)']
+```
+
+But now lets include `category` and `other_colors`.
+
+```{r fig.height=5, fig.width=7}
+library(broom)
+.ikea_volume %>%
+    # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
+    mutate(category = fct_relevel(category, "Tables & desks")) %>%
+    lm(log2(price_usd) ~ log2(volume_m3) + category + other_colors, data = .) %>%
+    tidy(conf.int = TRUE) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(term = ifelse(term == "log2(volume_m3)", "Item volume (doubling)", term),
+           term = str_remove(term, "^category")) %>%
+    mutate(term = fct_reorder(term, estimate)) %>%
+    ggplot(aes(estimate, term, color=p.value <= 0.05)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = .2) +
+    geom_vline(xintercept = 0, color = "red", lty = 2) +
+    labs(x = "Impact on price (relative to Tables & desks)",
+         y = "",
+         title = "What objects are unusually expensive/inexpensive relative to volume?")
 ```
 
 ```{r include=FALSE}
