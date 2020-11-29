@@ -622,6 +622,7 @@ library(survival)
 cetaceans <- cetaceans_raw
 dolphin_survival <- cetaceans %>%
   filter(status %in% c("Alive", "Died")) %>%
+         # deathYear needs a value even if they didn't die (status will indicate if they did die)
   mutate(deathYear = ifelse(status == "Alive", 2017, year(statusDate)),
          status = ifelse(status == "Alive", 0, 1),  # note: alive == 0
          age = deathYear - birthYear) %>%
