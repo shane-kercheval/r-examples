@@ -594,7 +594,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f8502a8bb40
+    ## env:  0x7fae41435038
 
     ## [1] 61.875
 
@@ -1071,12 +1071,16 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
 Pairwise Correlation
 --------------------
 
+In this case, we are finding correlations of `lifeExp` among `countries`
+life-expectencies over time (i.e. by year)?
+
 ``` r
 library(gapminder)
 library(widyr)
 
 life_expectency_pairwise_cor <- gapminder %>% 
-         filter(continent == 'Americas') %>%
+         filter(continent == 'Americas') %>%  # filter for one continent just so we can fit into a single graph.
+         # add_count(country) %>%
          pairwise_cor(country, year, lifeExp, sort = TRUE)
 
 head(life_expectency_pairwise_cor)
@@ -1091,6 +1095,20 @@ head(life_expectency_pairwise_cor)
     ## 4 Guatemala Nicaragua       0.999
     ## 5 Guatemala Brazil          0.999
     ## 6 Brazil    Guatemala       0.999
+
+``` r
+life_expectency_pairwise_cor %>%
+    filter(item1 %in% c('United States', 'Mexico', 'Canada')) %>%
+    ggplot(aes(x=correlation, y=tidytext::reorder_within(x=item2, by=correlation, within=item1))) +
+    geom_col() +
+    tidytext::scale_y_reordered() +
+    facet_wrap(~item1, scales='free') +
+    labs(title="Countries with Similar Life-Expectencies to US, Mexico, Canada",
+         x='Correlation of Life-Expectencies',
+         y=NULL)
+```
+
+![](examples_files/figure-markdown_github/pairwise_correlations_us_mexico_canada-1.png)
 
 ``` r
 life_expectency_pairwise_cor %>%
