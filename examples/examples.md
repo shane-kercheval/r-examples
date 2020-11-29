@@ -1072,6 +1072,7 @@ Pairwise Correlation
 --------------------
 
 In this case, we are finding correlations of `lifeExp` among `countries`
+across/by `year`. So, which countries tend to have similar
 life-expectencies over time (i.e. by year)?
 
 ``` r
