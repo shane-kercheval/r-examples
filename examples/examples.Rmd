@@ -962,13 +962,15 @@ eb_career_ab %>%
 
 Now, Andy Abad and Dan Abbot have much lower estimated batting-averages compared to the graph above. In the graph above Dan Abbot was estimated to have a slightly higher batting average than Kurt Abbott, who has many more at-bats than Dan. Now, Dan is estimated to have a much lower batting-avearge.
 
+An important note is that this will not work for rookies, it is only meant to assess the players' entire career. 
 
+http://varianceexplained.org/r/beta_binomial_baseball/
 
+Question in comments
 
+> About this post; don't you think that letting the estimate being affected by AB biases the estimate for young players who have low AB because they are starting and not because are not playing? Would it be interesting to use something like mean of AB per game?
 
+Answer by Dave
 
-
-
-
-
+> Your question raises a very important issue- I bring it up in the following post in this series (http://varianceexplained.or.... In short you're 100% right that this doesn't work for predicting future performance of rookies without more adjustments. "One important aspect of this prediction is that it won’t be useful when we’ve just hired a “rookie” player, and we’re wondering what his batting average will be. This observed variable ABAB is based on a player’s entire career, such that a low number is evidence that a player didn’t have much of a chance to bat. (If we wanted to make a prediction, we’d have to consider the distribution of possible ABAB’s the player could end up with and integrate over that, which is beyond the scope of this post)."
 
