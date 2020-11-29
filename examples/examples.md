@@ -22,6 +22,7 @@
     -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
     -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
     -   [spinogram](#spinogram)
+    -   [Joy Plot](#joy-plot)
 -   [Advanced](#advanced)
     -   [Confidence Intervals w/
         t-tests](#confidence-intervals-w-t-tests)
@@ -42,6 +43,7 @@
     -   [Singular Value Decomposition
         (PCA)](#singular-value-decomposition-pca)
     -   [Logistic Regression](#logistic-regression)
+    -   [Nested Regression](#nested-regression)
 
 Data Cleaning
 =============
@@ -585,7 +587,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fe1b9bc4d80
+    ## env:  0x7f88c7fccea8
 
     ## [1] 61.875
 
@@ -769,9 +771,7 @@ First, here is what it would look like if we didn’t use `complete`.
 Notice the missing gaps. That is because we have missing years.
 
 ``` r
-cetaceans <- cetaceans_raw
-
-cateaceans_acquisition_by_decade <- cetaceans %>%
+cateaceans_acquisition_by_decade <- cetaceans_raw %>%
   filter(originDate >= "1960-01-01") %>%
   count(acquisition,
         decade = 5 * (year(originDate) %/% 5))
@@ -799,7 +799,15 @@ the gabs.
 ``` r
 cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>%
   complete(acquisition, decade, fill = list(n = 0))
+```
 
+What did `complete()` do? Lets look at the rows that were added
+(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
+
+`complete` filled in the missing combinations with a default value of
+`n` = `1`
+
+``` r
 cateaceans_acquisition_by_decade_complete %>%
     anti_join(cateaceans_acquisition_by_decade, by = c("acquisition", "decade", "n")) %>%
     head(10)
@@ -835,6 +843,63 @@ cateaceans_acquisition_by_decade_complete %>%
 ```
 
 ![](examples_files/figure-markdown_github/spinogram_dolphins_v2-1.png)
+
+### Joy Plot
+
+Example from David Robinson’s screencast
+(<a href="https://youtu.be/lY0YLDZhT88?t=665" class="uri">https://youtu.be/lY0YLDZhT88?t=665</a>)
+
+``` r
+ikea %>% select(category, name, price_usd) %>% head()
+```
+
+    ## # A tibble: 6 x 3
+    ##   category      name                  price_usd
+    ##   <chr>         <chr>                     <dbl>
+    ## 1 Bar furniture FREKVENS                   71.6
+    ## 2 Bar furniture NORDVIKEN                 269. 
+    ## 3 Bar furniture NORDVIKEN / NORDVIKEN     566. 
+    ## 4 Bar furniture STIG                       18.6
+    ## 5 Bar furniture NORBERG                    60.8
+    ## 6 Bar furniture INGOLF                     93.2
+
+``` r
+library(ggridges)
+ikea %>%
+  mutate(category = glue::glue("{ category } ({ category_total })"),
+         category = fct_reorder(category, price_usd)) %>%
+  ggplot(aes(price_usd, category)) +
+  geom_density_ridges() +
+  # geom_jitter(width = 0, height = .1, alpha = .25) +
+  scale_x_log10(labels = dollar) +
+  labs(x = "Price (USD)",
+       y = "",
+       title = "How much do items in each category cost?")
+```
+
+    ## Picking joint bandwidth of 0.165
+
+![](examples_files/figure-markdown_github/unnamed-chunk-34-1.png)
+
+``` r
+ikea %>%
+  mutate(category = glue::glue("{ category } ({ category_total })"),
+         category = fct_reorder(category, price_usd)) %>%
+  ggplot(aes(price_usd, category, fill = other_colors)) +
+  geom_density_ridges(alpha = .5) +
+  # geom_jitter(width = 0, height = .1, alpha = .25) +
+  scale_x_log10(labels = dollar) +
+  labs(x = "Price (USD)",
+       y = "",
+       title = "How much do items in each category cost?")
+```
+
+    ## Picking joint bandwidth of 0.174
+
+![](examples_files/figure-markdown_github/unnamed-chunk-35-1.png)
+
+> “If we were building a predictive model, we’d probably include both
+> category and other\_colors”
 
 Advanced
 ========
@@ -2064,3 +2129,149 @@ models_by_state %>%
 ```
 
 ![](examples_files/figure-markdown_github/logistic_regression_coefficients_beer_awards-1.png)
+
+Nested Regression
+-----------------
+
+Example from David Robinson’s screencast
+(<a href="https://youtu.be/lY0YLDZhT88?t=2977" class="uri">https://youtu.be/lY0YLDZhT88?t=2977</a>)
+
+``` r
+.ikea <- ikea %>% select(price_usd, category, other_colors, depth, height, width)
+head(.ikea)
+```
+
+    ## # A tibble: 6 x 6
+    ##   price_usd category      other_colors depth height width
+    ##       <dbl> <chr>         <chr>        <dbl>  <dbl> <dbl>
+    ## 1      71.6 Bar furniture No              NA     99    51
+    ## 2     269.  Bar furniture No              NA    105    80
+    ## 3     566.  Bar furniture No              NA     NA    NA
+    ## 4      18.6 Bar furniture Yes             50    100    60
+    ## 5      60.8 Bar furniture No              60     43    74
+    ## 6      93.2 Bar furniture No              45     91    40
+
+``` r
+.ikea_volume <- .ikea %>%
+  mutate(volume_m3 = depth * height * width / 1e6) %>%
+  filter(!is.na(volume_m3),
+         volume_m3 >= .001) %>%
+  arrange(desc(volume_m3)) %>%
+  add_count(category, name = "category_total")
+
+head(.ikea_volume)
+```
+
+    ## # A tibble: 6 x 8
+    ##   price_usd category    other_colors depth height width volume_m3 category_total
+    ##       <dbl> <chr>       <chr>        <dbl>  <dbl> <dbl>     <dbl>          <int>
+    ## 1     1453. Wardrobes   No             210    236   275     13.6             199
+    ## 2     1775. Sofas & ar… Yes            252    104   327      8.57            223
+    ## 3     2403  Sofas & ar… No             252    104   327      8.57            223
+    ## 4     2240. Sofas & ar… Yes            257     83   368      7.85            223
+    ## 5     1862. Sofas & ar… Yes            257     83   328      7.00            223
+    ## 6     2267. Sofas & ar… Yes            249     83   327      6.76            223
+
+``` r
+.ikea_model <-lm(log2(price_usd) ~ log2(volume_m3), data = .ikea_volume)
+```
+
+If we were to predict price based on only the volumn (cubic meters).
+
+``` r
+.ikea_model %>% summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log2(price_usd) ~ log2(volume_m3), data = .ikea_volume)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.9166 -0.5027  0.0594  0.5208  4.2457 
+    ## 
+    ## Coefficients:
+    ##                 Estimate Std. Error t value            Pr(>|t|)    
+    ## (Intercept)      8.34960    0.02558  326.46 <0.0000000000000002 ***
+    ## log2(volume_m3)  0.81219    0.01219   66.63 <0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9528 on 1889 degrees of freedom
+    ## Multiple R-squared:  0.7015, Adjusted R-squared:  0.7014 
+    ## F-statistic:  4440 on 1 and 1889 DF,  p-value: < 0.00000000000000022
+
+Then what this says that our Intercept (which is where `log2(volume_m3)`
+is `0`; or in other words when the volumn\_m3 is 1 (cubic meter) because
+`log2(1)` equals `0`) …
+
+``` r
+log2(1)
+```
+
+    ## [1] 0
+
+then `log2(price_usd)` is `8.349597`
+
+``` r
+coef(.ikea_model)['(Intercept)']
+```
+
+    ## (Intercept) 
+    ##    8.349597
+
+In other words, the price is `326.1963889`
+
+``` r
+2 ^ coef(.ikea_model)['(Intercept)']
+```
+
+    ## (Intercept) 
+    ##    326.1964
+
+Putting it together, when the volume of the furniture is 1 cubic meter,
+we would predict that the price is `$326.1963889`
+
+For each increase in `log2(volume_m3)` we would expect an increase in
+`log2(price_usd)` by `0.8121906`
+
+``` r
+coef(.ikea_model)['log2(volume_m3)']
+```
+
+    ## log2(volume_m3) 
+    ##       0.8121906
+
+i.e. every time we doulbe in cubic meters we would expect an increase to
+the price by a factor of `1.7558755`
+
+``` r
+2 ^ coef(.ikea_model)['log2(volume_m3)']
+```
+
+    ## log2(volume_m3) 
+    ##        1.755876
+
+But now lets include `category` and `other_colors`.
+
+``` r
+library(broom)
+.ikea_volume %>%
+    # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
+    mutate(category = fct_relevel(category, "Tables & desks")) %>%
+    lm(log2(price_usd) ~ log2(volume_m3) + category + other_colors, data = .) %>%
+    tidy(conf.int = TRUE) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(term = ifelse(term == "log2(volume_m3)", "Item volume (doubling)", term),
+           term = str_remove(term, "^category")) %>%
+    mutate(term = fct_reorder(term, estimate)) %>%
+    ggplot(aes(estimate, term, color=p.value <= 0.05)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = .2) +
+    geom_vline(xintercept = 0, color = "red", lty = 2) +
+    labs(x = "Impact on price (relative to Tables & desks)",
+         y = "",
+         title = "What objects are unusually expensive/inexpensive relative to volume?")
+```
+
+![](examples_files/figure-markdown_github/nested_regression_ikea-1.png)
