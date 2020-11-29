@@ -421,7 +421,7 @@ For example, the order of `setosa`, `versicolor`, `virginica` is allowed to chan
 
 other examples: https://juliasilge.com/blog/reorder-within/
 
-```{r}
+```{r reorder_within_iris}
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
 iris_gathered %>%
     ggplot(aes(x=tidytext::reorder_within(x=Species, by=value, within=metric),
@@ -439,7 +439,7 @@ iris_gathered %>%
 	* scales the x-axis ticks but keeps the actual values the same
 	* this works when viewing time (in seconds)
 
-```{r}
+```{r scale_x_log10_seconds}
 data.frame(value = abs(rnorm(1000, sd = (60^4) / 3))) %>%
 ggplot(aes(x='', y=value)) +
     geom_point() +
@@ -453,7 +453,7 @@ ggplot(aes(x='', y=value)) +
 
 group by two columns in ggplot2
 
-```{r}
+```{r interaction}
 # Data frame with two continuous variables and two factors 
 set.seed(0)
 x <- rep(1:10, 4)
@@ -480,7 +480,7 @@ First, here is what it would look like if we didn't use `complete`.
 
 Notice the missing gaps. That is because we have missing years.
 
-```{r message=FALSE, warning=FALSE}
+```{r spinogram_dolphins_v1, message=FALSE, warning=FALSE}
 cetaceans <- cetaceans_raw
 
 cateaceans_acquisition_by_decade <- cetaceans %>%
@@ -513,7 +513,7 @@ cateaceans_acquisition_by_decade_complete %>%
     head(10)
 ```
 
-```{r}
+```{r spinogram_dolphins_v2}
 cateaceans_acquisition_by_decade_complete %>%
     mutate(acquisition = fct_reorder(acquisition, n, sum)) %>%
     group_by(decade) %>%
@@ -527,7 +527,6 @@ cateaceans_acquisition_by_decade_complete %>%
     labs(x = "year",
        y = "% of dolphins recorded")
 ```
-
 
 # Advanced
 
@@ -588,16 +587,22 @@ Then we take each of those data.frames, and run a `t.test` of `ave_score`.
 ```{r}
 library(broom)
 cuisine_conf_ints <- restaurant_inspections_by_dba %>%
-    add_count(cuisine) %>%
-    filter(n > 100) %>%
-    nest(data=-cuisine) %>%
+    add_count(cuisine) %>%  # adds number of dbas for each cuisine
+    filter(n > 100) %>%  # only keep cuisines that have >100 invidual DBAs
+    nest(data=-cuisine) %>%  # take all columns except for cuisine and collapse the resulting data.frame into the row's cell
+    mutate(num_dbas = map_int(data, ~ nrow(.))) %>%
+    mutate(mean_avg_score = map_dbl(data, ~ mean(.$avg_score))) %>%
     mutate(model = map(data, ~ t.test(.$avg_score))) %>%
     mutate(model = map(model, ~ tidy(.))) %>%
     unnest(model)
-head(cuisine_conf_ints, 10)
+# note: the p-value is meaningless, the null hypothesis is that the mean is equal to 0
+# we are just using this to get us confidence intervals
+
+round_2 <- function(.x) {round(.x, 2)}
+head(cuisine_conf_ints %>% mutate_if(is.numeric, round_2), 10)
 ```
 
-```{r}
+```{r t_test_confidence_intervals}
 cuisine_conf_ints %>%
   mutate(cuisine = str_remove(cuisine, " \\(.*"),
          cuisine = fct_reorder(cuisine, estimate)) %>%
@@ -642,7 +647,7 @@ model <- survival::survfit(Surv(age, status) ~ 1, dolphin_survival)
 model
 ```
 
-```{r}
+```{r survival_dolphins}
 broom::tidy(model) %>%
   ggplot(aes(time, estimate)) +
   geom_line() +
@@ -660,7 +665,7 @@ model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
 model
 ```
 
-```{r}
+```{r survival_dolphins_sex}
 broom::tidy(model) %>%
   ggplot(aes(time, estimate, color = strata)) +
   geom_line() +
@@ -683,7 +688,7 @@ p.value is not statistically significant (confience intervals include 0) so we c
 
 We can do the same thing for acquisition.
 
-```{r}
+```{r survival_dolphins_acquisition}
 model <- survival::survfit(Surv(age, status) ~ acquisition, dolphin_survival)
 broom::tidy(model) %>%
   filter(strata != "acquisition=Unknown") %>%
@@ -715,7 +720,7 @@ life_expectency_pairwise_cor <- gapminder %>%
 head(life_expectency_pairwise_cor)
 ```
 
-```{r fig.height=7, fig.width=7}
+```{r pairwise_correlations_country_life_expectencies, fig.height=7, fig.width=7}
 life_expectency_pairwise_cor %>%
     mutate(item1=factor(item1, ordered = TRUE),
            item2=factor(item2, ordered = TRUE)) %>%
@@ -790,7 +795,7 @@ head(career)
 
 > In Chapter 3, we noticed that the distribution of player batting averages looked roughly like a beta distribution (Figure 11.1). We thus wanted to estimate the beta prior for the overall dataset, which is the first step of empirical Bayes analysis. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-```{r}
+```{r ebb_batting_average_distribution}
 career %>%
     filter(at_bats > 500) %>%
     ggplot(aes(x=batting_average)) +
@@ -828,7 +833,7 @@ career %>%
     summarise(median(batting_average))
 ```
 
-```{r}
+```{r ebb_beta_distribution_prior}
 beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
     mutate(y=dbeta(x, prior$parameters$alpha, prior$parameters$beta))
 
@@ -879,7 +884,7 @@ So for example, look at the dots/people to the left of the graph. These are peop
 
 The people with a lot of at bats, tend to have estimated batting average that is very close to the raw batting average.
 
-```{r message=FALSE, warning=FALSE}
+```{r ebb_raw_vs_shrunken, message=FALSE, warning=FALSE}
 eb_career %>%
     ggplot(aes(x=.raw, y=.fitted, color = at_bats)) +
     geom_point() +
@@ -893,7 +898,7 @@ eb_career %>%
        y = "Shrunken batting average")
 ```
 
-```{r message=FALSE}
+```{r ebb_raw_vs_shurnked_at_bats, message=FALSE}
 eb_career %>%
     filter(at_bats > 10) %>%
     rename(Raw = .raw, Shrunken = .fitted) %>%
@@ -908,7 +913,7 @@ eb_career %>%
 
 This graph shows that we are shrinking people with a low number of at bats toward the prior mean (red dotted line) rather than towards the fitted regression line, which shows that the more at-bats someone has, the higher their batting-average tends to be (the better you are the more at bats you get). We'll solve this below, but for now, this means that, of the people who have very few at bats, we're likely over-estimating their ability/batting-average. 
 
-```{r}
+```{r ebb_estimated_batting_average}
 eb_career %>%
     head(10) %>%
     mutate(name = reorder(name, .fitted)) %>%
@@ -928,7 +933,7 @@ eb_career %>%
 
 This means that, in the previous estimates and graphs, it's not appropriate to move people who have very few bats (and for example very low batting averages), all the way up to the prior mean batting average (``r tidy(prior)$mean``). We should assume (had they keep getting more and more at-bats) that they would have a lower batting average than average.
 
-```{r message=FALSE}
+```{r ebb_at_bats_regression, message=FALSE}
 career %>%
   filter(at_bats >= 10) %>%
   ggplot(aes(at_bats, hits / at_bats)) +
@@ -951,7 +956,7 @@ eb_career_ab <- career %>%
 head(eb_career_ab)
 ```
 
-```{r message=FALSE}
+```{r ebb_at_bats_raw_vs_shrunken, message=FALSE}
 eb_career_ab %>%
     filter(at_bats > 10) %>%
     rename(Raw = .raw, Shrunken = .fitted) %>%
@@ -966,7 +971,7 @@ eb_career_ab %>%
 
 Now, we are shrinking the players with fewer at-bats to a lower batting average.
 
-```{r}
+```{r ebb_estimated_batting_average_at_bats}
 eb_career_ab %>%
     head(10) %>%
     mutate(name = reorder(name, .fitted)) %>%
@@ -1002,7 +1007,7 @@ eb_career_prior <- career_full %>%
 eb_career_prior
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r ebb_gamlss_splines, message=FALSE, warning=FALSE}
 # fake data ranging from 1885 to 2013
 fake_data <- crossing(hits = 300,
                       at_bats = 1000,
