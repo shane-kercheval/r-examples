@@ -974,3 +974,85 @@ Answer by Dave
 
 > Your question raises a very important issue- I bring it up in the following post in this series (http://varianceexplained.or.... In short you're 100% right that this doesn't work for predicting future performance of rookies without more adjustments. "One important aspect of this prediction is that it won’t be useful when we’ve just hired a “rookie” player, and we’re wondering what his batting average will be. This observed variable ABAB is based on a player’s entire career, such that a low number is evidence that a player didn’t have much of a chance to bat. (If we wanted to make a prediction, we’d have to consider the distribution of possible ABAB’s the player could end up with and integrate over that, which is beyond the scope of this post)."
 
+```{r message=FALSE, warning=FALSE}
+library(splines)
+eb_career_prior <- career_full %>%
+  ebb_fit_prior(hits, at_bats, method = "gamlss",
+                mu_predictors = ~ 0 + ns(year, df = 5) * bats + log(at_bats))
+
+eb_career_prior
+```
+
+```{r message=FALSE, warning=FALSE}
+# fake data ranging from 1885 to 2013
+fake_data <- crossing(hits = 300,
+                      at_bats = 1000,
+                      year = seq(1885, 2013),
+                      bats = c("L", "R"))
+
+# find the mean of the prior, as well as the 95% quantiles,
+# for each of these combinations. This does require a bit of
+# manual manipulation of alpha0 and beta0:
+augment(eb_career_prior, newdata = fake_data) %>%
+    mutate(prior = .alpha0 / (.alpha0 + .beta0),
+         prior.low = qbeta(.025, .alpha0, .beta0),
+         prior.high = qbeta(.975, .alpha0, .beta0)) %>%
+    ggplot(aes(year, prior, color = bats)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = prior.low, ymax = prior.high), alpha = .1, lty = 2) +
+    ylab("Prior distribution (mean + 95% quantiles)")
+```
+
+### Hypothesis Testing
+
+> For example, we wanted to get a posterior probability for the statement "this player's true batting average is greater than .300", so that we could construct a "Hall of Fame" of such players. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+test_300 <- career %>%
+    add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
+    add_ebb_prop_test(.300, sort = TRUE)
+
+round_4 <- function(.x) {
+    round(.x, 4)
+}
+
+test_300 %>%
+    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
+    mutate_if(is.numeric, round_4) %>%
+    head()
+```
+
+> `.pep`: the posterior error probability- the probability that this player's true batting average is less than .3. `.qvalue`: the q-value, which corrects for multiple testing by controlling for false discovery rate (FDR). Allowing players with a q-value `below .05` would mean only 5% of the ones included would be false discoveries. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+sum(test_300$.qvalue < .05)
+sum(test_300$.qvalue < .01)
+```
+
+#### Player-Player AB-test
+
+> Chapter 6 discussed the case where instead of comparing each observation to a single threshold (like .300) we want to compare to another player's posterior distribution. We noted that this is similar to the problem of "A/B testing", where we might be comparing two clickthrough rates, each represented by successes / total. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+```{r}
+piazza <- eb_career_ab %>%
+  filter(name == "Mike Piazza")
+
+piazza_params <- c(piazza$.alpha1, piazza$.beta1)
+piazza_params ## [1] 2281 5183 This vector of two parameters, an alpha and a beta, can be passed into add_ebb_prop_test just like we passed in a threshold.4 
+```
+
+```{r}
+compare_piazza <- eb_career_ab %>%
+  add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
+
+compare_piazza %>%
+    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
+    mutate_if(is.numeric, round_4) %>%
+    head()
+```
+
+> Just like the one-sample test, the function has added .pep and .qvalue columns. From this we can see a few players who we're extremely confident are better than Piazza. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+### Mixture Models
+
+
