@@ -31,13 +31,26 @@ plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
-# Packages
+```{r message=FALSE, warning=FALSE, include=FALSE}
+beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
+  mutate(state = str_to_upper(state),
+         medal = fct_relevel(medal, c("Bronze", "Silver")))
 
-```{r message=FALSE, warning=FALSE}
-library(tidyverse)
-library(janitor)
-library(ggplot2)
-library(tidytext)
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
+    select(-X1) %>%
+    mutate(birthYear = as.numeric(birthYear))
+cetaceans <- cetaceans_raw %>% select(species, originLocation)
+
+ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv') %>%
+    select(-X1) %>%
+    mutate(price_usd = 0.27 * price,
+           short_description = str_squish(short_description)) %>%
+    add_count(category, name = "category_total") %>%
+    select(item_id, name, price_usd, category, category_total, short_description, depth, height, width)
+
+mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
+
+restaurant_inspections_by_dba <- readRDS('data/restaurant_inspections_by_dba.RDS')
 ```
 
 # Data Cleaning
@@ -88,17 +101,12 @@ Join data.frames based on matching regex.
 In this example, we will create categories and add them to our data.frame based on regex.
 
 ```{r message=FALSE, warning=FALSE}
-#install.packages('fuzzyjoin')
-library(fuzzyjoin)
-
-cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
-    select(-X1) %>%
-    mutate(birthYear = as.numeric(birthYear))
-cetaceans <- cetaceans_raw %>% select(species, originLocation)
 head(cetaceans)
 ```
 
 ```{r}
+#install.packages('fuzzyjoin')
+library(fuzzyjoin)
 
 regexes <- tribble(
   ~ regex, ~ category,
@@ -534,50 +542,9 @@ cateaceans_acquisition_by_decade_complete %>%
 
 Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/em4FXPf4H-Y?t=1783)
 
-```{r eval=FALSE, include=FALSE}
-restaurant_inspections_raw <- read_csv("https://data.cityofnewyork.us/api/views/43nn-pn8j/rows.csv")
-restaurant_inspections <- restaurant_inspections_raw %>% 
-  janitor::clean_names() %>%
-  select(-phone, -grade_date, -record_date, -building, -street) %>%
-  mutate(inspection_date = mdy(inspection_date)) %>%
-  separate(inspection_type, c("inspection_program", "inspection_type"), sep = " / ")
-
-inspections <- restaurant_inspections %>%
-  group_by(camis,
-           dba,
-           boro,
-           zipcode,
-           cuisine_description,
-           inspection_date,
-           action,
-           score,
-           grade,
-           inspection_type,
-           inspection_program) %>%
-  summarize(critical_violations = sum(critical_flag == "Critical", na.rm = TRUE),
-            non_critical_violations = sum(critical_flag == "Not Critical", na.rm = TRUE)) %>%
-  ungroup()
-
-most_recent_cycle_inspection <- inspections %>%
-  filter(inspection_program == "Cycle Inspection",
-         inspection_type == "Initial Inspection") %>%
-  arrange(desc(inspection_date)) %>%
-  distinct(camis, .keep_all = TRUE)
-
-restaurant_inspections_by_dba <- most_recent_cycle_inspection %>%
-  group_by(dba, cuisine = cuisine_description) %>%
-  summarize(locations = n(),
-            avg_score = mean(score),
-            median_score = median(score)) %>%
-  ungroup() %>%
-  arrange(desc(locations))
-
-saveRDS(restaurant_inspections_by_dba, 'data/restaurant_inspections_by_dba.RDS')
-```
 
 ```{r}
-restaurant_inspections_by_dba <- readRDS('data/restaurant_inspections_by_dba.RDS')
-head(restaurant_inspections_by_dba, 109)
+head(restaurant_inspections_by_dba, 10)
 ```
 
 `nest(data=-cuisine)` groups by cuisine and creates a data-frame (tibble) out of all of the rest of the columns. That is, it `nests` the all of the data (a data.frame) with each row corresponding to a cuisine.
@@ -1095,8 +1062,6 @@ compare_piazza %>%
 ## Tidy Text
 
 ```{r message=FALSE, warning=FALSE}
-mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
-
 head(mr_boston)
 ```
 
@@ -1244,10 +1209,6 @@ recipe_svd %>%
 ## Logistic Regression
 
 ```{r message=FALSE, warning=FALSE}
-beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
-  mutate(state = str_to_upper(state),
-         medal = fct_relevel(medal, c("Bronze", "Silver")))
-
 head(beer_awards)
 ```
 
@@ -1332,4 +1293,49 @@ models_by_state %>%
   labs(x = "Estimated slope",
        title = "Which states become more or less frequent medal winners?",
        y = "")
+```
+
+```{r include=FALSE}
+knitr::knit_exit()
+```
+
+```{r eval=FALSE, include=FALSE}
+restaurant_inspections_raw <- read_csv("https://data.cityofnewyork.us/api/views/43nn-pn8j/rows.csv")
+restaurant_inspections <- restaurant_inspections_raw %>% 
+  janitor::clean_names() %>%
+  select(-phone, -grade_date, -record_date, -building, -street) %>%
+  mutate(inspection_date = mdy(inspection_date)) %>%
+  separate(inspection_type, c("inspection_program", "inspection_type"), sep = " / ")
+
+inspections <- restaurant_inspections %>%
+  group_by(camis,
+           dba,
+           boro,
+           zipcode,
+           cuisine_description,
+           inspection_date,
+           action,
+           score,
+           grade,
+           inspection_type,
+           inspection_program) %>%
+  summarize(critical_violations = sum(critical_flag == "Critical", na.rm = TRUE),
+            non_critical_violations = sum(critical_flag == "Not Critical", na.rm = TRUE)) %>%
+  ungroup()
+
+most_recent_cycle_inspection <- inspections %>%
+  filter(inspection_program == "Cycle Inspection",
+         inspection_type == "Initial Inspection") %>%
+  arrange(desc(inspection_date)) %>%
+  distinct(camis, .keep_all = TRUE)
+
+restaurant_inspections_by_dba <- most_recent_cycle_inspection %>%
+  group_by(dba, cuisine = cuisine_description) %>%
+  summarize(locations = n(),
+            avg_score = mean(score),
+            median_score = median(score)) %>%
+  ungroup() %>%
+  arrange(desc(locations))
+
+saveRDS(restaurant_inspections_by_dba, 'data/restaurant_inspections_by_dba.RDS')
 ```
