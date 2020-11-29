@@ -30,6 +30,13 @@
     -   [Pairwise Correlation](#pairwise-correlation)
     -   [`ebbr` package: Empirical Bayes on the Binomial in
         R](#ebbr-package-empirical-bayes-on-the-binomial-in-r)
+        -   [Prior Distribution](#prior-distribution)
+        -   [Updating Observations based on
+            Priors](#updating-observations-based-on-priors)
+        -   [`add_ebb_estimate`](#add_ebb_estimate)
+        -   [Hierarchical Modeling](#hierarchical-modeling)
+        -   [Hypothesis Testing](#hypothesis-testing)
+            -   [Player-Player AB-test](#player-player-ab-test)
 
 Packages
 ========
@@ -587,7 +594,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f99c32a7ba8
+    ## env:  0x7fa66a96ea20
 
     ## [1] 61.875
 
@@ -1127,6 +1134,8 @@ career %>%
 
 ![](examples_files/figure-markdown_github/unnamed-chunk-50-1.png)
 
+### Prior Distribution
+
 ``` r
 library(ebbr)
 prior <- career %>%
@@ -1209,6 +1218,8 @@ career %>%
 
 ![](examples_files/figure-markdown_github/unnamed-chunk-53-2.png)
 
+### Updating Observations based on Priors
+
 > The second step of empirical Bayes analysis is updating each
 > observation based on the overall statistical model. Based on the
 > philosophy of the broom package, this is achieved with the augment()
@@ -1229,6 +1240,8 @@ head(augment(prior, data = career))
     ## 5 abbated… Ed A…   772    3044          0.254    870.   2550.   0.254 0.254 
     ## 6 abbeych… Char…   493    1756          0.281    591.   1541.   0.277 0.281 
     ## # … with 2 more variables: .low <dbl>, .high <dbl>
+
+### `add_ebb_estimate`
 
 > Notice we’ve now added several columns to the original data, each
 > beginning with . (which is a convention of the augment verb to avoid
@@ -1253,12 +1266,13 @@ all(eb_career$batting_average == eb_career$.raw)
 
     ## [1] TRUE
 
-> This was one of the most important visualizations in Chapter 3. I like
-> how it captures what empirical Bayes estimation is doing: moving all
-> batting averages towards the prior mean (the dashed red line), but
-> moving them less if there is a lot of information about that player
-> (high at\_bats). (Robinson, David. Introduction to Empirical Bayes:
-> Examples from Baseball Statistics . Kindle Edition.)
+> This \[the graph below\] was one of the most important visualizations
+> in Chapter 3. I like how it captures what empirical Bayes estimation
+> is doing: moving all batting averages towards the prior mean (the
+> dashed red line), but moving them less if there is a lot of
+> information about that player (high at\_bats). (Robinson, David.
+> Introduction to Empirical Bayes: Examples from Baseball Statistics .
+> Kindle Edition.)
 
 The red line represents points where the raw batting average and the
 estimated batting average are identical.
@@ -1294,6 +1308,29 @@ eb_career %>%
 
 ``` r
 eb_career %>%
+    filter(at_bats > 10) %>%
+    rename(Raw = .raw, Shrunken = .fitted) %>%
+    gather(type, estimate, Raw, Shrunken) %>%
+    ggplot(aes(at_bats, estimate)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    facet_wrap(~ type) +
+    scale_x_log10()
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-58-1.png)
+
+This graph shows that we are shrinking people with a low number of at
+bats toward the prior mean (red dotted line) rather than towards the
+fitted regression line, which shows that the more at-bats someone has,
+the higher their batting-average tends to be (the better you are the
+more at bats you get). We’ll solve this below, but for now, this means
+that, of the people who have very few at bats, we’re likely
+over-estimating their ability/batting-average.
+
+``` r
+eb_career %>%
     head(10) %>%
     mutate(name = reorder(name, .fitted)) %>%
     ggplot(aes(x=.fitted, y=name)) +
@@ -1305,4 +1342,292 @@ eb_career %>%
          y = "Player")
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-58-1.png)
+![](examples_files/figure-markdown_github/unnamed-chunk-59-1.png)
+
+### Hierarchical Modeling
+
+> In Chapters 7 and 8, we examined how this beta-binomial model may not
+> be appropriate, because of the relationship between a player’s at-bats
+> and their batting average. Good batters tend to have long careers,
+> while poor batters may retire quickly. (Robinson, David. Introduction
+> to Empirical Bayes: Examples from Baseball Statistics . Kindle
+> Edition.)
+
+This means that, in the previous estimates and graphs, it’s not
+appropriate to move people who have very few bats (and for example very
+low batting averages), all the way up to the prior mean batting average
+(`0.2603578`). We should assume (had they keep getting more and more
+at-bats) that they would have a lower batting average than average.
+
+``` r
+career %>%
+  filter(at_bats >= 10) %>%
+  ggplot(aes(at_bats, hits / at_bats)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_log10()
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-60-1.png)
+
+This graphs shows that the more at-bats someone has, the better their
+batting average tends to be, which makes sense. This is the line that we
+should be pushing people towards who have very few at bats, rather than
+the dotted red line above.
+
+> We solved this by fitting a prior that depended on AB, through the
+> process of beta-binomial regression. The add\_ebb\_estimate() function
+> from ebbr offers this option, by setting method = “gamlss” and
+> providing a formula to mu\_predictors.3 (Robinson, David. Introduction
+> to Empirical Bayes: Examples from Baseball Statistics . Kindle
+> Edition.)
+
+Obviously, now we do not want to filter our prior based on &gt;=500
+at-bats because we are using at-bats directly in our estimation.
+
+``` r
+eb_career_ab <- career %>%
+  add_ebb_estimate(hits, at_bats, method = "gamlss",
+                    mu_predictors = ~ log10(at_bats))
+
+head(eb_career_ab)
+```
+
+    ## # A tibble: 6 x 15
+    ##   playerID name   hits at_bats batting_average   .mu  .sigma .alpha0 .beta0
+    ##   <chr>    <chr> <int>   <int>           <dbl> <dbl>   <dbl>   <dbl>  <dbl>
+    ## 1 aaronha… Hank…  3771   12364          0.305  0.288 0.00179    161.   397.
+    ## 2 aaronto… Tomm…   216     944          0.229  0.246 0.00179    138.   420.
+    ## 3 abadan01 Andy…     2      21          0.0952 0.193 0.00179    108.   450.
+    ## 4 abadijo… John…    11      49          0.224  0.204 0.00179    114.   444.
+    ## 5 abbated… Ed A…   772    3044          0.254  0.265 0.00179    148.   410.
+    ## 6 abbeych… Char…   493    1756          0.281  0.256 0.00179    143.   415.
+    ## # … with 6 more variables: .alpha1 <dbl>, .beta1 <dbl>, .fitted <dbl>,
+    ## #   .raw <dbl>, .low <dbl>, .high <dbl>
+
+``` r
+eb_career_ab %>%
+    filter(at_bats > 10) %>%
+    rename(Raw = .raw, Shrunken = .fitted) %>%
+    gather(type, estimate, Raw, Shrunken) %>%
+    ggplot(aes(at_bats, estimate)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    facet_wrap(~ type) +
+    scale_x_log10()
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-62-1.png)
+
+Now, we are shrinking the players with fewer at-bats to a lower batting
+average.
+
+``` r
+eb_career_ab %>%
+    head(10) %>%
+    mutate(name = reorder(name, .fitted)) %>%
+    ggplot(aes(x=.fitted, y=name)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = .low, xmax = .high)) +
+    geom_point(aes(x=.raw), color='red') +
+    geom_text(aes(x=.raw, label=glue::glue("({ hits } / { at_bats })")), vjust=-0.7, size=3) +
+    labs(x = "Estimated batting average (w/ 95% confidence interval)",
+         y = "Player")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-63-1.png)
+
+Now, Andy Abad and Dan Abbot have much lower estimated batting-averages
+compared to the graph above. In the graph above Dan Abbot was estimated
+to have a slightly higher batting average than Kurt Abbott, who has many
+more at-bats than Dan. Now, Dan is estimated to have a much lower
+batting-avearge.
+
+An important note is that this will not work for rookies, it is only
+meant to assess the players’ entire career.
+
+<a href="http://varianceexplained.org/r/beta_binomial_baseball/" class="uri">http://varianceexplained.org/r/beta_binomial_baseball/</a>
+
+Question in comments
+
+> About this post; don’t you think that letting the estimate being
+> affected by AB biases the estimate for young players who have low AB
+> because they are starting and not because are not playing? Would it be
+> interesting to use something like mean of AB per game?
+
+Answer by Dave
+
+> Your question raises a very important issue- I bring it up in the
+> following post in this series
+> (<a href="http://varianceexplained.or" class="uri">http://varianceexplained.or</a>….
+> In short you’re 100% right that this doesn’t work for predicting
+> future performance of rookies without more adjustments. “One important
+> aspect of this prediction is that it won’t be useful when we’ve just
+> hired a “rookie” player, and we’re wondering what his batting average
+> will be. This observed variable ABAB is based on a player’s entire
+> career, such that a low number is evidence that a player didn’t have
+> much of a chance to bat. (If we wanted to make a prediction, we’d have
+> to consider the distribution of possible ABAB’s the player could end
+> up with and integrate over that, which is beyond the scope of this
+> post)."
+
+``` r
+library(splines)
+eb_career_prior <- career_full %>%
+  ebb_fit_prior(hits, at_bats, method = "gamlss",
+                mu_predictors = ~ 0 + ns(year, df = 5) * bats + log(at_bats))
+
+eb_career_prior
+```
+
+    ## Empirical Bayes binomial fit with method gamlss 
+    ## Parameters:
+    ## # A tibble: 20 x 6
+    ##    parameter term                    estimate std.error statistic   p.value
+    ##    <chr>     <chr>                      <dbl>     <dbl>     <dbl>     <dbl>
+    ##  1 mu        ns(year, df = 5)1        0.0260    0.0502     0.517  6.05e-  1
+    ##  2 mu        ns(year, df = 5)2       -0.132     0.0642    -2.05   4.04e-  2
+    ##  3 mu        ns(year, df = 5)3        0.00867   0.0371     0.233  8.16e-  1
+    ##  4 mu        ns(year, df = 5)4       -0.0303    0.125     -0.242  8.09e-  1
+    ##  5 mu        ns(year, df = 5)5       -0.0300    0.0205    -1.46   1.43e-  1
+    ##  6 mu        batsB                   -1.69      0.0553   -30.4    7.77e-195
+    ##  7 mu        batsL                   -1.63      0.0212   -76.8    0.       
+    ##  8 mu        batsR                   -1.73      0.0150  -116.     0.       
+    ##  9 mu        log(at_bats)             0.0840    0.00117   72.0    0.       
+    ## 10 mu        ns(year, df = 5)1:batsL  0.0410    0.0537     0.765  4.45e-  1
+    ## 11 mu        ns(year, df = 5)2:batsL -0.0375    0.0689    -0.544  5.87e-  1
+    ## 12 mu        ns(year, df = 5)3:batsL -0.0258    0.0406    -0.636  5.25e-  1
+    ## 13 mu        ns(year, df = 5)4:batsL -0.0115    0.133     -0.0866 9.31e-  1
+    ## 14 mu        ns(year, df = 5)5:batsL -0.0676    0.0233    -2.90   3.71e-  3
+    ## 15 mu        ns(year, df = 5)1:batsR  0.0997    0.0518     1.93   5.41e-  2
+    ## 16 mu        ns(year, df = 5)2:batsR  0.0328    0.0663     0.495  6.21e-  1
+    ## 17 mu        ns(year, df = 5)3:batsR  0.0560    0.0388     1.44   1.49e-  1
+    ## 18 mu        ns(year, df = 5)4:batsR  0.0819    0.128      0.638  5.23e-  1
+    ## 19 mu        ns(year, df = 5)5:batsR  0.0474    0.0221     2.15   3.19e-  2
+    ## 20 mu        (Intercept)             -6.55      0.0229  -286.     0.
+
+``` r
+# fake data ranging from 1885 to 2013
+fake_data <- crossing(hits = 300,
+                      at_bats = 1000,
+                      year = seq(1885, 2013),
+                      bats = c("L", "R"))
+
+# find the mean of the prior, as well as the 95% quantiles,
+# for each of these combinations. This does require a bit of
+# manual manipulation of alpha0 and beta0:
+augment(eb_career_prior, newdata = fake_data) %>%
+    mutate(prior = .alpha0 / (.alpha0 + .beta0),
+         prior.low = qbeta(.025, .alpha0, .beta0),
+         prior.high = qbeta(.975, .alpha0, .beta0)) %>%
+    ggplot(aes(year, prior, color = bats)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = prior.low, ymax = prior.high), alpha = .1, lty = 2) +
+    ylab("Prior distribution (mean + 95% quantiles)")
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-65-1.png)
+
+### Hypothesis Testing
+
+> For example, we wanted to get a posterior probability for the
+> statement “this player’s true batting average is greater than .300”,
+> so that we could construct a “Hall of Fame” of such players.
+> (Robinson, David. Introduction to Empirical Bayes: Examples from
+> Baseball Statistics . Kindle Edition.)
+
+``` r
+test_300 <- career %>%
+    add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
+    add_ebb_prop_test(.300, sort = TRUE)
+```
+
+    ## Warning: gamlss tidiers are deprecated and will be removed in an upcoming
+    ## release of broom. These tidiers are now maintained in the broom.mixed package.
+
+``` r
+round_4 <- function(.x) {
+    round(.x, 4)
+}
+
+test_300 %>%
+    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
+    mutate_if(is.numeric, round_4) %>%
+    head()
+```
+
+    ## # A tibble: 6 x 8
+    ##   name            hits at_bats .fitted  .low .high  .pep .qvalue
+    ##   <chr>          <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>   <dbl>
+    ## 1 Ty Cobb         4189   11436   0.363 0.354 0.371     0       0
+    ## 2 Rogers Hornsby  2930    8173   0.354 0.344 0.364     0       0
+    ## 3 Tris Speaker    3514   10195   0.342 0.333 0.351     0       0
+    ## 4 Ed Delahanty    2597    7510   0.341 0.331 0.352     0       0
+    ## 5 Ted Williams    2654    7706   0.340 0.330 0.350     0       0
+    ## 6 Willie Keeler   2932    8591   0.338 0.328 0.347     0       0
+
+> `.pep`: the posterior error probability- the probability that this
+> player’s true batting average is less than .3. `.qvalue`: the q-value,
+> which corrects for multiple testing by controlling for false discovery
+> rate (FDR). Allowing players with a q-value `below .05` would mean
+> only 5% of the ones included would be false discoveries. (Robinson,
+> David. Introduction to Empirical Bayes: Examples from Baseball
+> Statistics . Kindle Edition.)
+
+``` r
+sum(test_300$.qvalue < .05)
+```
+
+    ## [1] 112
+
+``` r
+sum(test_300$.qvalue < .01)
+```
+
+    ## [1] 77
+
+#### Player-Player AB-test
+
+> Chapter 6 discussed the case where instead of comparing each
+> observation to a single threshold (like .300) we want to compare to
+> another player’s posterior distribution. We noted that this is similar
+> to the problem of “A/B testing”, where we might be comparing two
+> clickthrough rates, each represented by successes / total. (Robinson,
+> David. Introduction to Empirical Bayes: Examples from Baseball
+> Statistics . Kindle Edition.)
+
+``` r
+piazza <- eb_career_ab %>%
+  filter(name == "Mike Piazza")
+
+piazza_params <- c(piazza$.alpha1, piazza$.beta1)
+piazza_params ## [1] 2281 5183 This vector of two parameters, an alpha and a beta, can be passed into add_ebb_prop_test just like we passed in a threshold.4 
+```
+
+    ## [1] 2282.291 5186.696
+
+``` r
+compare_piazza <- eb_career_ab %>%
+  add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
+
+compare_piazza %>%
+    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
+    mutate_if(is.numeric, round_4) %>%
+    head()
+```
+
+    ## # A tibble: 6 x 8
+    ##   name                  hits at_bats .fitted  .low .high  .pep .qvalue
+    ##   <chr>                <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>   <dbl>
+    ## 1 Ty Cobb               4189   11436   0.363 0.354 0.371     0       0
+    ## 2 Rogers Hornsby        2930    8173   0.354 0.344 0.364     0       0
+    ## 3 Tris Speaker          3514   10195   0.342 0.333 0.351     0       0
+    ## 4 Shoeless Joe Jackson  1772    4981   0.347 0.335 0.36      0       0
+    ## 5 Ed Delahanty          2597    7510   0.341 0.331 0.352     0       0
+    ## 6 Ted Williams          2654    7706   0.340 0.330 0.350     0       0
+
+> Just like the one-sample test, the function has added .pep and .qvalue
+> columns. From this we can see a few players who we’re extremely
+> confident are better than Piazza. (Robinson, David. Introduction to
+> Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)

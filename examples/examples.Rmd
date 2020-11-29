@@ -1052,7 +1052,3 @@ compare_piazza %>%
 ```
 
 > Just like the one-sample test, the function has added .pep and .qvalue columns. From this we can see a few players who we're extremely confident are better than Piazza. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
-
-### Mixture Models
-
-
