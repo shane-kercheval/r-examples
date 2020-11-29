@@ -1399,7 +1399,7 @@ i.e. every time we doulbe in cubic meters we would expect an increase to the pri
 
 But now lets include `category` and `other_colors`.
 
-```{r fig.height=5, fig.width=7}
+```{r nested_regression_ikea, fig.height=5, fig.width=7}
 library(broom)
 .ikea_volume %>%
     # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
