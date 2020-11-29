@@ -635,7 +635,25 @@ head(dolphin_survival)
 
 `status` is `0` if `alive`, `1` if `died`
 
-So the followin gives the median age of death, by sex, with confidence intervals.
+So the followin gives the median age of death, with confidence intervals.
+
+```{r}
+model <- survival::survfit(Surv(age, status) ~ 1, dolphin_survival)
+model
+```
+
+```{r}
+broom::tidy(model) %>%
+  ggplot(aes(time, estimate)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(y = "Estimated % survival",
+       x = "Age of Dolphin")
+```
+
+
+The followin gives the median age of death, by sex, with confidence intervals.
 
 ```{r}
 model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
