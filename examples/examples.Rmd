@@ -709,12 +709,14 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
 
 ## Pairwise Correlation
 
+In this case, we are finding correlations of `lifeExp` among `countries` across/by `year`. So, which countries tend to have similar life-expectencies over time (i.e. by year)?
+
 ```{r message=FALSE, warning=FALSE}
 library(gapminder)
 library(widyr)
 
 life_expectency_pairwise_cor <- gapminder %>% 
-         filter(continent == 'Americas') %>%
+         filter(continent == 'Americas') %>%  # filter for one continent just so we can fit into a single graph.
          pairwise_cor(country, year, lifeExp, sort = TRUE)
 
 head(life_expectency_pairwise_cor)
