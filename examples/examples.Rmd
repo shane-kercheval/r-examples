@@ -448,6 +448,7 @@ iris_gathered %>%
 	* this works when viewing time (in seconds)
 
 ```{r scale_x_log10_seconds}
+set.seed(1)
 data.frame(value = abs(rnorm(1000, sd = (60^4) / 3))) %>%
 ggplot(aes(x='', y=value)) +
     geom_point() +

@@ -1,4 +1,3 @@
--   [Packages](#packages)
 -   [Data Cleaning](#data-cleaning)
     -   [General](#general)
         -   [`clean_names()`](#clean_names)
@@ -43,16 +42,6 @@
     -   [Singular Value Decomposition
         (PCA)](#singular-value-decomposition-pca)
     -   [Logistic Regression](#logistic-regression)
-
-Packages
-========
-
-``` r
-library(tidyverse)
-library(janitor)
-library(ggplot2)
-library(tidytext)
-```
 
 Data Cleaning
 =============
@@ -115,13 +104,6 @@ In this example, we will create categories and add them to our
 data.frame based on regex.
 
 ``` r
-#install.packages('fuzzyjoin')
-library(fuzzyjoin)
-
-cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
-    select(-X1) %>%
-    mutate(birthYear = as.numeric(birthYear))
-cetaceans <- cetaceans_raw %>% select(species, originLocation)
 head(cetaceans)
 ```
 
@@ -136,6 +118,9 @@ head(cetaceans)
     ## 6 Bottlenose SeaWorld San Diego
 
 ``` r
+#install.packages('fuzzyjoin')
+library(fuzzyjoin)
+
 regexes <- tribble(
   ~ regex, ~ category,
   "Unknown", "Unknown",
@@ -600,7 +585,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f8215e319a0
+    ## env:  0x7fe1b9bc4d80
 
     ## [1] 61.875
 
@@ -736,6 +721,7 @@ iris_gathered %>%
     * this works when viewing time (in seconds)
 
 ``` r
+set.seed(1)
 data.frame(value = abs(rnorm(1000, sd = (60^4) / 3))) %>%
 ggplot(aes(x='', y=value)) +
     geom_point() +
@@ -860,11 +846,10 @@ Example from David Robinson Tidy-Tuesday Screencast
 (<a href="https://youtu.be/em4FXPf4H-Y?t=1783" class="uri">https://youtu.be/em4FXPf4H-Y?t=1783</a>)
 
 ``` r
-restaurant_inspections_by_dba <- readRDS('data/restaurant_inspections_by_dba.RDS')
-head(restaurant_inspections_by_dba, 109)
+head(restaurant_inspections_by_dba, 10)
 ```
 
-    ## # A tibble: 109 x 5
+    ## # A tibble: 10 x 5
     ##    dba                 cuisine                  locations avg_score median_score
     ##    <chr>               <chr>                        <int>     <dbl>        <dbl>
     ##  1 DUNKIN'             Donuts                         340      9.07          8.5
@@ -876,8 +861,7 @@ head(restaurant_inspections_by_dba, 109)
     ##  7 MCDONALD'S          American                        60      9.33          9  
     ##  8 BURGER KING         Hamburgers                      58     10.9          10  
     ##  9 SUBWAY              Sandwiches/Salads/Mixed…        54     11.3           7.5
-    ## 10 KENNEDY FRIED CHIC… Chicken                         51     15.8          13  
-    ## # … with 99 more rows
+    ## 10 KENNEDY FRIED CHIC… Chicken                         51     15.8          13
 
 `nest(data=-cuisine)` groups by cuisine and creates a data-frame
 (tibble) out of all of the rest of the columns. That is, it `nests` the
@@ -1694,8 +1678,6 @@ Tidy Text
 ---------
 
 ``` r
-mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
-
 head(mr_boston)
 ```
 
@@ -1923,10 +1905,6 @@ Logistic Regression
 -------------------
 
 ``` r
-beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
-  mutate(state = str_to_upper(state),
-         medal = fct_relevel(medal, c("Bronze", "Silver")))
-
 head(beer_awards)
 ```
 
