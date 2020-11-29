@@ -850,7 +850,7 @@ eb_career <- career %>%
 all(eb_career$batting_average == eb_career$.raw)
 ```
 
-> This was one of the most important visualizations in Chapter 3. I like how it captures what empirical Bayes estimation is doing: moving all batting averages towards the prior mean (the dashed red line), but moving them less if there is a lot of information about that player (high at_bats). (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+> This  [the graph below] was one of the most important visualizations in Chapter 3. I like how it captures what empirical Bayes estimation is doing: moving all batting averages towards the prior mean (the dashed red line), but moving them less if there is a lot of information about that player (high at_bats). (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
 The red line represents points where the raw batting average and the estimated batting average are identical.
 
@@ -860,7 +860,7 @@ So for example, look at the dots/people to the left of the graph. These are peop
 
 The people with a lot of at bats, tend to have estimated batting average that is very close to the raw batting average.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 eb_career %>%
     ggplot(aes(x=.raw, y=.fitted, color = at_bats)) +
     geom_point() +
@@ -874,6 +874,21 @@ eb_career %>%
        y = "Shrunken batting average")
 ```
 
+```{r message=FALSE}
+eb_career %>%
+    filter(at_bats > 10) %>%
+    rename(Raw = .raw, Shrunken = .fitted) %>%
+    gather(type, estimate, Raw, Shrunken) %>%
+    ggplot(aes(at_bats, estimate)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    facet_wrap(~ type) +
+    scale_x_log10()
+```
+
+This graph shows that we are shrinking people with a low number of at bats toward the prior mean (red dotted line) rather than towards the fitted regression line, which shows that the more at-bats someone has, the higher their batting-average tends to be (the better you are the more at bats you get). We'll solve this below, but for now, this means that, of the people who have very few at bats, we're likely over-estimating their ability/batting-average. 
+
 ```{r}
 eb_career %>%
     head(10) %>%
@@ -886,6 +901,69 @@ eb_career %>%
     labs(x = "Estimated batting average (w/ 95% confidence interval)",
          y = "Player")
 ```
+
+
+### Hierarchical Modeling
+
+> In Chapters 7 and 8, we examined how this beta-binomial model may not be appropriate, because of the relationship between a player's at-bats and their batting average. Good batters tend to have long careers, while poor batters may retire quickly. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+This means that, in the previous estimates and graphs, it's not appropriate to move people who have very few bats (and for example very low batting averages), all the way up to the prior mean batting average (``r tidy(prior)$mean``). We should assume (had they keep getting more and more at-bats) that they would have a lower batting average than average.
+
+```{r message=FALSE}
+career %>%
+  filter(at_bats >= 10) %>%
+  ggplot(aes(at_bats, hits / at_bats)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_log10()
+```
+
+This graphs shows that the more at-bats someone has, the better their batting average tends to be, which makes sense. This is the line that we should be pushing people towards who have very few at bats, rather than the dotted red line above.
+
+> We solved this by fitting a prior that depended on AB, through the process of beta-binomial regression. The add_ebb_estimate() function from ebbr offers this option, by setting method = "gamlss" and providing a formula to mu_predictors.3 (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
+
+Obviously, now we do not want to filter our prior based on >=500 at-bats because we are using at-bats directly in our estimation.
+
+```{r message=FALSE, warning=FALSE}
+eb_career_ab <- career %>%
+  add_ebb_estimate(hits, at_bats, method = "gamlss",
+                    mu_predictors = ~ log10(at_bats))
+
+head(eb_career_ab)
+```
+
+```{r message=FALSE}
+eb_career_ab %>%
+    filter(at_bats > 10) %>%
+    rename(Raw = .raw, Shrunken = .fitted) %>%
+    gather(type, estimate, Raw, Shrunken) %>%
+    ggplot(aes(at_bats, estimate)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    facet_wrap(~ type) +
+    scale_x_log10()
+```
+
+Now, we are shrinking the players with fewer at-bats to a lower batting average.
+
+```{r}
+eb_career_ab %>%
+    head(10) %>%
+    mutate(name = reorder(name, .fitted)) %>%
+    ggplot(aes(x=.fitted, y=name)) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = .low, xmax = .high)) +
+    geom_point(aes(x=.raw), color='red') +
+    geom_text(aes(x=.raw, label=glue::glue("({ hits } / { at_bats })")), vjust=-0.7, size=3) +
+    labs(x = "Estimated batting average (w/ 95% confidence interval)",
+         y = "Player")
+```
+
+Now, Andy Abad and Dan Abbot have much lower estimated batting-averages compared to the graph above. In the graph above Dan Abbot was estimated to have a slightly higher batting average than Kurt Abbott, who has many more at-bats than Dan. Now, Dan is estimated to have a much lower batting-avearge.
+
+
+
 
 
 
