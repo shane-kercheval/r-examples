@@ -116,6 +116,14 @@ summary(model)
 
 ---
 
+Print()
+
+```{r}
+print(model)
+```
+
+---
+
 Model Coefficients:
 
 ```{r}
@@ -152,3 +160,152 @@ hibbs %>%
 ```
 
 ---
+
+# Chapter 3
+
+### Log-Log Interpretation
+
+```{r message=FALSE, warning=FALSE}
+metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
+head(metabolic_rate)
+```
+
+```{r chapter_3_log_log_not_scaled, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    labs("Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "(Not Scaled)")
+```
+
+```{r chapter_3_log_log_scaled, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs("Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Scaled Log")
+```
+
+```{r}
+model <- lm(log(`Metabolic Rate`) ~ log(`Primate Mass`), data=metabolic_rate)
+summary(model)
+```
+
+```{r}
+coef(model)
+```
+
+
+```{r}
+summary(model)$sigma
+
+```
+
+```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+all_predictions <- data.frame(`Primate Mass`=seq(50, 80000), check.names = FALSE)
+temp_predictions <- predict(model, newdata=all_predictions)
+
+model_residuals <- residuals(model)
+length(model_residuals)^-1
+
+duan_smearing_adjustment <- sum(exp(model_residuals)) / length(model_residuals)
+
+all_predictions$predictions_adjusted_simple <- exp(((summary(model)$sigma)^2)/2)*exp(temp_predictions)
+all_predictions$predictions_adjusted_duan <- duan_smearing_adjustment*exp(temp_predictions)
+all_predictions$predictions_raw <- exp(temp_predictions)
+
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    scale_x_log10(breaks=10^seq(0, 4)) +
+    scale_y_log10() +
+    geom_text(aes(label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })")), vjust=-0.5) +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_raw), color='blue') +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_simple), color='red') +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_duan), color='purple') +
+    geom_smooth(method='lm') +
+    labs("Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Scaled Log")
+
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    #scale_x_log10(breaks=10^seq(0, 4)) +
+    #scale_y_log10() +
+    geom_text(aes(label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })")), vjust=-0.5) +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_raw), color='blue') +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_simple), color='red') +
+    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_duan), color='purple') +
+    #geom_smooth(method='lm') +
+    labs("Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Scaled Log")
+```
+
+> "A one-unit difference in `log x` corresponds to an additive difference of `b` in `log y`. (R&OS pg. 39)
+
+This is essentially "elasticity" and is interpreted as a `1%` change in x has a `b`% change in `y` (Intro Econometrics pg. 39), although this does not hold for large changes in `y` (Intro Econometrics pg. 186).
+
+So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` change in `Primate Mass` results in a `~`r paste0(round(coef(model)["log(`Primate Mass`)"], 2), "%")`` change in `Metabolic Rate`.
+
+Let's see if this is true.
+
+```{r}
+(prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
+```
+
+If the `Primate Mass` is `105` then our prediction of `log(Metabolic Rate`) is ``r prediction_105``
+
+```{r}
+exp(prediction_105)
+```
+
+Which means our prediction of `Metabolic Rate` is ``r exp(prediction_105)``, which matches the point on the graph.
+
+```{r}
+(one_percent_change <- (0.01 * 105) + 105)
+(one_percent_change_prediction <- predict(model, newdata = data.frame(`Primate Mass`=one_percent_change, check.names = FALSE)))
+one_percent_change_prediction <- exp(one_percent_change_prediction)
+```
+
+```{r}
+format_percent((one_percent_change_prediction - exp(prediction_105)) / exp(prediction_105))
+```
+
+```{r}
+coef(model)["log(`Primate Mass`)"]
+```
+
+Yep, this works. A `1%` (from `105` to ``r one_percent_change``) change in `Primate Mass` resulted in a `0.74%` change in the predicted `Metabolic Rate`
+
+But lets try with a larger change.
+
+Lets predict `Metabolic Change` for a `Primate Mass` of `9,500`
+
+```{r}
+(percent_change <- (9500 - 105) / 105)
+format_percent <- function(.x) { paste0(round(.x * 100, 2), '%')}
+```
+
+The percent-change in `Primate Mass` between these two values is ``r format_percent(percent_change)``.
+
+```{r}
+(expected_percent_change_y <- as.numeric(coef(model)["log(`Primate Mass`)"]) * percent_change)
+```
+
+Therefore, the **expected** percent change in `Metabolic Rate` should be ``r format_percent(expected_percent_change_y)``.
+
+But the actual percent change is:
+
+```{r}
+(prediction_9500 <- predict(model, newdata = data.frame(`Primate Mass`=9500, check.names = FALSE)))
+format_percent((exp(prediction_9500) - exp(prediction_105)) / exp(prediction_105))
+```
+
+Which is quite lower.
+
+So this rule of thumb doesn't work across large changes in `y`.
+
+---
+
