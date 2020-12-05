@@ -46,13 +46,8 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-
 # Chapter 1
 
 ```{r figure.1.1, fig.height=7, fig.width=plot_width_height_7}}
 
 ```
-
-# Chapter 2
-
-# Chapter X
