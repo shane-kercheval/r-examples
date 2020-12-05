@@ -71,10 +71,16 @@ options(dplyr.summarise.inform=F)
 
 # Chapter 1
 
+## Simple Example with `stan_glm`
+
+Load in the data:
+
 ```{r}
 hibbs <- read.table('data/hibbs.dat', header = TRUE)
 head(hibbs)
 ```
+
+Graph data:
 
 ```{r figure.1.1.a, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 hibbs %>%
@@ -89,4 +95,44 @@ hibbs %>%
          caption='Figure 1.1')
 ```
 
- 
+Build Model:
+
+```{r}
+model <- stan_glm(vote ~ growth, data=hibbs)
+```
+
+Model Summary:
+
+```{r}
+summary(model)
+```
+
+Model Coefficients:
+
+```{r}
+coef(model)
+```
+
+Compare to `lm()`:
+
+```{r}
+summary(lm(vote ~ growth, data=hibbs))
+```
+
+(pretty close)
+
+Graph uses model coefficients rather than `geom_smooth(method='lm')`
+
+```{r figure.1.1.a, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+hibbs %>%
+    ggplot(aes(x=growth, y=vote)) +
+    geom_hline(yintercept = 50, color="red", linetype="dashed") +
+    geom_text(aes(label=year)) +
+    #geom_smooth(method='lm') +
+    geom_abline(intercept = coef(model)['(Intercept)'], slope = coef(model)['growth']) +
+    scale_y_continuous(labels=function(.x)paste0(.x, '%')) +
+    labs(title="Forecasting the election from the economy",
+         y="Incuming party's vote share",
+         x="Average recent growth in personal",
+         caption='Figure 1.1')
+```
