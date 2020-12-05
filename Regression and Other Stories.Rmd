@@ -1,0 +1,58 @@
+---
+title: "Regression and Other Stories"
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+# library(stringr)
+# library(ggrepel)
+# library(forecast)
+#library(scales)
+#library(lubridate)
+
+library(knitr)
+
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+
+theme_set(theme_light())
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+This document includes examples and exercises from `Regression and Other Stories` by Andrew Gelman, Jennifer Hill and Aki Vehtari, 2020, first edition.
+
+# Resources
+
+[Errata](https://avehtari.github.io/ROS-Examples/errata.html)
+
+[Authors' Code](https://avehtari.github.io/ROS-Examples/examples.html#Examples_by_chapters)
+
+# Packages
+
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+```
+
+
+# Chapter 1
+
+```{r figure.1.1, fig.height=7, fig.width=plot_width_height_7}}
+
+```
+
+# Chapter 2
+
+# Chapter X
