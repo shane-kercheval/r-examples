@@ -1,8 +1,8 @@
 -   [Overview](#overview)
 -   [Resources](#resources)
 -   [Packages](#packages)
-    -   [Main](#main)
-    -   [Additional](#additional)
+    -   [statistical packages](#statistical-packages)
+    -   [base packages](#base-packages)
     -   [Settings](#settings)
 -   [Chapter 1](#chapter-1)
     -   [Simple Example with `stan_glm`](#simple-example-with-stan_glm)
@@ -25,8 +25,8 @@ Code](https://avehtari.github.io/ROS-Examples/examples.html#Examples_by_chapters
 Packages
 ========
 
-Main
-----
+statistical packages
+--------------------
 
 ``` r
 library(rstan)
@@ -35,8 +35,8 @@ library(bayesplot)
 library(loo)
 ```
 
-Additional
-----------
+base packages
+-------------
 
 ``` r
 library(tidyverse)
@@ -74,6 +74,8 @@ head(hibbs)
     ## 5 1968   3.02 49.60            Humphrey           Nixon
     ## 6 1972   3.62 61.79               Nixon        McGovern
 
+------------------------------------------------------------------------
+
 Graph data:
 
 ``` r
@@ -82,6 +84,7 @@ hibbs %>%
     geom_hline(yintercept = 50, color="red", linetype="dashed") +
     geom_text(aes(label=year)) +
     geom_smooth(method='lm') +
+    scale_x_continuous(labels=function(.x)paste0(.x, '%')) +
     scale_y_continuous(labels=function(.x)paste0(.x, '%')) +
     labs(title="Forecasting the election from the economy",
          y="Incuming party's vote share",
@@ -90,6 +93,8 @@ hibbs %>%
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/figure.1.1.a-1.png)
+
+------------------------------------------------------------------------
 
 Build Model:
 
@@ -100,8 +105,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.5e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.55 seconds.
+    ## Chain 1: Gradient evaluation took 5.9e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.59 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -118,15 +123,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.033173 seconds (Warm-up)
-    ## Chain 1:                0.026592 seconds (Sampling)
-    ## Chain 1:                0.059765 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.031015 seconds (Warm-up)
+    ## Chain 1:                0.025475 seconds (Sampling)
+    ## Chain 1:                0.05649 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 3.3e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.33 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -143,9 +148,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.030026 seconds (Warm-up)
-    ## Chain 2:                0.025826 seconds (Sampling)
-    ## Chain 2:                0.055852 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.03409 seconds (Warm-up)
+    ## Chain 2:                0.033772 seconds (Sampling)
+    ## Chain 2:                0.067862 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -168,15 +173,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.027156 seconds (Warm-up)
-    ## Chain 3:                0.024811 seconds (Sampling)
-    ## Chain 3:                0.051967 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.027653 seconds (Warm-up)
+    ## Chain 3:                0.023661 seconds (Sampling)
+    ## Chain 3:                0.051314 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 8e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 4: Gradient evaluation took 7e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -193,10 +198,12 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.035352 seconds (Warm-up)
-    ## Chain 4:                0.028576 seconds (Sampling)
-    ## Chain 4:                0.063928 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.028124 seconds (Warm-up)
+    ## Chain 4:                0.028501 seconds (Sampling)
+    ## Chain 4:                0.056625 seconds (Total)
     ## Chain 4:
+
+------------------------------------------------------------------------
 
 Model Summary:
 
@@ -218,7 +225,7 @@ summary(model)
     ## Estimates:
     ##               mean   sd   10%   50%   90%
     ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
-    ## growth       3.0    0.7  2.1   3.0   3.9 
+    ## growth       3.0    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
@@ -229,13 +236,15 @@ summary(model)
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3027 
-    ## growth        0.0  1.0  3365 
-    ## sigma         0.0  1.0  2479 
-    ## mean_PPD      0.0  1.0  3723 
-    ## log-posterior 0.0  1.0  1595 
+    ## (Intercept)   0.0  1.0  3021 
+    ## growth        0.0  1.0  3277 
+    ## sigma         0.0  1.0  2511 
+    ## mean_PPD      0.0  1.0  3120 
+    ## log-posterior 0.0  1.0  1609 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
+
+------------------------------------------------------------------------
 
 Model Coefficients:
 
@@ -244,7 +253,9 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.308870    3.042233
+    ##   46.286084    3.035563
+
+------------------------------------------------------------------------
 
 Compare to `lm()`:
 
@@ -273,6 +284,8 @@ summary(lm(vote ~ growth, data=hibbs))
 
 (pretty close)
 
+------------------------------------------------------------------------
+
 Graph uses model coefficients rather than `geom_smooth(method='lm')`
 
 ``` r
@@ -282,6 +295,7 @@ hibbs %>%
     geom_text(aes(label=year)) +
     #geom_smooth(method='lm') +
     geom_abline(intercept = coef(model)['(Intercept)'], slope = coef(model)['growth']) +
+    scale_x_continuous(labels=function(.x)paste0(.x, '%')) +
     scale_y_continuous(labels=function(.x)paste0(.x, '%')) +
     labs(title="Forecasting the election from the economy",
          y="Incuming party's vote share",
@@ -290,3 +304,5 @@ hibbs %>%
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/figure.1.1.a2-1.png)
+
+------------------------------------------------------------------------

@@ -134,7 +134,7 @@ summary(lm(vote ~ growth, data=hibbs))
 
 ---
 
-Graph uses model coefficients rather than `geom_smooth(method='lm')`
+Graph using model coefficients rather than `geom_smooth(method='lm')`
 
 ```{r figure.1.1.a2, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 hibbs %>%
