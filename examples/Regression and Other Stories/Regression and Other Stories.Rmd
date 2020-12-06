@@ -282,7 +282,11 @@ metabolic_rate_plot +
 
 This is essentially "elasticity" and is interpreted as a `1%` change in x has a `b`% change in `y` (Intro Econometrics pg. 39), although this does not hold for large changes in `y` (Intro Econometrics pg. 186).
 
-So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` change in `Primate Mass` results in a `~`r paste0(round(coef(model)["log(`Primate Mass`)"], 2), "%")`` change in `Metabolic Rate`.
+So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` change in `Primate Mass` results in a 
+
+``r paste0(round(coef(model)["log(`Primate Mass`)"], 2), "%")`` change in `Metabolic Rate`.
+
+`r `
 
 Let's see if this is true.
 
@@ -305,6 +309,7 @@ one_percent_change_prediction <- exp(one_percent_change_prediction)
 ```
 
 ```{r}
+format_percent <- function(.x) { paste0(round(.x * 100, 2), '%')}
 format_percent((one_percent_change_prediction - exp(prediction_105)) / exp(prediction_105))
 ```
 
@@ -320,7 +325,6 @@ Lets predict `Metabolic Change` for a `Primate Mass` of `9,500`
 
 ```{r}
 (percent_change <- (9500 - 105) / 105)
-format_percent <- function(.x) { paste0(round(.x * 100, 2), '%')}
 ```
 
 The percent-change in `Primate Mass` between these two values is ``r format_percent(percent_change)``.
