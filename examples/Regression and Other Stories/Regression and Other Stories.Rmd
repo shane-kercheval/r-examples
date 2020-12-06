@@ -287,7 +287,7 @@ So this rule of thumb doesn't work across large changes in `y`.
 
 ### Predictions
 
-According to `Introductory Econometrics, Wooldridge (pg. 206)`, 
+According to `Introductory Econometrics, Wooldridge (pg. 206)`,
 
 > Because the exponential undoes the log, our first guess for predicting y (when dependent variable is log(y)) is to simply exponentiate the predicted value for `log(y): y_predicted = exp(log y_predicted))`. **This does not work; in fact, it will systematically underestimate the expected value of y**.
 
@@ -303,7 +303,11 @@ where,
 
 The code below implements the `Duan smearing estimate`.
 
+Note, that this adjustment necessary, not just for `log y = log x` models, but for `log y = x` models (any time the dependent variable is log y, regardless of X).
+
 ```{r}
+#' This method returns the adjustment coefficient described in `Introductory Econometrics, Wooldridge (pg. 206)`
+#' @param .model the regression model
 duan_smearing_adjustment <- function(.model) {
     model_residuals <- residuals(.model)
     duan_smearing_coefficient <- sum(exp(model_residuals)) / length(model_residuals)
@@ -311,7 +315,10 @@ duan_smearing_adjustment <- function(.model) {
     return (duan_smearing_coefficient)
 }
 
-log_log_predict <- function(.model, .newdata) {
+#' This method returns the prediction of `y`, when the dependent variable is `log y`, based on the adjustment coefficient described in `Introductory Econometrics, Wooldridge (pg. 206)`
+#' @param .model the regression model
+#' @param .newdata the data (e.g. test data) from which predictions will be generated
+predict_from_log_y <- function(.model, .newdata) {
     
     duan_smearing_coefficient <- duan_smearing_adjustment(.model)
     .predictions <- predict(.model, newdata=.newdata)
@@ -330,7 +337,7 @@ log_y_predictions <- predict(model, newdata=all_predictions)
 # this simple adjustment is also described on pg 206 but assumes normal residuals
 all_predictions$`Predictions - Unadjusted` <- exp(log_y_predictions)
 all_predictions$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
-all_predictions$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=all_predictions)
+all_predictions$`Predictions - Adjusted - Duan` <- predict_from_log_y(.model=model, .newdata=all_predictions)
 head(all_predictions)
 ```
 
@@ -366,6 +373,8 @@ metabolic_rate_plot +
 ---
 
 ### Simulation of Log-Log Predictions
+
+See discussion in previous section regarding systematic underprediction of `y` when dependent varaible is `log y`.
 
 `log y = b*log x + random-noise`
 
@@ -410,7 +419,7 @@ log_y_predictions <- predict(model, newdata=test_data)
 # this simple adjustment is also described on pg 206 but assumes normal residuals
 test_data$`Predictions - Unadjusted` <- exp(log_y_predictions)
 test_data$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
-test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=test_data)
+test_data$`Predictions - Adjusted - Duan` <- predict_from_log_y(.model=model, .newdata=test_data)
 head(test_data)
 ```
 
@@ -460,3 +469,43 @@ rmse(fitted=test_data$`Predictions - Adjusted - Duan`, actual=test_data$simulate
 ```
 
 NOTE: the "Simple" adjustment (found in `Introductory Econometrics, Wooldridge (pg. 206)`) is only valid for residuals that are normally distributed. In this simulation, the residuals are normally distributed; and the Simple and Duan adjustments are quite similar.
+
+---
+
+We can do another performance check using `R-Squared`, which is a measure of the percent of variance in the dependent variable (y) that is explained by the model. The higher the R-squared, the better.
+
+```{r}
+#' these functions are from `Business Data Science, Taddy, pg 72`
+#' @param y the actual y values
+#' @param pred the predictions; must be probabilities (0<pred<1) for binomial
+deviance <- function(y, pred, family=c("gaussian","binomial")){
+    family <- match.arg(family)
+    if(family=="gaussian"){
+        return( sum( (y-pred)^2 ) )
+    }else{
+        if(is.factor(y)) y <- as.numeric(y)>1
+        return( -2*sum( y*log(pred) + (1-y)*log(1-pred) ) )
+    }
+}
+#' these functions are from `Business Data Science, Taddy, pg 72`
+#' returns r-squared which is a measure of the percent of variance in the dependent variable (y) that is explained by the model.
+#' @param y the actual y values
+#' @param pred the predictions; must be probabilities (0<pred<1) for binomial
+R2 <- function(y, pred, family=c("gaussian","binomial")){
+    fam <- match.arg(family)
+    if(fam=="binomial"){
+        if(is.factor(y)){ y <- as.numeric(y)>1 }
+    }
+    dev <- deviance(y, pred, family=fam)
+    dev0 <- deviance(y, mean(y), family=fam)
+    return(1-dev/dev0)
+}
+```
+
+We can see that the adjusted predictions do have a higher `R-Squared` than the unadjsuted.
+
+```{r}
+R2(pred=test_data$`Predictions - Unadjusted`, y=test_data$simulated_y)
+R2(pred=test_data$`Predictions - Adjusted - Simple`, y=test_data$simulated_y)
+R2(pred=test_data$`Predictions - Adjusted - Duan`, y=test_data$simulated_y)
+```

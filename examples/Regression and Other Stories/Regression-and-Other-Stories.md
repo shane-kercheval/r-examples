@@ -112,8 +112,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.3e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.53 seconds.
+    ## Chain 1: Gradient evaluation took 6e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -130,9 +130,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.029786 seconds (Warm-up)
-    ## Chain 1:                0.032769 seconds (Sampling)
-    ## Chain 1:                0.062555 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.030157 seconds (Warm-up)
+    ## Chain 1:                0.026303 seconds (Sampling)
+    ## Chain 1:                0.05646 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
@@ -155,15 +155,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.029141 seconds (Warm-up)
-    ## Chain 2:                0.027991 seconds (Sampling)
-    ## Chain 2:                0.057132 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.033724 seconds (Warm-up)
+    ## Chain 2:                0.024267 seconds (Sampling)
+    ## Chain 2:                0.057991 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 9e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 3: Gradient evaluation took 8e-06 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -180,15 +180,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.033104 seconds (Warm-up)
-    ## Chain 3:                0.025001 seconds (Sampling)
-    ## Chain 3:                0.058105 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.034092 seconds (Warm-up)
+    ## Chain 3:                0.028002 seconds (Sampling)
+    ## Chain 3:                0.062094 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 9e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 4: Gradient evaluation took 7e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -205,9 +205,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.02598 seconds (Warm-up)
-    ## Chain 4:                0.024507 seconds (Sampling)
-    ## Chain 4:                0.050487 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.029849 seconds (Warm-up)
+    ## Chain 4:                0.025518 seconds (Sampling)
+    ## Chain 4:                0.055367 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -231,23 +231,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.0  46.3  48.6 
+    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
     ## growth       3.0    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.8 
+    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2665 
-    ## growth        0.0  1.0  2659 
-    ## sigma         0.0  1.0  2379 
-    ## mean_PPD      0.0  1.0  3133 
-    ## log-posterior 0.0  1.0  1449 
+    ## (Intercept)   0.0  1.0  3075 
+    ## growth        0.0  1.0  3206 
+    ## sigma         0.0  1.0  2777 
+    ## mean_PPD      0.0  1.0  3138 
+    ## log-posterior 0.0  1.0  1675 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -286,7 +286,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.282219    3.043029
+    ##   46.288196    3.047957
 
 ------------------------------------------------------------------------
 
@@ -572,7 +572,13 @@ where,
 
 The code below implements the `Duan smearing estimate`.
 
+Note, that this adjustment necessary, not just for `log y = log x`
+models, but for `log y = x` models (any time the dependent variable is
+log y, regardless of X).
+
 ``` r
+#' This method returns the adjustment coefficient described in `Introductory Econometrics, Wooldridge (pg. 206)`
+#' @param .model the regression model
 duan_smearing_adjustment <- function(.model) {
     model_residuals <- residuals(.model)
     duan_smearing_coefficient <- sum(exp(model_residuals)) / length(model_residuals)
@@ -580,7 +586,10 @@ duan_smearing_adjustment <- function(.model) {
     return (duan_smearing_coefficient)
 }
 
-log_log_predict <- function(.model, .newdata) {
+#' This method returns the prediction of `y`, when the dependent variable is `log y`, based on the adjustment coefficient described in `Introductory Econometrics, Wooldridge (pg. 206)`
+#' @param .model the regression model
+#' @param .newdata the data (e.g. test data) from which predictions will be generated
+predict_from_log_y <- function(.model, .newdata) {
     
     duan_smearing_coefficient <- duan_smearing_adjustment(.model)
     .predictions <- predict(.model, newdata=.newdata)
@@ -600,7 +609,7 @@ log_y_predictions <- predict(model, newdata=all_predictions)
 # this simple adjustment is also described on pg 206 but assumes normal residuals
 all_predictions$`Predictions - Unadjusted` <- exp(log_y_predictions)
 all_predictions$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
-all_predictions$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=all_predictions)
+all_predictions$`Predictions - Adjusted - Duan` <- predict_from_log_y(.model=model, .newdata=all_predictions)
 head(all_predictions)
 ```
 
@@ -655,6 +664,9 @@ metabolic_rate_plot +
 ------------------------------------------------------------------------
 
 ### Simulation of Log-Log Predictions
+
+See discussion in previous section regarding systematic underprediction
+of `y` when dependent varaible is `log y`.
 
 `log y = b*log x + random-noise`
 
@@ -720,7 +732,7 @@ log_y_predictions <- predict(model, newdata=test_data)
 # this simple adjustment is also described on pg 206 but assumes normal residuals
 test_data$`Predictions - Unadjusted` <- exp(log_y_predictions)
 test_data$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
-test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=test_data)
+test_data$`Predictions - Adjusted - Duan` <- predict_from_log_y(.model=model, .newdata=test_data)
 head(test_data)
 ```
 
@@ -768,7 +780,7 @@ simulated_plot +
 ``` r
 simulated_plot +
     labs(title="Simulated Data & Predictions",
-         subtitle = "Unscaled",
+         subtitle = "Not Scaled",
          caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap,\nand the Duan is being hidden behind the Simple.")
 ```
 
@@ -777,9 +789,9 @@ simulated_plot +
 ------------------------------------------------------------------------
 
 The adjustments seem to make sense, visualy; but we can check the
-`Root Mean Square Error` (`RMSE`) to see if it actually results in a
-better **out-of-sample** fit, below (which it appears is the case; there
-is a lower error for the adjusted predictions).
+`Root Mean Square Error` (`RMSE`) to see if the adjustments actually
+results in a better **out-of-sample** fit, below (which it appears is
+the case; there is a lower error for the adjusted predictions).
 
 ``` r
 rmse = function(fitted, actual){
@@ -808,3 +820,58 @@ NOTE: the “Simple” adjustment (found in
 residuals that are normally distributed. In this simulation, the
 residuals are normally distributed; and the Simple and Duan adjustments
 are quite similar.
+
+------------------------------------------------------------------------
+
+We can do another performance check using `R-Squared`, which is a
+measure of the percent of variance in the dependent variable (y) that is
+explained by the model. The higher the R-squared, the better.
+
+``` r
+#' these functions are from `Business Data Science, Taddy, pg 72`
+#' @param y the actual y values
+#' @param pred the predictions; must be probabilities (0<pred<1) for binomial
+deviance <- function(y, pred, family=c("gaussian","binomial")){
+    family <- match.arg(family)
+    if(family=="gaussian"){
+        return( sum( (y-pred)^2 ) )
+    }else{
+        if(is.factor(y)) y <- as.numeric(y)>1
+        return( -2*sum( y*log(pred) + (1-y)*log(1-pred) ) )
+    }
+}
+#' these functions are from `Business Data Science, Taddy, pg 72`
+#' returns r-squared which is a measure of the percent of variance in the dependent variable (y) that is explained by the model.
+#' @param y the actual y values
+#' @param pred the predictions; must be probabilities (0<pred<1) for binomial
+R2 <- function(y, pred, family=c("gaussian","binomial")){
+    fam <- match.arg(family)
+    if(fam=="binomial"){
+        if(is.factor(y)){ y <- as.numeric(y)>1 }
+    }
+    dev <- deviance(y, pred, family=fam)
+    dev0 <- deviance(y, mean(y), family=fam)
+    return(1-dev/dev0)
+}
+```
+
+We can see that the adjusted predictions do have a higher `R-Squared`
+than the unadjsuted.
+
+``` r
+R2(pred=test_data$`Predictions - Unadjusted`, y=test_data$simulated_y)
+```
+
+    ## [1] 0.7248093
+
+``` r
+R2(pred=test_data$`Predictions - Adjusted - Simple`, y=test_data$simulated_y)
+```
+
+    ## [1] 0.7459729
+
+``` r
+R2(pred=test_data$`Predictions - Adjusted - Duan`, y=test_data$simulated_y)
+```
+
+    ## [1] 0.7460108
