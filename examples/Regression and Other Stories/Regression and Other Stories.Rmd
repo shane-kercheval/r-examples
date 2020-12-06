@@ -309,3 +309,65 @@ So this rule of thumb doesn't work across large changes in `y`.
 
 ---
 
+Simulate
+
+`log y = b*log x + random-noise`
+
+```{r}
+set.seed(3)
+simulated_x <- rexp(100000, rate = 0.5) + 4
+noise <- rnorm(100000, sd = 0.5)
+actual_log_y <- 3*log(simulated_x)
+simulated_log_y <- actual_log_y + noise
+simulated_y <- exp(simulated_log_y)
+
+
+simulated_data <- data.frame(simulated_x, simulated_y, actual_log_y)
+
+simulated_data %>%
+    ggplot(aes(x=simulated_x, y=simulated_y)) +
+    geom_point(alpha=0.1) +
+#    geom_line(aes(y=exp(actual_log_y)), color='red') +
+    scale_x_log10() +
+    scale_y_log10()
+
+training_indices <- sample.int(n=nrow(simulated_data), size = 0.7*nrow(simulated_data), replace = FALSE)
+training_data <- simulated_data[training_indices,]
+test_data <- simulated_data[-training_indices,]
+model <- lm(log(simulated_y) ~ log(simulated_x), data=training_data)
+summary(model)
+```
+
+```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+model_residuals <- residuals(model)
+(duan_smearing_adjustment <- sum(exp(model_residuals)) / length(model_residuals))
+
+temp_predictions <- predict(model, newdata = test_data)
+# only use _simple when residuals are normally distributed, which in this case they are
+# so they are actually very close to duan_smearing_adjustment, but in general the smearing adjustment
+# is a safer
+test_data$predictions_adjusted_simple <- exp(((summary(model)$sigma)^2)/2)*exp(temp_predictions)
+test_data$predictions_adjusted_duan <- duan_smearing_adjustment*exp(temp_predictions)
+test_data$predictions_raw <- exp(temp_predictions)
+
+test_data %>%
+    ggplot(aes(x=simulated_x, y=simulated_y)) +
+    geom_point() +
+    #geom_smooth(method='lm', se=FALSE) +
+    geom_line(aes(y=predictions_raw), color='red') +
+    geom_line(aes(y=predictions_adjusted_simple), color='orange') +
+    geom_line(aes(y=predictions_adjusted_duan), color='purple')# +
+    # scale_x_log10() +
+    # scale_y_log10()
+```
+
+```{r}
+rmse = function(fitted, actual){
+  sqrt(mean((fitted - actual)^2))
+}
+
+rmse(fitted=test_data$predictions_raw, actual=test_data$simulated_y)
+rmse(fitted=test_data$predictions_adjusted_simple, actual=test_data$simulated_y)
+rmse(fitted=test_data$predictions_adjusted_duan, actual=test_data$simulated_y)
+```
+
