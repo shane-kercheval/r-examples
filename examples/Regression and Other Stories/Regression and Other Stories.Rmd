@@ -561,3 +561,23 @@ R2(pred=test_data$`Predictions - Unadjusted`, y=test_data$simulated_y)
 R2(pred=test_data$`Predictions - Adjusted - Simple`, y=test_data$simulated_y)
 R2(pred=test_data$`Predictions - Adjusted - Duan`, y=test_data$simulated_y)
 ```
+
+# Chapter 4 - Statistcal Inference
+
+## Confidence Interval of Proportion
+
+```{r}
+sample_size <- 1000
+respond_yes <- 700
+
+(estimate <- respond_yes / sample_size)
+(standard_error <- sqrt(estimate * (1 - estimate) / sample_size))
+(z_scores <- qnorm(c(0.025, 0.975)))
+(confidence_interval_95 <- estimate + (z_scores * standard_error))
+```
+
+Compare to R's `prop.test`.
+
+```{r}
+prop.test(x=respond_yes, n=sample_size)
+```
