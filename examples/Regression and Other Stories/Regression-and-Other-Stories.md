@@ -6,6 +6,12 @@
     -   [Settings](#settings)
 -   [Chapter 1](#chapter-1)
     -   [Simple Example with `stan_glm`](#simple-example-with-stan_glm)
+-   [Chapter 3](#chapter-3)
+    -   [Log-Log Interpretation](#log-log-interpretation)
+        -   [Example Model](#example-model)
+        -   [Predictions](#predictions)
+        -   [Simulation of Log-Log
+            Predictions](#simulation-of-log-log-predictions)
 
 Overview
 ========
@@ -105,8 +111,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.9e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.59 seconds.
+    ## Chain 1: Gradient evaluation took 5.4e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.54 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -123,15 +129,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.031015 seconds (Warm-up)
-    ## Chain 1:                0.025475 seconds (Sampling)
-    ## Chain 1:                0.05649 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.03529 seconds (Warm-up)
+    ## Chain 1:                0.027154 seconds (Sampling)
+    ## Chain 1:                0.062444 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 3.3e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.33 seconds.
+    ## Chain 2: Gradient evaluation took 8e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -148,15 +154,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.03409 seconds (Warm-up)
-    ## Chain 2:                0.033772 seconds (Sampling)
-    ## Chain 2:                0.067862 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.030109 seconds (Warm-up)
+    ## Chain 2:                0.02724 seconds (Sampling)
+    ## Chain 2:                0.057349 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 9e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 3: Gradient evaluation took 1e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -173,15 +179,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.027653 seconds (Warm-up)
-    ## Chain 3:                0.023661 seconds (Sampling)
-    ## Chain 3:                0.051314 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.0289 seconds (Warm-up)
+    ## Chain 3:                0.026275 seconds (Sampling)
+    ## Chain 3:                0.055175 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 7e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+    ## Chain 4: Gradient evaluation took 9e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -198,9 +204,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.028124 seconds (Warm-up)
-    ## Chain 4:                0.028501 seconds (Sampling)
-    ## Chain 4:                0.056625 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.029973 seconds (Warm-up)
+    ## Chain 4:                0.027534 seconds (Sampling)
+    ## Chain 4:                0.057507 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -224,25 +230,51 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## (Intercept) 46.2    1.8 43.9  46.2  48.4 
+    ## growth       3.1    0.8  2.1   3.1   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.8 
+    ## mean_PPD 52.1    1.4 50.4  52.0  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3021 
-    ## growth        0.0  1.0  3277 
-    ## sigma         0.0  1.0  2511 
-    ## mean_PPD      0.0  1.0  3120 
-    ## log-posterior 0.0  1.0  1609 
+    ## (Intercept)   0.0  1.0  3213 
+    ## growth        0.0  1.0  3210 
+    ## sigma         0.0  1.0  2492 
+    ## mean_PPD      0.0  1.0  3846 
+    ## log-posterior 0.0  1.0  1437 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
+
+------------------------------------------------------------------------
+
+Print()
+
+``` r
+print(model)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      vote ~ growth
+    ##  observations: 16
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 46.2    1.6  
+    ## growth       3.1    0.7  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 3.9    0.8   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
 
 ------------------------------------------------------------------------
 
@@ -253,7 +285,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.286084    3.035563
+    ##   46.247332    3.054269
 
 ------------------------------------------------------------------------
 
@@ -286,7 +318,7 @@ summary(lm(vote ~ growth, data=hibbs))
 
 ------------------------------------------------------------------------
 
-Graph uses model coefficients rather than `geom_smooth(method='lm')`
+Graph using model coefficients rather than `geom_smooth(method='lm')`
 
 ``` r
 hibbs %>%
@@ -306,3 +338,432 @@ hibbs %>%
 ![](Regression-and-Other-Stories_files/figure-markdown_github/figure.1.1.a2-1.png)
 
 ------------------------------------------------------------------------
+
+Chapter 3
+=========
+
+Log-Log Interpretation
+----------------------
+
+### Example Model
+
+``` r
+metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
+head(metabolic_rate)
+```
+
+    ## # A tibble: 6 x 2
+    ##   `Primate Mass` `Metabolic Rate`
+    ##            <dbl>            <dbl>
+    ## 1           4670            11.6 
+    ## 2           1020             2.56
+    ## 3            206             0.73
+    ## 4            190             0.86
+    ## 5            105             0.55
+    ## 6            300             1.1
+
+``` r
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "(Not Log Scaled)")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_not_scaled-1.png)
+
+``` r
+metabolic_rate %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
+    geom_point() +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Log Scaled")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_scaled-1.png)
+
+``` r
+model <- lm(log(`Metabolic Rate`) ~ log(`Primate Mass`), data=metabolic_rate)
+summary(model)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(`Metabolic Rate`) ~ log(`Primate Mass`), data = metabolic_rate)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.71136 -0.13959  0.01586  0.14175  0.57990 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error t value        Pr(>|t|)    
+    ## (Intercept)         -4.05787    0.28770  -14.11 0.0000000004613 ***
+    ## log(`Primate Mass`)  0.74160    0.04198   17.66 0.0000000000189 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.2983 on 15 degrees of freedom
+    ## Multiple R-squared:  0.9541, Adjusted R-squared:  0.9511 
+    ## F-statistic:   312 on 1 and 15 DF,  p-value: 0.00000000001891
+
+``` r
+coef(model)
+```
+
+    ##         (Intercept) log(`Primate Mass`) 
+    ##           -4.057868            0.741598
+
+### Predictions
+
+According to \`Introductory Econometrics, Wooldridge (pg. 206),
+
+> Because the exponential undoes the log, our first guess for predicting
+> y \[when dependent variable is log(y)\] is to simply exponentiate the
+> predicted value for \`log(y): y\_predicted = exp(log y\_predicted)).
+> **This does not work; in fact, it will systematically underestimate
+> the expected value of y**.
+
+One adjustment that the author describes is the \`Duan smearing
+estimate.
+
+> Given an esimtate a0, we can predict y as
+>
+> `y_predicted = a0 * exp(log y_predicted)`
+
+where,
+
+> `a0 = sum(exp(residuals)) / length(residuals)`
+
+The code below implements the \`Duan smearing estimate.
+
+``` r
+duan_smearing_adjustment <- function(.model) {
+    model_residuals <- residuals(.model)
+    duan_smearing_coefficient <- sum(exp(model_residuals)) / length(model_residuals)
+    
+    return (duan_smearing_coefficient)
+}
+
+log_log_predict <- function(.model, .newdata) {
+    
+    duan_smearing_coefficient <- duan_smearing_adjustment(.model)
+    .predictions <- predict(.model, newdata=.newdata)
+    .predictions <- duan_smearing_coefficient*exp(.predictions)
+
+    return (.predictions)
+}
+```
+
+Now, let’s create predictions for all `Primate Masses` between `50` and
+`80000`, which is around the interval of our data.
+
+``` r
+all_predictions <- data.frame(`Primate Mass`=seq(50, 80000), check.names = FALSE)
+log_y_predictions <- predict(model, newdata=all_predictions)
+
+# this simple adjustment is also described on pg 206 but assumes normal residuals
+all_predictions$`Predictions - Unadjusted` <- exp(log_y_predictions)
+all_predictions$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
+all_predictions$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=all_predictions)
+head(all_predictions)
+```
+
+    ##   Primate Mass Predictions - Unadjusted Predictions - Adjusted - Simple
+    ## 1           50                0.3145163                       0.3288212
+    ## 2           51                0.3191693                       0.3336858
+    ## 3           52                0.3237987                       0.3385258
+    ## 4           53                0.3284052                       0.3433418
+    ## 5           54                0.3329892                       0.3481343
+    ## 6           55                0.3375514                       0.3529040
+    ##   Predictions - Adjusted - Duan
+    ## 1                     0.3266032
+    ## 2                     0.3314350
+    ## 3                     0.3362423
+    ## 4                     0.3410258
+    ## 5                     0.3457860
+    ## 6                     0.3505236
+
+``` r
+predictions_long <- all_predictions %>% 
+    # get the original values, where applicable
+    #left_join(metabolic_rate, by = 'Primate Mass') %>%
+    pivot_longer(-`Primate Mass`, names_to = 'Prediction Type', values_to='Metabolic Rate')
+
+metabolic_rate_plot <- predictions_long %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`, color=`Prediction Type`)) +
+    geom_point(data=metabolic_rate, aes(x=`Primate Mass`, y=`Metabolic Rate`, color=NULL)) +
+    geom_text(data=metabolic_rate, 
+              aes(x=`Primate Mass`, y=`Metabolic Rate`,
+                  label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })"),
+                  color=NULL),
+              vjust=-0.5, check_overlap = TRUE) +
+    geom_line()
+
+metabolic_rate_plot +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Log Scaled")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_scaled_regression-1.png)
+
+``` r
+metabolic_rate_plot +
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Unscaled")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_unscaled_regression-1.png)
+
+> "A one-unit difference in `log x` corresponds to an additive
+> difference of `b` in `log y`. (R&OS pg. 39)
+
+This is essentially “elasticity” and is interpreted as a `1%` change in
+x has a `b`% change in `y` (Intro Econometrics pg. 39), although this
+does not hold for large changes in `y` (Intro Econometrics pg. 186).
+
+``` r
+(expected_one_percent_change <- paste0(round(coef(model)["log(`Primate Mass`)"], 2), "%"))
+```
+
+    ## [1] "0.74%"
+
+So, the interpretation of the `log(Primate Mass)` coefficient is that a
+`1%` change in `Primate Mass` results in a `~0.74%` change in
+`Metabolic Rate`.
+
+Let’s see if this is true.
+
+``` r
+(prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
+```
+
+    ##       1 
+    ## -0.6065
+
+If the `Primate Mass` is `105` then our prediction of
+`log(Metabolic Rate`) is `-0.6065`
+
+``` r
+exp(prediction_105)
+```
+
+    ##         1 
+    ## 0.5452559
+
+Which means our prediction of `Metabolic Rate` is `0.5452559`, which
+matches the point on the graph.
+
+``` r
+(one_percent_change <- (0.01 * 105) + 105)
+```
+
+    ## [1] 106.05
+
+``` r
+(one_percent_change_prediction <- predict(model, newdata = data.frame(`Primate Mass`=one_percent_change, check.names = FALSE)))
+```
+
+    ##          1 
+    ## -0.5991209
+
+``` r
+one_percent_change_prediction <- exp(one_percent_change_prediction)
+```
+
+``` r
+format_percent <- function(.x) { paste0(round(.x * 100, 2), '%')}
+format_percent((one_percent_change_prediction - exp(prediction_105)) / exp(prediction_105))
+```
+
+    ## [1] "0.74%"
+
+``` r
+coef(model)["log(`Primate Mass`)"]
+```
+
+    ## log(`Primate Mass`) 
+    ##            0.741598
+
+Yep, this works. A `1%` (from `105` to `106.05`) change in
+`Primate Mass` resulted in a `0.74%` change in the predicted
+`Metabolic Rate`
+
+But lets try with a larger change.
+
+Lets predict `Metabolic Change` for a `Primate Mass` of `9,500`
+
+``` r
+(percent_change <- (9500 - 105) / 105)
+```
+
+    ## [1] 89.47619
+
+The percent-change in `Primate Mass` between these two values is
+`8947.62%`.
+
+``` r
+(expected_percent_change_y <- as.numeric(coef(model)["log(`Primate Mass`)"]) * percent_change)
+```
+
+    ## [1] 66.35536
+
+Therefore, the **expected** percent change in `Metabolic Rate` should be
+`6635.54%`.
+
+But the actual percent change is:
+
+``` r
+(prediction_9500 <- predict(model, newdata = data.frame(`Primate Mass`=9500, check.names = FALSE)))
+```
+
+    ##        1 
+    ## 2.734463
+
+``` r
+format_percent((exp(prediction_9500) - exp(prediction_105)) / exp(prediction_105))
+```
+
+    ## [1] "2724.63%"
+
+Which is quite lower.
+
+So this rule of thumb doesn’t work across large changes in `y`.
+
+------------------------------------------------------------------------
+
+### Simulation of Log-Log Predictions
+
+`log y = b*log x + random-noise`
+
+``` r
+set.seed(3)
+simulated_x <- rexp(100000, rate = 0.5) + 4
+noise <- rnorm(100000, sd = 0.5)
+b_coefficient <- 3
+actual_log_y <- b_coefficient * log(simulated_x)
+simulated_log_y <- actual_log_y + noise
+simulated_y <- exp(simulated_log_y)
+
+simulated_data <- data.frame(simulated_x, simulated_y)
+
+simulated_data %>%
+    ggplot(aes(x=simulated_x, y=simulated_y)) +
+    geom_point(alpha=0.1) +
+    scale_x_log10() +
+    scale_y_log10()
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-24-1.png)
+
+``` r
+training_indices <- sample.int(n=nrow(simulated_data), size = 0.7*nrow(simulated_data), replace = FALSE)
+training_data <- simulated_data[training_indices,]
+test_data <- simulated_data[-training_indices,]
+model <- lm(log(simulated_y) ~ log(simulated_x), data=training_data)
+summary(model)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(simulated_y) ~ log(simulated_x), data = training_data)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.08312 -0.33521 -0.00043  0.33729  2.36796 
+    ## 
+    ## Coefficients:
+    ##                   Estimate Std. Error t value            Pr(>|t|)    
+    ## (Intercept)      -0.011860   0.011719  -1.012               0.312    
+    ## log(simulated_x)  3.008661   0.006618 454.616 <0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.4982 on 69998 degrees of freedom
+    ## Multiple R-squared:  0.747,  Adjusted R-squared:  0.747 
+    ## F-statistic: 2.067e+05 on 1 and 69998 DF,  p-value: < 0.00000000000000022
+
+``` r
+log_y_predictions <- predict(model, newdata=test_data)
+
+# this simple adjustment is also described on pg 206 but assumes normal residuals
+test_data$`Predictions - Unadjusted` <- exp(log_y_predictions)
+test_data$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
+test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=test_data)
+head(test_data)
+```
+
+    ##    simulated_x simulated_y Predictions - Unadjusted
+    ## 2     5.230066   461.20701                143.41462
+    ## 5     4.408403    75.66499                 85.75767
+    ## 8     4.020096    62.26698                 64.98177
+    ## 10    4.228998   216.33233                 75.68072
+    ## 13    4.316355   100.41827                 80.48246
+    ## 26    7.540898   671.49422                431.23856
+    ##    Predictions - Adjusted - Simple Predictions - Adjusted - Duan
+    ## 2                        162.36388                     162.38557
+    ## 5                         97.08876                      97.10173
+    ## 8                         73.56776                      73.57759
+    ## 10                        85.68035                      85.69180
+    ## 13                        91.11655                      91.12872
+    ## 26                       488.21776                     488.28301
+
+``` r
+predictions_long <- test_data %>%
+    select(-simulated_y) %>%
+    # get the original values, where applicable
+    #left_join(metabolic_rate, by = 'Primate Mass') %>%
+    pivot_longer(-simulated_x, names_to = 'Prediction Type', values_to='Predicted Y')
+
+simulated_plot <- predictions_long %>%
+    ggplot(aes(x=simulated_x, y=`Predicted Y`, color=`Prediction Type`)) +
+    geom_point(data=test_data, aes(x=simulated_x, y=simulated_y, color=NULL)) +
+    geom_line()
+
+simulated_plot +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(title="Simulated Data & Predictions",
+         subtitle = "Log Scaled",
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_scaled_simulation-1.png)
+
+``` r
+simulated_plot +
+    labs(title="Simulated Data & Predictions",
+         subtitle = "Unscaled",
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_unscaled_simulation-1.png)
+
+The adjustments seem to make sense, visualy; but we can check the
+`Root Mean Square Error` (`RMSE`) to see if it actually results in a
+better out-of-sample fit, below (which it appears is the case).
+
+``` r
+rmse = function(fitted, actual){
+  sqrt(mean((fitted - actual)^2))
+}
+
+rmse(fitted=test_data$`Predictions - Unadjusted`, actual=test_data$simulated_y)
+```
+
+    ## [1] 352.1605
+
+``` r
+rmse(fitted=test_data$`Predictions - Adjusted - Simple`, actual=test_data$simulated_y)
+```
+
+    ## [1] 343.5079
+
+``` r
+rmse(fitted=test_data$`Predictions - Adjusted - Duan`, actual=test_data$simulated_y)
+```
+
+    ## [1] 343.5077

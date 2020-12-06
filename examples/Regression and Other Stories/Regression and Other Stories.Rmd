@@ -215,7 +215,7 @@ where,
 
 > `a0 = sum(exp(residuals)) / length(residuals)`
 
-The code below implements the `Duan smearing estimate.
+The code below implements the `Duan smearing estimate`.
 
 ```{r}
 duan_smearing_adjustment <- function(.model) {
