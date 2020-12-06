@@ -165,6 +165,8 @@ hibbs %>%
 
 ## Log-Log Interpretation
 
+Example from `Regression & Other Stories pg 39. (Data found elsewhere.)
+
 ### Example Model
 
 ```{r message=FALSE, warning=FALSE}
@@ -211,6 +213,61 @@ coef(model)
 
 ### Interpretation
 
+#### Interpretation from `Regression and Other Stores`
+
+From `pg. 40`
+
+"For example, when increasing body mass on this curve by a factor of 2, metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplgying body mass by `10` corresponds to multiplying metabolic rate by `10^0.74` = `5.5`, and so forth."
+
+```{r}
+(primate_mass_coefficient <- unname(coef(model)['log(`Primate Mass`)']))
+```
+
+Lets test this. We'll start with a body mass of `105`.
+
+```{r}
+(log_prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
+(prediction_105 <- exp(log_prediction_105))
+```
+
+Our prediction of the metabolic rate is ``r prediction_105``.
+
+What is our prediction if we **double** the body mass?
+
+We would expect a Metabolic Rate of ``r 2^primate_mass_coefficient * prediction_105``.
+
+```{r}
+2^primate_mass_coefficient * prediction_105
+```
+
+What is the actual prediction if we double the body mass?
+
+```{r}
+log_prediction_210 <- predict(model, newdata = data.frame(`Primate Mass`=210, check.names = FALSE))
+(prediction_210 <- exp(log_prediction_210))
+```
+
+---
+
+What is our prediction if we multiply body mass by `10`?
+
+We would expect a Metabolic Rate of ``r 10^primate_mass_coefficient * prediction_105``.
+
+```{r}
+10^primate_mass_coefficient * prediction_105
+```
+
+What is the actual prediction if we double the body mass?
+
+```{r}
+log_prediction_1050 <- predict(model, newdata = data.frame(`Primate Mass`=1050, check.names = FALSE))
+(prediction_1050 <- exp(log_prediction_1050))
+```
+
+---- 
+
+#### Interpretation from `Introductory Econometrics 7e`
+
 > "A one-unit difference in `log x` corresponds to an additive difference of `b` in `log y`. (R&OS pg. 39)
 
 This is essentially "elasticity" and is interpreted as a `1%` change in x has a `b`% change in `y` (Intro Econometrics pg. 39), although this does not hold for large changes in `y` (Intro Econometrics pg. 186).
@@ -219,18 +276,13 @@ This is essentially "elasticity" and is interpreted as a `1%` change in x has a 
 format_percent <- function(.x) { paste0(round(.x, 3), '%')}
 format_percent_scale <- function(.x) { paste0(round(.x * 100, 3), '%')}
 
-(expected_one_percent_change <- format_percent(coef(model)["log(`Primate Mass`)"]))
+(expected_one_percent_change <- format_percent(primate_mass_coefficient))
 ```
 
 So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` change in `Primate Mass` results in a `~`r expected_one_percent_change`` change in `Metabolic Rate`.
 
 
 Let's see if this is true.
-
-```{r}
-(log_prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
-(prediction_105 <- exp(log_prediction_105))
-```
 
 If the `Primate Mass` is `105` then our prediction of `log(Metabolic Rate`) is ``r log_prediction_105``, which means our prediction of `Metabolic Rate` is ``r prediction_105``, which matches the point on the graph.
 
@@ -253,7 +305,7 @@ format_percent_scale((one_percent_change_prediction - prediction_105) / predicti
 Which matches the expected percent change from the coefficient.
 
 ```{r}
-coef(model)["log(`Primate Mass`)"]
+primate_mass_coefficient
 ```
 
 ---

@@ -10,6 +10,10 @@
     -   [Log-Log Interpretation](#log-log-interpretation)
         -   [Example Model](#example-model)
         -   [Interpretation](#interpretation)
+            -   [Interpretation from
+                `Regression and Other Stores`](#interpretation-from-regression-and-other-stores)
+            -   [Interpretation from
+                `Introductory Econometrics 7e`](#interpretation-from-introductory-econometrics-7e)
         -   [Predictions](#predictions)
         -   [Simulation of Log-Log
             Predictions](#simulation-of-log-log-predictions)
@@ -112,8 +116,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 6e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
+    ## Chain 1: Gradient evaluation took 5.4e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.54 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -130,15 +134,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.030157 seconds (Warm-up)
-    ## Chain 1:                0.026303 seconds (Sampling)
-    ## Chain 1:                0.05646 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.037096 seconds (Warm-up)
+    ## Chain 1:                0.026733 seconds (Sampling)
+    ## Chain 1:                0.063829 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 1e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -155,15 +159,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.033724 seconds (Warm-up)
-    ## Chain 2:                0.024267 seconds (Sampling)
-    ## Chain 2:                0.057991 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.031783 seconds (Warm-up)
+    ## Chain 2:                0.024674 seconds (Sampling)
+    ## Chain 2:                0.056457 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 8e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 3: Gradient evaluation took 1e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -180,9 +184,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.034092 seconds (Warm-up)
-    ## Chain 3:                0.028002 seconds (Sampling)
-    ## Chain 3:                0.062094 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.029294 seconds (Warm-up)
+    ## Chain 3:                0.026967 seconds (Sampling)
+    ## Chain 3:                0.056261 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
@@ -205,9 +209,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.029849 seconds (Warm-up)
-    ## Chain 4:                0.025518 seconds (Sampling)
-    ## Chain 4:                0.055367 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.031105 seconds (Warm-up)
+    ## Chain 4:                0.025188 seconds (Sampling)
+    ## Chain 4:                0.056293 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -231,23 +235,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## (Intercept) 46.2    1.8 44.0  46.3  48.4 
+    ## growth       3.1    0.8  2.1   3.1   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
+    ## mean_PPD 52.1    1.4 50.2  52.1  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3075 
-    ## growth        0.0  1.0  3206 
-    ## sigma         0.0  1.0  2777 
-    ## mean_PPD      0.0  1.0  3138 
-    ## log-posterior 0.0  1.0  1675 
+    ## (Intercept)   0.0  1.0  3216 
+    ## growth        0.0  1.0  2952 
+    ## sigma         0.0  1.0  2289 
+    ## mean_PPD      0.0  1.0  3578 
+    ## log-posterior 0.0  1.0  1313 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -267,11 +271,11 @@ print(model)
     ## ------
     ##             Median MAD_SD
     ## (Intercept) 46.3    1.7  
-    ## growth       3.0    0.7  
+    ## growth       3.1    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.8   
+    ## sigma 3.9    0.7   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -286,7 +290,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.288196    3.047957
+    ##   46.254923    3.066782
 
 ------------------------------------------------------------------------
 
@@ -345,6 +349,8 @@ Chapter 3
 
 Log-Log Interpretation
 ----------------------
+
+Example from \`Regression & Other Stories pg 39. (Data found elsewhere.)
 
 ### Example Model
 
@@ -428,27 +434,20 @@ coef(model)
 
 ### Interpretation
 
-> "A one-unit difference in `log x` corresponds to an additive
-> difference of `b` in `log y`. (R&OS pg. 39)
+#### Interpretation from `Regression and Other Stores`
 
-This is essentially “elasticity” and is interpreted as a `1%` change in
-x has a `b`% change in `y` (Intro Econometrics pg. 39), although this
-does not hold for large changes in `y` (Intro Econometrics pg. 186).
+From `pg. 40`
+
+"For example, when increasing body mass on this curve by a factor of 2,
+metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplgying body mass
+by 10 corresponds to multiplying metabolic rate by `10^0.74` = `5.5`,
+and so forth.
 
 ``` r
-format_percent <- function(.x) { paste0(round(.x, 3), '%')}
-format_percent_scale <- function(.x) { paste0(round(.x * 100, 3), '%')}
-
-(expected_one_percent_change <- format_percent(coef(model)["log(`Primate Mass`)"]))
+(primate_mass_coefficient <- unname(coef(model)['log(`Primate Mass`)']))
 ```
 
-    ## [1] "0.742%"
-
-So, the interpretation of the `log(Primate Mass)` coefficient is that a
-`1%` change in `Primate Mass` results in a `~0.742%` change in
-`Metabolic Rate`.
-
-Let’s see if this is true.
+    ## [1] 0.741598
 
 ``` r
 (log_prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
@@ -463,6 +462,79 @@ Let’s see if this is true.
 
     ##         1 
     ## 0.5452559
+
+Lets test this. We’ll start with a body mass of `105`. Our prediction of
+metabolic rate is `0.5452559`.
+
+What is our prediction if we **double** the body mass?
+
+We would expect a Metabolic Rate of `0.9116825`.
+
+``` r
+2^primate_mass_coefficient * prediction_105
+```
+
+    ##         1 
+    ## 0.9116825
+
+What is the actual prediction if we double the body mass?
+
+``` r
+log_prediction_210 <- predict(model, newdata = data.frame(`Primate Mass`=210, check.names = FALSE))
+(prediction_210 <- exp(log_prediction_210))
+```
+
+    ##         1 
+    ## 0.9116825
+
+------------------------------------------------------------------------
+
+What is our prediction if we multiply body mass by `10`?
+
+We would expect a Metabolic Rate of `3.0074496`.
+
+``` r
+10^primate_mass_coefficient * prediction_105
+```
+
+    ##       1 
+    ## 3.00745
+
+What is the actual prediction if we double the body mass?
+
+``` r
+log_prediction_1050 <- predict(model, newdata = data.frame(`Primate Mass`=1050, check.names = FALSE))
+(prediction_1050 <- exp(log_prediction_1050))
+```
+
+    ##       1 
+    ## 3.00745
+
+------------------------------------------------------------------------
+
+#### Interpretation from `Introductory Econometrics 7e`
+
+> "A one-unit difference in `log x` corresponds to an additive
+> difference of `b` in `log y`. (R&OS pg. 39)
+
+This is essentially “elasticity” and is interpreted as a `1%` change in
+x has a `b`% change in `y` (Intro Econometrics pg. 39), although this
+does not hold for large changes in `y` (Intro Econometrics pg. 186).
+
+``` r
+format_percent <- function(.x) { paste0(round(.x, 3), '%')}
+format_percent_scale <- function(.x) { paste0(round(.x * 100, 3), '%')}
+
+(expected_one_percent_change <- format_percent(primate_mass_coefficient))
+```
+
+    ## [1] "0.742%"
+
+So, the interpretation of the `log(Primate Mass)` coefficient is that a
+`1%` change in `Primate Mass` results in a `~0.742%` change in
+`Metabolic Rate`.
+
+Let’s see if this is true.
 
 If the `Primate Mass` is `105` then our prediction of
 `log(Metabolic Rate`) is `-0.6065`, which means our prediction of
@@ -500,11 +572,10 @@ format_percent_scale((one_percent_change_prediction - prediction_105) / predicti
 Which matches the expected percent change from the coefficient.
 
 ``` r
-coef(model)["log(`Primate Mass`)"]
+primate_mass_coefficient
 ```
 
-    ## log(`Primate Mass`) 
-    ##            0.741598
+    ## [1] 0.741598
 
 ------------------------------------------------------------------------
 
@@ -689,7 +760,7 @@ simulated_data %>%
          subtitle = "Graphed on a log-scale.")
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-28-1.png)
 
 ------------------------------------------------------------------------
 
