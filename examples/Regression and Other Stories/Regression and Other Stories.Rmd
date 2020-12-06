@@ -384,7 +384,7 @@ test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newd
 head(test_data)
 ```
 
-```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+```{r chapter_3_log_log_scaled_simulation, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
 predictions_long <- test_data %>%
     select(-simulated_y) %>%
     # get the original values, where applicable
@@ -404,7 +404,7 @@ simulated_plot +
          caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
 ```
 
-```{r chapter_3_log_log_unscaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+```{r chapter_3_log_log_unscaled_simulation, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 simulated_plot +
     labs(title="Simulated Data & Predictions",
          subtitle = "Unscaled",
