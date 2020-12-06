@@ -69,7 +69,7 @@ options(scipen=999) # non-scientific notation
 options(dplyr.summarise.inform=F)
 ```
 
-# Chapter 1
+# Chapter 1 - Overview
 
 ## Simple Example with `stan_glm`
 
@@ -161,7 +161,7 @@ hibbs %>%
 
 ---
 
-# Chapter 3
+# Chapter 3 - Basic Methods
 
 ## Log-Log Interpretation
 
@@ -576,8 +576,134 @@ respond_yes <- 700
 (confidence_interval_95 <- estimate + (z_scores * standard_error))
 ```
 
+---
+
 Compare to R's `prop.test`.
 
 ```{r}
 prop.test(x=respond_yes, n=sample_size)
+```
+
+# Chapter 5 - Simulation
+
+How many girls in 400 births?
+
+```{r}
+probability_girl <- 0.488
+sample_size <- 400
+# one random sample (simulated)
+number_of_simulated_samples <- 1
+set.seed(1)
+rbinom(n = number_of_simulated_samples, size=sample_size, prob = probability_girl)
+```
+
+```{r}
+number_of_simulated_samples <- 1000
+set.seed(1)
+simulations <- rbinom(n = number_of_simulated_samples, size=sample_size, prob = probability_girl)
+simulations[1:10]
+```
+
+95% Interval
+
+```{r}
+quantile(simulations, c(0.025, 0.975))
+```
+
+```{r}
+hist(simulations)
+```
+
+---
+
+Accounting for twins.
+
+First, simulate birth types of 400 births.
+
+```{r}
+set.seed(2)
+probability_girl_if_twins <- 0.495
+probability_of_twins_fraternal <- 1/125  # each has a 49.5% of being a girl
+probability_of_twins_identical <- 1/300  # 49.5% chance of being a pair of girls.
+
+simulate_birth_types <- function() {
+    
+    sample(x=c('fraternal twin', 'identical twin', 'single born'),
+           size = sample_size,
+           replace = TRUE,
+           prob = c(probability_of_twins_fraternal,
+                    probability_of_twins_identical,
+                    1 - probability_of_twins_fraternal - probability_of_twins_identical))
+}
+birth_type <- simulate_birth_types()
+table(birth_type)
+```
+
+Simulating Number of Girls if Fraternal Twin. In this scenario, there are `2` different people, each of which has a ``r format_percent_scale(probability_girl_if_twins)` percent chance of being a girl. So the possible outcomes are `0`, `1`, `2`
+
+- `0`: 0 girls (both boys)
+- `1`: 1 girl
+- `2`: 2 both
+
+```{r}
+hist(rbinom(n=10000,  # simulate this scenario 10K times
+            size=2, # two different possible chances of being a girl
+            prob=probability_girl_if_twins))
+```
+
+Simulating Number of Girls if Identical Twin. In this scenario, they are either both boys, or both girls. So the possible outcomes are either `0` or `2`
+
+- `0`: 0 girls (both boys)
+- `2`: both girls
+
+In other words, we'll simulate the binary outcome of either both girls or both boys, but the former means we have to count 2 people, so we'll multiple the number of people by 2
+
+```{r}
+hist(2 * rbinom(n=10000,  # simulate this scenario 10K times
+                size=1, # two different possible chances of being a girl
+                prob=probability_girl_if_twins))
+```
+
+Now, we will do 1000 simulations of births, considering fraternal/identical twins; each simulation has a sample-size of 400.
+
+```{r}
+set.seed(1)
+simulation_results <- replicate(1000, {
+    birth_type <- simulate_birth_types()
+    
+    total_number_of_girls <- map_dbl(birth_type, ~ {
+
+        if(. == 'fraternal twin') {
+            # simulate number of girls for this particular simulated birth_type
+            number_of_girls <- rbinom(n=1,
+                   size=2, # two different possible chances of being a girl
+                   prob=probability_girl_if_twins)
+            
+        } else if(. == 'identical twin') {
+            # simulate number of girls for this particular simulated birth_type
+            number_of_girls <- 2 * rbinom(n=1,
+                size=1, # two different possible chances of being a girl
+                prob=probability_girl_if_twins)
+            
+        } else if(. == 'single born') {
+            # simulate number of girls for this particular simulated birth_type
+            number_of_girls <- rbinom(1, 1, probability_girl)
+            
+        } else {
+            stop()
+        }
+        
+        return(number_of_girls)
+    })
+    
+    return (sum(total_number_of_girls))
+})
+```
+
+```{r}
+quantile(simulation_results, c(0.025, 0.975))
+```
+
+```{r}
+hist(simulation_results)
 ```
