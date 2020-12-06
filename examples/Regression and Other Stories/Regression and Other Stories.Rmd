@@ -163,7 +163,9 @@ hibbs %>%
 
 # Chapter 3
 
-### Log-Log Interpretation
+## Log-Log Interpretation
+
+### Example Model
 
 ```{r message=FALSE, warning=FALSE}
 metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
@@ -174,8 +176,8 @@ head(metabolic_rate)
 metabolic_rate %>%
     ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
     geom_point() +
-    labs("Primate Body Mass And Basal Metabolic Rate",
-         subtitle = "(Not Scaled)")
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "(Not Log Scaled)")
 ```
 
 ```{r chapter_3_log_log_scaled, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
@@ -184,8 +186,8 @@ metabolic_rate %>%
     geom_point() +
     scale_x_log10() +
     scale_y_log10() +
-    labs("Primate Body Mass And Basal Metabolic Rate",
-         subtitle = "Scaled Log")
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Log Scaled")
 ```
 
 ```{r}
@@ -197,50 +199,83 @@ summary(model)
 coef(model)
 ```
 
+### Predictions
+
+According to `Introductory Econometrics, Wooldridge (pg. 206), 
+
+> Because the exponential undoes the log, our first guess for predicting y [when dependent variable is log(y)] is to simply exponentiate the predicted value for `log(y): y_predicted = exp(log y_predicted)). **This does not work; in fact, it will systematically underestimate the expected value of y**.
+
+One adjustment that the author describes is the `Duan smearing estimate.
+
+> Given an esimtate a0, we can predict y as 
+>
+> `y_predicted = a0 * exp(log y_predicted)`
+
+where, 
+
+> `a0 = sum(exp(residuals)) / length(residuals)`
+
+The code below implements the `Duan smearing estimate.
 
 ```{r}
-summary(model)$sigma
+duan_smearing_adjustment <- function(.model) {
+    model_residuals <- residuals(.model)
+    duan_smearing_coefficient <- sum(exp(model_residuals)) / length(model_residuals)
+    
+    return (duan_smearing_coefficient)
+}
 
+log_log_predict <- function(.model, .newdata) {
+    
+    duan_smearing_coefficient <- duan_smearing_adjustment(.model)
+    .predictions <- predict(.model, newdata=.newdata)
+    .predictions <- duan_smearing_coefficient*exp(.predictions)
+
+    return (.predictions)
+}
 ```
 
-```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+Now, let's create predictions for all `Primate Masses` between `50` and `80000`, which is around the interval of our data.
+
+```{r}
 all_predictions <- data.frame(`Primate Mass`=seq(50, 80000), check.names = FALSE)
-temp_predictions <- predict(model, newdata=all_predictions)
+log_y_predictions <- predict(model, newdata=all_predictions)
 
-model_residuals <- residuals(model)
-length(model_residuals)^-1
+# this simple adjustment is also described on pg 206 but assumes normal residuals
+all_predictions$`Predictions - Unadjusted` <- exp(log_y_predictions)
+all_predictions$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
+all_predictions$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=all_predictions)
+head(all_predictions)
+```
 
-duan_smearing_adjustment <- sum(exp(model_residuals)) / length(model_residuals)
 
-all_predictions$predictions_adjusted_simple <- exp(((summary(model)$sigma)^2)/2)*exp(temp_predictions)
-all_predictions$predictions_adjusted_duan <- duan_smearing_adjustment*exp(temp_predictions)
-all_predictions$predictions_raw <- exp(temp_predictions)
+```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+predictions_long <- all_predictions %>% 
+    # get the original values, where applicable
+    #left_join(metabolic_rate, by = 'Primate Mass') %>%
+    pivot_longer(-`Primate Mass`, names_to = 'Prediction Type', values_to='Metabolic Rate')
 
-metabolic_rate %>%
-    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
-    geom_point() +
-    scale_x_log10(breaks=10^seq(0, 4)) +
+metabolic_rate_plot <- predictions_long %>%
+    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`, color=`Prediction Type`)) +
+    geom_point(data=metabolic_rate, aes(x=`Primate Mass`, y=`Metabolic Rate`, color=NULL)) +
+    geom_text(data=metabolic_rate, 
+              aes(x=`Primate Mass`, y=`Metabolic Rate`,
+                  label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })"),
+                  color=NULL),
+              vjust=-0.5, check_overlap = TRUE) +
+    geom_line()
+
+metabolic_rate_plot +
+    scale_x_log10() +
     scale_y_log10() +
-    geom_text(aes(label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })")), vjust=-0.5) +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_raw), color='blue') +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_simple), color='red') +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_duan), color='purple') +
-    geom_smooth(method='lm') +
-    labs("Primate Body Mass And Basal Metabolic Rate",
-         subtitle = "Scaled Log")
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Log Scaled")
+```
 
-metabolic_rate %>%
-    ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
-    geom_point() +
-    #scale_x_log10(breaks=10^seq(0, 4)) +
-    #scale_y_log10() +
-    geom_text(aes(label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })")), vjust=-0.5) +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_raw), color='blue') +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_simple), color='red') +
-    geom_line(data=all_predictions, aes(x=`Primate Mass`, y=predictions_adjusted_duan), color='purple') +
-    #geom_smooth(method='lm') +
-    labs("Primate Body Mass And Basal Metabolic Rate",
-         subtitle = "Scaled Log")
+```{r chapter_3_log_log_unscaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+metabolic_rate_plot +
+    labs(title="Primate Body Mass And Basal Metabolic Rate",
+         subtitle = "Unscaled")
 ```
 
 > "A one-unit difference in `log x` corresponds to an additive difference of `b` in `log y`. (R&OS pg. 39)
@@ -309,7 +344,7 @@ So this rule of thumb doesn't work across large changes in `y`.
 
 ---
 
-Simulate
+### Simulation of Log-Log Predictions
 
 `log y = b*log x + random-noise`
 
@@ -317,20 +352,21 @@ Simulate
 set.seed(3)
 simulated_x <- rexp(100000, rate = 0.5) + 4
 noise <- rnorm(100000, sd = 0.5)
-actual_log_y <- 3*log(simulated_x)
+b_coefficient <- 3
+actual_log_y <- b_coefficient * log(simulated_x)
 simulated_log_y <- actual_log_y + noise
 simulated_y <- exp(simulated_log_y)
 
-
-simulated_data <- data.frame(simulated_x, simulated_y, actual_log_y)
+simulated_data <- data.frame(simulated_x, simulated_y)
 
 simulated_data %>%
     ggplot(aes(x=simulated_x, y=simulated_y)) +
     geom_point(alpha=0.1) +
-#    geom_line(aes(y=exp(actual_log_y)), color='red') +
     scale_x_log10() +
     scale_y_log10()
+```
 
+```{r}
 training_indices <- sample.int(n=nrow(simulated_data), size = 0.7*nrow(simulated_data), replace = FALSE)
 training_data <- simulated_data[training_indices,]
 test_data <- simulated_data[-training_indices,]
@@ -338,36 +374,51 @@ model <- lm(log(simulated_y) ~ log(simulated_x), data=training_data)
 summary(model)
 ```
 
-```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
-model_residuals <- residuals(model)
-(duan_smearing_adjustment <- sum(exp(model_residuals)) / length(model_residuals))
+```{r}
+log_y_predictions <- predict(model, newdata=test_data)
 
-temp_predictions <- predict(model, newdata = test_data)
-# only use _simple when residuals are normally distributed, which in this case they are
-# so they are actually very close to duan_smearing_adjustment, but in general the smearing adjustment
-# is a safer
-test_data$predictions_adjusted_simple <- exp(((summary(model)$sigma)^2)/2)*exp(temp_predictions)
-test_data$predictions_adjusted_duan <- duan_smearing_adjustment*exp(temp_predictions)
-test_data$predictions_raw <- exp(temp_predictions)
-
-test_data %>%
-    ggplot(aes(x=simulated_x, y=simulated_y)) +
-    geom_point() +
-    #geom_smooth(method='lm', se=FALSE) +
-    geom_line(aes(y=predictions_raw), color='red') +
-    geom_line(aes(y=predictions_adjusted_simple), color='orange') +
-    geom_line(aes(y=predictions_adjusted_duan), color='purple')# +
-    # scale_x_log10() +
-    # scale_y_log10()
+# this simple adjustment is also described on pg 206 but assumes normal residuals
+test_data$`Predictions - Unadjusted` <- exp(log_y_predictions)
+test_data$`Predictions - Adjusted - Simple` <- exp(((summary(model)$sigma)^2)/2)*exp(log_y_predictions)
+test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newdata=test_data)
+head(test_data)
 ```
+
+```{r chapter_3_log_log_scaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+predictions_long <- test_data %>%
+    select(-simulated_y) %>%
+    # get the original values, where applicable
+    #left_join(metabolic_rate, by = 'Primate Mass') %>%
+    pivot_longer(-simulated_x, names_to = 'Prediction Type', values_to='Predicted Y')
+
+simulated_plot <- predictions_long %>%
+    ggplot(aes(x=simulated_x, y=`Predicted Y`, color=`Prediction Type`)) +
+    geom_point(data=test_data, aes(x=simulated_x, y=simulated_y, color=NULL)) +
+    geom_line()
+
+simulated_plot +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(title="Simulated Data & Predictions",
+         subtitle = "Log Scaled",
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+```
+
+```{r chapter_3_log_log_unscaled_regression, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+simulated_plot +
+    labs(title="Simulated Data & Predictions",
+         subtitle = "Unscaled",
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+```
+
+The adjustments seem to make sense, visualy; but we can check the `Root Mean Square Error` (`RMSE`) to see if it actually results in a better out-of-sample fit, below (which it appears is the case).
 
 ```{r}
 rmse = function(fitted, actual){
   sqrt(mean((fitted - actual)^2))
 }
 
-rmse(fitted=test_data$predictions_raw, actual=test_data$simulated_y)
-rmse(fitted=test_data$predictions_adjusted_simple, actual=test_data$simulated_y)
-rmse(fitted=test_data$predictions_adjusted_duan, actual=test_data$simulated_y)
+rmse(fitted=test_data$`Predictions - Unadjusted`, actual=test_data$simulated_y)
+rmse(fitted=test_data$`Predictions - Adjusted - Simple`, actual=test_data$simulated_y)
+rmse(fitted=test_data$`Predictions - Adjusted - Duan`, actual=test_data$simulated_y)
 ```
-
