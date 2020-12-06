@@ -671,7 +671,7 @@ set.seed(1)
 simulation_results <- replicate(1000, {
     birth_type <- simulate_birth_types()
     
-    total_number_of_girls <- map_dbl(birth_type, ~ {
+    sample_of_girls <- map_dbl(birth_type, ~ {
 
         if(. == 'fraternal twin') {
             # simulate number of girls for this particular simulated birth_type
@@ -695,8 +695,8 @@ simulation_results <- replicate(1000, {
         
         return(number_of_girls)
     })
-    
-    return (sum(total_number_of_girls))
+    stopifnot(length(sample_of_girls) == sample_size)
+    return (sum(sample_of_girls))
 })
 ```
 
