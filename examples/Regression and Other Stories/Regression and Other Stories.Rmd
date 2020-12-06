@@ -586,7 +586,7 @@ prop.test(x=respond_yes, n=sample_size)
 
 # Chapter 5 - Simulation
 
-How many girls in 400 births?
+## How many girls in 400 births?
 
 ```{r}
 probability_girl <- 0.488
@@ -610,7 +610,7 @@ simulations[1:10]
 quantile(simulations, c(0.025, 0.975))
 ```
 
-```{r}
+```{r simulations_girls, fig.height=5, fig.width=plot_width_height_5}
 hist(simulations)
 ```
 
@@ -645,7 +645,7 @@ Simulating Number of Girls if Fraternal Twin. In this scenario, there are `2` di
 - `1`: 1 girl
 - `2`: 2 both
 
-```{r}
+```{r simulations_fraternal_twins, fig.height=5, fig.width=plot_width_height_5}
 hist(rbinom(n=10000,  # simulate this scenario 10K times
             size=2, # two different possible chances of being a girl
             prob=probability_girl_if_twins))
@@ -658,7 +658,7 @@ Simulating Number of Girls if Identical Twin. In this scenario, they are either 
 
 In other words, we'll simulate the binary outcome of either both girls or both boys, but the former means we have to count 2 people, so we'll multiple the number of people by 2
 
-```{r}
+```{r simulations_identical_twins, fig.height=5, fig.width=plot_width_height_5}
 hist(2 * rbinom(n=10000,  # simulate this scenario 10K times
                 size=1, # two different possible chances of being a girl
                 prob=probability_girl_if_twins))
@@ -704,6 +704,25 @@ simulation_results <- replicate(1000, {
 quantile(simulation_results, c(0.025, 0.975))
 ```
 
-```{r}
+```{r simulations_twins, fig.height=5, fig.width=plot_width_height_5}
 hist(simulation_results)
+```
+
+## Simulation of continuous and mixed discrete/continuous models
+
+```{r}
+n_sims <- 1000
+y1 <- rnorm(n = n_sims, mean = 3, sd = 0.5)
+y2 <- exp(x = y1)
+y3 <- rbinom(n = n_sims, size = 20, prob = 0.6)
+y4 <- rpois(n = n_sims, lambda = 5)
+```
+
+```{r simulations_continuous, fig.height=5, fig.width=plot_width_height_5}
+par(mar=c(4,3,4,3),  mgp=c(1.5,.5,0), tck=-.01)
+par(mfrow=c(2,2))
+hist(y1, breaks=seq(floor(min(y1)), ceiling(max(y1)), 0.2), main="1000 draws from normal dist with dist. with mean 3, sd 0.5")
+hist(y2, breaks=seq(0, ceiling(max(y2)) + 5, 5),  main="1000 draws from corresponding lognormal dist.")
+hist(y3, breaks=seq(-0.5, 20.5, 1), main="1000 draws from binomial dist. with 20 tries, probability 0.6")
+hist(y4, breaks=seq(-0.5, max(y4) + 1, 1), main="1000 draws from Poisson dist. with mean 5")
 ```

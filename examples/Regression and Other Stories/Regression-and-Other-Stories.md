@@ -22,6 +22,9 @@
     -   [Confidence Interval of
         Proportion](#confidence-interval-of-proportion)
 -   [Chapter 5 - Simulation](#chapter-5---simulation)
+    -   [How many girls in 400 births?](#how-many-girls-in-400-births)
+    -   [Simulation of continuous and mixed discrete/continuous
+        models](#simulation-of-continuous-and-mixed-discretecontinuous-models)
 
 Overview
 ========
@@ -121,8 +124,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.5 seconds.
+    ## Chain 1: Gradient evaluation took 6e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -139,15 +142,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.030172 seconds (Warm-up)
-    ## Chain 1:                0.026025 seconds (Sampling)
-    ## Chain 1:                0.056197 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.033563 seconds (Warm-up)
+    ## Chain 1:                0.028516 seconds (Sampling)
+    ## Chain 1:                0.062079 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 1e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
+    ## Chain 2: Gradient evaluation took 8e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -164,9 +167,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.030403 seconds (Warm-up)
-    ## Chain 2:                0.026676 seconds (Sampling)
-    ## Chain 2:                0.057079 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.03003 seconds (Warm-up)
+    ## Chain 2:                0.029257 seconds (Sampling)
+    ## Chain 2:                0.059287 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -189,15 +192,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.031305 seconds (Warm-up)
-    ## Chain 3:                0.02555 seconds (Sampling)
-    ## Chain 3:                0.056855 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.031281 seconds (Warm-up)
+    ## Chain 3:                0.025069 seconds (Sampling)
+    ## Chain 3:                0.05635 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.3e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
+    ## Chain 4: Gradient evaluation took 9e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -214,9 +217,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.029484 seconds (Warm-up)
-    ## Chain 4:                0.027077 seconds (Sampling)
-    ## Chain 4:                0.056561 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.031178 seconds (Warm-up)
+    ## Chain 4:                0.027323 seconds (Sampling)
+    ## Chain 4:                0.058501 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -240,23 +243,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.2    1.7 44.0  46.3  48.4 
-    ## growth       3.1    0.7  2.1   3.1   4.0 
-    ## sigma        4.0    0.8  3.1   3.9   5.1 
+    ## (Intercept) 46.3    1.7 44.2  46.4  48.5 
+    ## growth       3.0    0.7  2.1   3.0   3.9 
+    ## sigma        4.0    0.8  3.1   3.9   5.0 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
+    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3303 
-    ## growth        0.0  1.0  3215 
-    ## sigma         0.0  1.0  2528 
-    ## mean_PPD      0.0  1.0  3482 
-    ## log-posterior 0.0  1.0  1565 
+    ## (Intercept)   0.0  1.0  3254 
+    ## growth        0.0  1.0  3183 
+    ## sigma         0.0  1.0  2231 
+    ## mean_PPD      0.0  1.0  3659 
+    ## log-posterior 0.0  1.0  1323 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -275,8 +278,8 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.6  
-    ## growth       3.1    0.7  
+    ## (Intercept) 46.4    1.6  
+    ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -295,7 +298,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.286115    3.068807
+    ##   46.350645    3.021313
 
 ------------------------------------------------------------------------
 
@@ -1010,6 +1013,7 @@ Chapter 5 - Simulation
 ======================
 
 How many girls in 400 births?
+-----------------------------
 
 ``` r
 probability_girl <- 0.488
@@ -1044,7 +1048,7 @@ quantile(simulations, c(0.025, 0.975))
 hist(simulations)
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-39-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_girls-1.png)
 
 ------------------------------------------------------------------------
 
@@ -1089,7 +1093,7 @@ hist(rbinom(n=10000,  # simulate this scenario 10K times
             prob=probability_girl_if_twins))
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-41-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_fraternal_twins-1.png)
 
 Simulating Number of Girls if Identical Twin. In this scenario, they are
 either both boys, or both girls. So the possible outcomes are either `0`
@@ -1108,7 +1112,7 @@ hist(2 * rbinom(n=10000,  # simulate this scenario 10K times
                 prob=probability_girl_if_twins))
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-42-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_identical_twins-1.png)
 
 Now, we will do 1000 simulations of births, considering
 fraternal/identical twins; each simulation has a sample-size of 400.
@@ -1158,4 +1162,26 @@ quantile(simulation_results, c(0.025, 0.975))
 hist(simulation_results)
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-45-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_twins-1.png)
+
+Simulation of continuous and mixed discrete/continuous models
+-------------------------------------------------------------
+
+``` r
+n_sims <- 1000
+y1 <- rnorm(n = n_sims, mean = 3, sd = 0.5)
+y2 <- exp(x = y1)
+y3 <- rbinom(n = n_sims, size = 20, prob = 0.6)
+y4 <- rpois(n = n_sims, lambda = 5)
+```
+
+``` r
+par(mar=c(4,3,4,3),  mgp=c(1.5,.5,0), tck=-.01)
+par(mfrow=c(2,2))
+hist(y1, breaks=seq(floor(min(y1)), ceiling(max(y1)), 0.2), main="1000 draws from normal dist with dist. with mean 3, sd 0.5")
+hist(y2, breaks=seq(0, ceiling(max(y2)) + 5, 5),  main="1000 draws from corresponding lognormal dist.")
+hist(y3, breaks=seq(-0.5, 20.5, 1), main="1000 draws from binomial dist. with 20 tries, probability 0.6")
+hist(y4, breaks=seq(-0.5, max(y4) + 1, 1), main="1000 draws from Poisson dist. with mean 5")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_continuous-1.png)
