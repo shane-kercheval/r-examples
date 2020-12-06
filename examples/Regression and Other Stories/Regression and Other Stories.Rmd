@@ -176,14 +176,24 @@ head(metabolic_rate)
 metabolic_rate %>%
     ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
     geom_point() +
+    geom_text(data=metabolic_rate, 
+              aes(x=`Primate Mass`, y=`Metabolic Rate`,
+                  label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })"),
+                  color=NULL),
+              vjust=-0.5, check_overlap = TRUE) +
     labs(title="Primate Body Mass And Basal Metabolic Rate",
-         subtitle = "(Not Log Scaled)")
+         subtitle = "(Not Scaled)")
 ```
 
 ```{r chapter_3_log_log_scaled, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 metabolic_rate %>%
     ggplot(aes(x=`Primate Mass`, y=`Metabolic Rate`)) +
     geom_point() +
+    geom_text(data=metabolic_rate, 
+              aes(x=`Primate Mass`, y=`Metabolic Rate`,
+                  label=glue::glue("({ `Primate Mass` }, { `Metabolic Rate` })"),
+                  color=NULL),
+              vjust=-0.5, check_overlap = TRUE) +
     scale_x_log10() +
     scale_y_log10() +
     labs(title="Primate Body Mass And Basal Metabolic Rate",
@@ -206,9 +216,11 @@ coef(model)
 This is essentially "elasticity" and is interpreted as a `1%` change in x has a `b`% change in `y` (Intro Econometrics pg. 39), although this does not hold for large changes in `y` (Intro Econometrics pg. 186).
 
 ```{r}
-(expected_one_percent_change <- paste0(round(coef(model)["log(`Primate Mass`)"], 2), "%"))
-```
+format_percent <- function(.x) { paste0(round(.x, 3), '%')}
+format_percent_scale <- function(.x) { paste0(round(.x * 100, 3), '%')}
 
+(expected_one_percent_change <- format_percent(coef(model)["log(`Primate Mass`)"]))
+```
 
 So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` change in `Primate Mass` results in a `~`r expected_one_percent_change`` change in `Metabolic Rate`.
 
@@ -216,35 +228,37 @@ So, the interpretation of the `log(Primate Mass)` coefficient is that a `1%` cha
 Let's see if this is true.
 
 ```{r}
-(prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
+(log_prediction_105 <- predict(model, newdata = data.frame(`Primate Mass`=105, check.names = FALSE)))
+(prediction_105 <- exp(log_prediction_105))
 ```
 
-If the `Primate Mass` is `105` then our prediction of `log(Metabolic Rate`) is ``r prediction_105``
+If the `Primate Mass` is `105` then our prediction of `log(Metabolic Rate`) is ``r log_prediction_105``, which means our prediction of `Metabolic Rate` is ``r prediction_105``, which matches the point on the graph.
 
-```{r}
-exp(prediction_105)
-```
-
-Which means our prediction of `Metabolic Rate` is ``r exp(prediction_105)``, which matches the point on the graph.
+Now let's change `Primate Mass` (x) by `1%` and see how much `Metabolic Rate` (y) changes by.
 
 ```{r}
 (one_percent_change <- (0.01 * 105) + 105)
-(one_percent_change_prediction <- predict(model, newdata = data.frame(`Primate Mass`=one_percent_change, check.names = FALSE)))
-one_percent_change_prediction <- exp(one_percent_change_prediction)
+one_percent_change_prediction <- predict(model, newdata = data.frame(`Primate Mass`=one_percent_change, check.names = FALSE))
+(one_percent_change_prediction <- exp(one_percent_change_prediction))
 ```
 
+So if `Primate Mass` is ``r one_percent_change`` then we predict that `Metabolic Rate` is ``r one_percent_change_prediction``.
+
+So a `1%` change in `Primate Mass` resulted in the following percent change for `Metabolic Rate`:
+
 ```{r}
-format_percent <- function(.x) { paste0(round(.x * 100, 2), '%')}
-format_percent((one_percent_change_prediction - exp(prediction_105)) / exp(prediction_105))
+format_percent_scale((one_percent_change_prediction - prediction_105) / prediction_105)
 ```
+
+Which matches the expected percent change from the coefficient.
 
 ```{r}
 coef(model)["log(`Primate Mass`)"]
 ```
 
-Yep, this works. A `1%` (from `105` to ``r one_percent_change``) change in `Primate Mass` resulted in a `0.74%` change in the predicted `Metabolic Rate`
+---
 
-But lets try with a larger change.
+Now, lets try with a larger change.
 
 Lets predict `Metabolic Change` for a `Primate Mass` of `9,500`
 
@@ -252,40 +266,40 @@ Lets predict `Metabolic Change` for a `Primate Mass` of `9,500`
 (percent_change <- (9500 - 105) / 105)
 ```
 
-The percent-change in `Primate Mass` between these two values is ``r format_percent(percent_change)``.
+The percent-change in `Primate Mass` between these two values is ``r format_percent_scale(percent_change)``.
 
 ```{r}
 (expected_percent_change_y <- as.numeric(coef(model)["log(`Primate Mass`)"]) * percent_change)
 ```
 
-Therefore, the **expected** percent change in `Metabolic Rate` should be ``r format_percent(expected_percent_change_y)``.
+Therefore, if `Primate Mass` changes by ``r format_percent_scale(percent_change)``, the **expected** percent change in `Metabolic Rate` should be ``r format_percent_scale(expected_percent_change_y)``.
 
 But the actual percent change is:
 
 ```{r}
-(prediction_9500 <- predict(model, newdata = data.frame(`Primate Mass`=9500, check.names = FALSE)))
-format_percent((exp(prediction_9500) - exp(prediction_105)) / exp(prediction_105))
+(prediction_9500 <- exp(predict(model, newdata = data.frame(`Primate Mass`=9500, check.names = FALSE))))
+format_percent_scale((prediction_9500 - prediction_105) / prediction_105)
 ```
 
-Which is quite lower.
+Which is quite lower than what we expected.
 
 So this rule of thumb doesn't work across large changes in `y`.
 
 ### Predictions
 
-According to `Introductory Econometrics, Wooldridge (pg. 206), 
+According to `Introductory Econometrics, Wooldridge (pg. 206)`, 
 
-> Because the exponential undoes the log, our first guess for predicting y [when dependent variable is log(y)] is to simply exponentiate the predicted value for `log(y): y_predicted = exp(log y_predicted)). **This does not work; in fact, it will systematically underestimate the expected value of y**.
+> Because the exponential undoes the log, our first guess for predicting y (when dependent variable is log(y)) is to simply exponentiate the predicted value for `log(y): y_predicted = exp(log y_predicted))`. **This does not work; in fact, it will systematically underestimate the expected value of y**.
 
-One adjustment that the author describes is the `Duan smearing estimate.
+One adjustment that the author describes is the `Duan smearing estimate`.
 
-> Given an esimtate a0, we can predict y as 
+> Given an esimtate `a0`, we can predict `y` as 
 >
 > `y_predicted = a0 * exp(log y_predicted)`
 
 where, 
 
-> `a0 = sum(exp(residuals)) / length(residuals)`
+> `a0 = sum(exp(residuals)) / N`
 
 The code below implements the `Duan smearing estimate`.
 
@@ -356,7 +370,7 @@ metabolic_rate_plot +
 `log y = b*log x + random-noise`
 
 ```{r}
-set.seed(3)
+set.seed(1)
 simulated_x <- rexp(100000, rate = 0.5) + 4
 noise <- rnorm(100000, sd = 0.5)
 b_coefficient <- 3
@@ -365,13 +379,18 @@ simulated_log_y <- actual_log_y + noise
 simulated_y <- exp(simulated_log_y)
 
 simulated_data <- data.frame(simulated_x, simulated_y)
-
 simulated_data %>%
     ggplot(aes(x=simulated_x, y=simulated_y)) +
     geom_point(alpha=0.1) +
     scale_x_log10() +
-    scale_y_log10()
+    scale_y_log10() +
+    labs(title="Simulated Data (`log y = b*log x + random-noise`)",
+         subtitle = "Graphed on a log-scale.")
 ```
+
+---
+
+Create training/test sets, fit model on training data.
 
 ```{r}
 training_indices <- sample.int(n=nrow(simulated_data), size = 0.7*nrow(simulated_data), replace = FALSE)
@@ -380,6 +399,10 @@ test_data <- simulated_data[-training_indices,]
 model <- lm(log(simulated_y) ~ log(simulated_x), data=training_data)
 summary(model)
 ```
+
+---
+
+Predict on test data.
 
 ```{r}
 log_y_predictions <- predict(model, newdata=test_data)
@@ -391,6 +414,8 @@ test_data$`Predictions - Adjusted - Duan` <- log_log_predict(.model=model, .newd
 head(test_data)
 ```
 
+---
+
 ```{r chapter_3_log_log_scaled_simulation, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
 predictions_long <- test_data %>%
     select(-simulated_y) %>%
@@ -400,7 +425,7 @@ predictions_long <- test_data %>%
 
 simulated_plot <- predictions_long %>%
     ggplot(aes(x=simulated_x, y=`Predicted Y`, color=`Prediction Type`)) +
-    geom_point(data=test_data, aes(x=simulated_x, y=simulated_y, color=NULL)) +
+    geom_point(data=test_data, aes(x=simulated_x, y=simulated_y, color=NULL), alpha=0.2) +
     geom_line()
 
 simulated_plot +
@@ -408,17 +433,21 @@ simulated_plot +
     scale_y_log10() +
     labs(title="Simulated Data & Predictions",
          subtitle = "Log Scaled",
-         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap,\nand the Duan is being hidden behind the Simple.")
 ```
+
+---
 
 ```{r chapter_3_log_log_unscaled_simulation, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 simulated_plot +
     labs(title="Simulated Data & Predictions",
-         subtitle = "Unscaled",
-         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap, and the Duan is being hidden behind the Simple.")
+         subtitle = "Not Scaled",
+         caption="The 'Simple' and 'Duan' adjustments are slow close that they overlap,\nand the Duan is being hidden behind the Simple.")
 ```
 
-The adjustments seem to make sense, visualy; but we can check the `Root Mean Square Error` (`RMSE`) to see if it actually results in a better out-of-sample fit, below (which it appears is the case).
+---
+
+The adjustments seem to make sense, visualy; but we can check the `Root Mean Square Error` (`RMSE`) to see if the adjustments actually results in a better **out-of-sample** fit, below (which it appears is the case; there is a lower error for the adjusted predictions).
 
 ```{r}
 rmse = function(fitted, actual){
@@ -429,3 +458,5 @@ rmse(fitted=test_data$`Predictions - Unadjusted`, actual=test_data$simulated_y)
 rmse(fitted=test_data$`Predictions - Adjusted - Simple`, actual=test_data$simulated_y)
 rmse(fitted=test_data$`Predictions - Adjusted - Duan`, actual=test_data$simulated_y)
 ```
+
+NOTE: the "Simple" adjustment (found in `Introductory Econometrics, Wooldridge (pg. 206)`) is only valid for residuals that are normally distributed. In this simulation, the residuals are normally distributed; and the Simple and Duan adjustments are quite similar.
