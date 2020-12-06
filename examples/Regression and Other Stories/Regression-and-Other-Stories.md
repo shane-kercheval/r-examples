@@ -124,8 +124,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 6e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
+    ## Chain 1: Gradient evaluation took 5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.5 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -142,15 +142,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.033563 seconds (Warm-up)
-    ## Chain 1:                0.028516 seconds (Sampling)
-    ## Chain 1:                0.062079 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.035091 seconds (Warm-up)
+    ## Chain 1:                0.027758 seconds (Sampling)
+    ## Chain 1:                0.062849 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 9e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -167,9 +167,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.03003 seconds (Warm-up)
-    ## Chain 2:                0.029257 seconds (Sampling)
-    ## Chain 2:                0.059287 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.031393 seconds (Warm-up)
+    ## Chain 2:                0.026678 seconds (Sampling)
+    ## Chain 2:                0.058071 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -192,9 +192,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.031281 seconds (Warm-up)
-    ## Chain 3:                0.025069 seconds (Sampling)
-    ## Chain 3:                0.05635 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.029022 seconds (Warm-up)
+    ## Chain 3:                0.025536 seconds (Sampling)
+    ## Chain 3:                0.054558 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
@@ -217,9 +217,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.031178 seconds (Warm-up)
-    ## Chain 4:                0.027323 seconds (Sampling)
-    ## Chain 4:                0.058501 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.032487 seconds (Warm-up)
+    ## Chain 4:                0.026667 seconds (Sampling)
+    ## Chain 4:                0.059154 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -243,23 +243,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.7 44.2  46.4  48.5 
-    ## growth       3.0    0.7  2.1   3.0   3.9 
-    ## sigma        4.0    0.8  3.1   3.9   5.0 
+    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
+    ## growth       3.1    0.8  2.1   3.0   4.0 
+    ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
+    ## mean_PPD 52.1    1.5 50.3  52.1  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3254 
-    ## growth        0.0  1.0  3183 
-    ## sigma         0.0  1.0  2231 
-    ## mean_PPD      0.0  1.0  3659 
-    ## log-posterior 0.0  1.0  1323 
+    ## (Intercept)   0.0  1.0  3376 
+    ## growth        0.0  1.0  3302 
+    ## sigma         0.0  1.0  2499 
+    ## mean_PPD      0.0  1.0  3407 
+    ## log-posterior 0.0  1.0  1427 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -278,12 +278,12 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.4    1.6  
+    ## (Intercept) 46.3    1.7  
     ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.7   
+    ## sigma 3.9    0.8   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -298,7 +298,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.350645    3.021313
+    ##   46.269801    3.045271
 
 ------------------------------------------------------------------------
 

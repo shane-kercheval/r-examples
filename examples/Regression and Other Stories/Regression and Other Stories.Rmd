@@ -718,7 +718,7 @@ y3 <- rbinom(n = n_sims, size = 20, prob = 0.6)
 y4 <- rpois(n = n_sims, lambda = 5)
 ```
 
-```{r simulations_continuous, fig.height=5, fig.width=plot_width_height_5}
+```{r simulations_continuous, fig.height=6, fig.width=plot_width_height_6}
 par(mar=c(4,3,4,3),  mgp=c(1.5,.5,0), tck=-.01)
 par(mfrow=c(2,2))
 hist(y1, breaks=seq(floor(min(y1)), ceiling(max(y1)), 0.2), main="1000 draws from normal dist with dist. with mean 3, sd 0.5")
