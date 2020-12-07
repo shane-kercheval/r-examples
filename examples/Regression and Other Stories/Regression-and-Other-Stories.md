@@ -25,6 +25,8 @@
     -   [How many girls in 400 births?](#how-many-girls-in-400-births)
     -   [Simulation of continuous and mixed discrete/continuous
         models](#simulation-of-continuous-and-mixed-discretecontinuous-models)
+    -   [Median Absolute Deviation
+        (`MAD SD`)](#median-absolute-deviation-mad-sd)
 
 Overview
 ========
@@ -124,8 +126,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 6e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
+    ## Chain 1: Gradient evaluation took 5.1e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.51 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -142,15 +144,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.0302 seconds (Warm-up)
-    ## Chain 1:                0.027357 seconds (Sampling)
-    ## Chain 1:                0.057557 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.035819 seconds (Warm-up)
+    ## Chain 1:                0.030395 seconds (Sampling)
+    ## Chain 1:                0.066214 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 9e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -167,15 +169,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.029281 seconds (Warm-up)
-    ## Chain 2:                0.027739 seconds (Sampling)
-    ## Chain 2:                0.05702 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.035551 seconds (Warm-up)
+    ## Chain 2:                0.029316 seconds (Sampling)
+    ## Chain 2:                0.064867 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 7e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+    ## Chain 3: Gradient evaluation took 1.3e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -192,15 +194,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.039437 seconds (Warm-up)
-    ## Chain 3:                0.031601 seconds (Sampling)
-    ## Chain 3:                0.071038 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.031718 seconds (Warm-up)
+    ## Chain 3:                0.025339 seconds (Sampling)
+    ## Chain 3:                0.057057 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.1e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.11 seconds.
+    ## Chain 4: Gradient evaluation took 8e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -217,9 +219,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.030567 seconds (Warm-up)
-    ## Chain 4:                0.026508 seconds (Sampling)
-    ## Chain 4:                0.057075 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.029683 seconds (Warm-up)
+    ## Chain 4:                0.025789 seconds (Sampling)
+    ## Chain 4:                0.055472 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -243,23 +245,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.4    1.8 44.2  46.3  48.6 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## (Intercept) 46.2    1.8 44.0  46.3  48.4 
+    ## growth       3.1    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
+    ## mean_PPD 52.0    1.5 50.1  52.1  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2998 
-    ## growth        0.0  1.0  2580 
-    ## sigma         0.0  1.0  2620 
-    ## mean_PPD      0.0  1.0  3500 
-    ## log-posterior 0.0  1.0  1505 
+    ## (Intercept)   0.0  1.0  2717 
+    ## growth        0.0  1.0  2620 
+    ## sigma         0.0  1.0  2360 
+    ## mean_PPD      0.0  1.0  3150 
+    ## log-posterior 0.0  1.0  1266 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -278,12 +280,12 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.6  
+    ## (Intercept) 46.3    1.7  
     ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.7   
+    ## sigma 3.9    0.8   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -298,7 +300,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.347295    3.022401
+    ##   46.258214    3.040237
 
 ------------------------------------------------------------------------
 
@@ -1176,3 +1178,82 @@ y4 <- rpois(n = n_sims, lambda = 5)
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_continuous-1.png)
+
+Median Absolute Deviation (`MAD SD`)
+------------------------------------
+
+``` r
+set.seed(1)
+z <- rnorm(10000, 5, 2)
+hist(z)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_mad_sd-1.png)
+
+``` r
+rnd3 <- function(.x) {
+    round(.x, 3)
+}
+glue::glue("mean = { rnd3(mean(z)) }, sd = { rnd3(sd(z)) }, median = { rnd3(median(z)) }, mad sd = { rnd3(mad(z)) }")
+```
+
+    ## mean = 4.987, sd = 2.025, median = 4.968, mad sd = 1.997
+
+``` r
+constant <- 1.4826  # 1.483 defined R&OS pg 73; but function uses more specific number
+constant * median(abs(z - median(z)))
+```
+
+    ## [1] 1.996752
+
+``` r
+mad(z)
+```
+
+    ## [1] 1.996752
+
+------------------------------------------------------------------------
+
+The above is a single sample if `10,000` observations.
+
+The `standard error` (i.e. expected **standard deviation** of the
+**distribution** of **sample means** (if we were going to run this
+simulation many times (or draw a random sample from the population many
+times))) is:
+
+``` r
+sd(z) / sqrt(length(z))
+```
+
+    ## [1] 0.02024713
+
+We can also simulate this.
+
+First, lets run a `1,000` simulations of drawing a sample of `10,000`
+observations. Each time we’ll take the mean of those 10,000
+observations. So we’ll have a distribution of (1000) sample means.
+
+The standard deviation of the distribution of sample means is:
+
+``` r
+set.seed(1)
+simulations <- replicate(1000, mean(rnorm(10000, 5, 2)))
+sd(simulations)
+```
+
+    ## [1] 0.01941111
+
+Which is fairly close to our calculated standard error.
+
+``` r
+quantile(simulations, c(0.025, 0.975))
+```
+
+    ##     2.5%    97.5% 
+    ## 4.960204 5.038125
+
+``` r
+hist(simulations, main = "Distribution of Sample Means")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/simulations_sample_means-1.png)

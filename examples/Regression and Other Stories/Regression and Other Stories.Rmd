@@ -726,3 +726,56 @@ hist(y2, breaks=seq(0, ceiling(max(y2)) + 5, 5),  main="1000 draws from correspo
 hist(y3, breaks=seq(-0.5, 20.5, 1), main="1000 draws from binomial dist. with 20 tries, probability 0.6")
 hist(y4, breaks=seq(-0.5, max(y4) + 1, 1), main="1000 draws from Poisson dist. with mean 5")
 ```
+
+## Median Absolute Deviation (`MAD SD`)
+
+```{r simulations_mad_sd, fig.height=6, fig.width=plot_width_height_6}
+set.seed(1)
+z <- rnorm(10000, 5, 2)
+hist(z)
+```
+
+```{r}
+rnd3 <- function(.x) {
+    round(.x, 3)
+}
+glue::glue("mean = { rnd3(mean(z)) }, sd = { rnd3(sd(z)) }, median = { rnd3(median(z)) }, mad sd = { rnd3(mad(z)) }")
+```
+
+```{r}
+constant <- 1.4826  # 1.483 defined R&OS pg 73; but function uses more specific number
+constant * median(abs(z - median(z)))
+mad(z)
+```
+
+---
+
+The above is a single sample if `10,000` observations.
+
+The `standard error` (i.e. expected **standard deviation** of the **distribution** of **sample means** (if we were going to run this simulation many times (or draw a random sample from the population many times))) is:
+
+```{r}
+sd(z) / sqrt(length(z))
+```
+
+We can also simulate this.
+
+First, lets run a `1,000` simulations of drawing a sample of `10,000` observations. Each time we'll take the mean of those 10,000 observations. So we'll have a distribution of (1000) sample means.
+
+The standard deviation of the distribution of sample means is:
+
+```{r}
+set.seed(1)
+simulations <- replicate(1000, mean(rnorm(10000, 5, 2)))
+sd(simulations)
+```
+
+Which is fairly close to our calculated standard error.
+
+```{r}
+quantile(simulations, c(0.025, 0.975))
+```
+
+```{r simulations_sample_means, fig.height=6, fig.width=plot_width_height_6}
+hist(simulations, main = "Distribution of Sample Means")
+```
