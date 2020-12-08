@@ -56,6 +56,9 @@ library(loo)
 ## base packages
 
 ```{r message=FALSE, warning=FALSE}
+library(broom)
+library(broom.mixed)
+
 library(tidyverse)
 library(ggplot2)
 library(scales)
@@ -779,113 +782,3 @@ quantile(simulations, c(0.025, 0.975))
 ```{r simulations_sample_means, fig.height=6, fig.width=plot_width_height_6}
 hist(simulations, main = "Distribution of Sample Means")
 ```
-
-# Chapter 6 - Background on regression modeling
-
-Example on pg 82.
-
-```{r}
-x <- 1:20
-n <- length(x)
-a <- 0.2
-b <- 0.3
-sigma <- 0.5
-# set the random seed to get reproducible results
-# change the seed to experiment with variation due to random noise
-set.seed(2141)
-y <- a + b*x + sigma*rnorm(n)
-fake <- data.frame(x, y)
-```
-
-The option refresh = 0 supresses the default Stan sampling progress output. This is useful for small data with fast computation. For more complex models and bigger data, it can be useful to see the progress.
-
-```{r}
-fit_1 <- stan_glm(y ~ x, data = fake, seed=2141, refresh = 0)
-print(fit_1, digits=2)
-```
-
-
-
-```{r}
-ggplot()
-```
-
-
-
-```{r}
-par(mar=c(3,3,1,1), mgp=c(1.7,.5,0), tck=-.01)
-plot(fake$x, fake$y, main="Data and fitted regression line", bty="l", pch=20,
-     xlab = "x", ylab = "y")
-a_hat <- coef(fit_1)[1]
-b_hat <- coef(fit_1)[2]
-abline(a_hat, b_hat)
-x_bar <- mean(fake$x)
-text(x_bar, a_hat + b_hat*x_bar, paste("   y =", round(a_hat, 2), "+", round(b_hat, 2), "* x"), adj=0)
-```
-
-```{r}
-n_0 <- 200
-# set the random seed to get reproducible results
-# change the seed to experiment with variation due to random noise
-set.seed(2141)
-y_0 <- rnorm(n_0, 2.0, 5.0)
-fake_0 <- data.frame(y_0)
-round(y_0, 1)
-```
-
-
-```{r}
-round(mean(y_0), 2)
-```
-
-
-```{r}
-round(sd(y_0)/sqrt(n_0), 2)
-```
-
-```{r}
-fit_2 <- stan_glm(y_0 ~ 1, data = fake_0, seed=2141, refresh = 0,
-                  prior_intercept = NULL, prior = NULL, prior_aux = NULL)
-```
-
-
-```{r}
-print(fit_2)
-```
-
-```{r}
-n_1 <- 300
-# set the random seed to get reproducible results
-# change the seed to experiment with variation due to random noise
-set.seed(2141)
-y_1 <- rnorm(n_1, 8, 5)
-diff <- mean(y_1) - mean(y_0)
-se_0 <- sd(y_0)/sqrt(n_0)
-se_1 <- sd(y_1)/sqrt(n_1)
-se <- sqrt(se_0^2 + se_1^2)
-print(diff)
-```
-
-```{r}
-print(se)
-```
-
-
-```{r}
-n <- n_0 + n_1
-y <- c(y_0, y_1)
-x <- c(rep(0, n_0), rep(1, n_1))
-fake <- data.frame(y, x)
-fit_3 <- stan_glm(y ~ x, data = fake, seed=2141, refresh = 0, 
-                  prior_intercept = NULL, prior = NULL, prior_aux = NULL)
-print(fit_3)
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
