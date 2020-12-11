@@ -931,6 +931,12 @@ y_pred <- posterior_predict(object = model, newdata = new_data)
 head(y_pred)
 ```
 
+If we were to predict on several instances, we would get a column for each input value (i.e. growth of `-2` corresponds to column `1`)
+
+```{r}
+head(posterior_predict(object=model, newdata = data.frame(growth=-2:2)))
+```
+
 If we were to do this by hand, we do the same as before, but add the error term to the computation (which assumes normal distribution).
 
 ```{r}
@@ -940,6 +946,9 @@ simulations %>%
     mutate(error = rnorm(nrow(simulations), 0, sigma)) %>%
     mutate(prediction = `(Intercept)` + growth*2.0 + error)
 ```
+
+
+
 
 ```{r}
 simulate_election_results_conf_int <- function(.growth) {
