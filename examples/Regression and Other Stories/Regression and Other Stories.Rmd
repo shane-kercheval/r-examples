@@ -889,7 +889,8 @@ To understand what these predictions are, we could have calculated them by hand 
 simulations %>%
     as.data.frame() %>%
     select(-sigma) %>%
-    mutate(prediction = `(Intercept)` + growth * 2.0)
+    mutate(prediction = `(Intercept)` + growth * 2.0) %>%
+    head()
 ```
 
 ```{r}
@@ -931,12 +932,6 @@ y_pred <- posterior_predict(object = model, newdata = new_data)
 head(y_pred)
 ```
 
-If we were to predict on several instances, we would get a column for each input value (i.e. growth of `-2` corresponds to column `1`)
-
-```{r}
-head(posterior_predict(object=model, newdata = data.frame(growth=-2:2)))
-```
-
 If we were to do this by hand, we do the same as before, but add the error term to the computation (which assumes normal distribution).
 
 ```{r}
@@ -944,11 +939,11 @@ set.seed(1)
 simulations %>%
     as.data.frame() %>%
     mutate(error = rnorm(nrow(simulations), 0, sigma)) %>%
-    mutate(prediction = `(Intercept)` + growth*2.0 + error)
+    mutate(prediction = `(Intercept)` + growth*2.0 + error) %>%
+    head()
 ```
 
-
-
+---
 
 ```{r}
 simulate_election_results_conf_int <- function(.growth) {
@@ -978,6 +973,8 @@ results
 
 Note the confidence intervals are being simulated so the numbers/graph will change each time unless a seed is set.
 
+---
+
 ```{r chapter_9_posterior_predict, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 results %>%
     ggplot(aes(x=growth, y=prediction, color=stat.sig)) +
@@ -993,7 +990,9 @@ results %>%
          y="Prediction of Incumbent party's vote share.")
 ```
 
-```{r chapter_9_posterior_predict, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+---
+
+```{r chapter_9_posterior_predict_ribbon, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 results %>%
     ggplot(aes(x=growth, y=prediction)) +
     geom_hline(yintercept = 50, color="#DF585C") +
@@ -1010,6 +1009,8 @@ results %>%
          y="Prediction of Incumbent party's vote share.")
 ```
 
+---
+
 ```{r chapter_9_posterior_predict_prob, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 results %>%
     mutate(growth = factor(growth)) %>%
@@ -1022,4 +1023,40 @@ results %>%
     labs(title="Probability of Incumbent party's vote share > 50%",
          x="Economic Growth (% from previous year)",
          y="Probability of Incumbent party's vote share > 50%")
+```
+
+---
+
+If we were to predict on several instances, we would get a column for each input value (i.e. growth of `-2` corresponds to column `1`)
+
+```{r}
+head(posterior_predict(object=model, newdata = data.frame(growth=-2:2)))
+```
+
+```{r}
+all_predictions <- posterior_predict(object=model, newdata = data.frame(growth=-6:6))
+head(all_predictions, 20)
+```
+
+```{r chapter_9_posterior_predict_points, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+all_predictions <- all_predictions %>%
+    as.data.frame() %>%
+    mutate(temp=1) %>%
+    pivot_longer(-temp, names_to='growth', values_to='prediction') %>%
+    mutate(growth = as.numeric(growth) - 6 - 1) %>%
+    select(-temp)
+
+results %>%
+    ggplot(aes(x=growth, y=prediction, color=stat.sig)) +
+    geom_hline(yintercept = 50, color="#DF585C") +
+    #geom_point() +
+    geom_jitter(data=all_predictions, aes(x=growth, y=prediction, color=NULL), width=0.1, alpha=0.1) +
+    #geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
+    geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.7) +
+    scale_x_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_y_continuous(breaks = pretty_breaks(20), labels = function(.x)paste0(.x, "%")) +
+    scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
+    labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         x="Economic Growth (% from previous year)",
+         y="Prediction of Incumbent party's vote share.")
 ```
