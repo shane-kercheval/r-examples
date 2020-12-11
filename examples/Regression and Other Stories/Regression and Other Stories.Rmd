@@ -31,7 +31,6 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
               destfile = 'data/hibbs.dat', quiet = TRUE)
 ```
 
-
 # Overview
 
 This document includes examples and exercises from `Regression and Other Stories` by Andrew Gelman, Jennifer Hill and Aki Vehtari, 2020, first edition.
@@ -62,6 +61,7 @@ library(broom.mixed)
 library(tidyverse)
 library(ggplot2)
 library(scales)
+library(ggridges)
 ```
 
 ## Settings
@@ -72,6 +72,10 @@ options(scipen=999) # non-scientific notation
 options(dplyr.summarise.inform=F)
 ```
 
+```{r include=FALSE}
+hibbs <- read.table('data/hibbs.dat', header = TRUE)
+```
+
 # Chapter 1 - Overview
 
 ## Simple Example with `stan_glm`
@@ -79,7 +83,6 @@ options(dplyr.summarise.inform=F)
 Load in the data:
 
 ```{r}
-hibbs <- read.table('data/hibbs.dat', header = TRUE)
 head(hibbs)
 ```
 
@@ -781,4 +784,233 @@ quantile(simulations, c(0.025, 0.975))
 
 ```{r simulations_sample_means, fig.height=6, fig.width=plot_width_height_6}
 hist(simulations, main = "Distribution of Sample Means")
+```
+
+# Chapter 9 - Prediction and Bayesian Inference
+
+```{r}
+head(hibbs)
+```
+
+```{r}
+# refresh = 0 supresses the default Stan sampling progress output
+model <- stan_glm(vote ~ growth, data=hibbs, refresh=0)
+print(model)
+```
+
+> These numbers are summaries of a matrix of simulations representing different possible values of the parameters (intercept/slope/residual-standard-deviation). `pg. 113`
+
+> We have a set of `posterior simulations` rather than a single point estimate because we have uncertainty about these parameters. `pg. 113`
+
+```{r}
+simulations <- as.matrix(model)
+head(simulations)
+```
+
+```{r}
+model %>% tidy()
+```
+
+```{r}
+median(simulations[, '(Intercept)'])
+mad(simulations[, '(Intercept)'])
+```
+
+```{r}
+median(simulations[, 'growth'])
+mad(simulations[, 'growth'])
+```
+
+---
+
+```{r chapter_9_coefficient_joy_plot, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+simulations %>%
+    as.data.frame() %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
+    #mutate(name = fct_reorder(name, coef_median)) %>%
+    ggplot(aes(x=value, y=name)) +
+    geom_density_ridges(alpha=0.5) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+---
+
+```{r chapter_9_coefficient_tiefighter_plot, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+simulations %>%
+    as.data.frame() %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    group_by(name) %>%
+    summarise(coef_median = median(value),
+              coef_mad = mad(value),
+              conf.low = coef_median - 2*coef_mad,
+              conf.high = coef_median + 2*coef_mad,
+              # this is sudo p.value
+              # it's the percent of times the simulated values are below zero (if coef_median is greater than zero), or vice-versa
+              p.value=ifelse(coef_median > 0, sum(value <= 0) / n(), sum(value >= 0) / n()),
+              stat.sig = p.value <= 0.05) %>%
+    ungroup() %>%
+    mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
+    mutate(name = fct_reorder(name, coef_median)) %>%
+    ggplot(aes(x=coef_median, y=name, color=stat.sig)) +
+    geom_point() +
+    geom_vline(xintercept = 0, color='red') +
+    geom_errorbar(aes(xmin=conf.low, xmax=conf.high)) +
+    scale_color_manual(values=c("#37B57F", "#DF585C"))
+```
+
+## Point Prediction
+
+```{r}
+new_data <- data.frame(growth=2.0)
+predict(object = model, newdata = new_data)
+```
+
+## Linear Predictor with Uncertainty 
+
+> We can use `posterior_linpred` to get uncertainty in the value of the fitted regression line. (pg. 116)
+
+```{r}
+y_linpredict <- posterior_linpred(object=model, newdata = new_data)
+head(y_linpredict)
+```
+
+> Equivalently we can use the function `posterior_epred`, which returns the expected prediction for a new data point. For linear regression, the expected value is the same as the linear predcitor, but as we dicuss in Chapter 13, these two quantities differ for nonlinear models. (pg 116)
+
+```{r}
+head(posterior_epred(object=model, newdata = new_data))
+```
+
+To understand what these predictions are, we could have calculated them by hand using the simulations output.
+
+```{r}
+simulations %>%
+    as.data.frame() %>%
+    select(-sigma) %>%
+    mutate(prediction = `(Intercept)` + growth * 2.0)
+```
+
+```{r}
+simulate_election_results_conf_int <- function(.growth) {
+
+    predictions <- posterior_linpred(object=model, newdata = data.frame(growth=.growth))
+    confidence_intervals <- quantile(predictions, c(0.025, 0.975))
+    data.frame(prediction=median(predictions),
+               conf.low=unname(confidence_intervals[1]),
+               conf.high=unname(confidence_intervals[2]))
+}
+simulate_election_results_conf_int(2)
+```
+
+```{r chapter_9_posterior_linpred, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+data.frame(growth = -6:6) %>%
+    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    unnest(results) %>%
+    ggplot(aes(x=growth, y=prediction)) +
+    geom_point() +
+    geom_errorbar(aes(ymin=conf.low, ymax=conf.high)) +
+    scale_x_continuous(breaks = pretty_breaks(20)) +
+    scale_y_continuous(breaks = pretty_breaks(10)) +
+    labs(title="Uncertainty in the value of the fitted regression LINE (not the prediction)",
+         subtitle="NOTE: I doubt this is how we ever want to express uncertainty in the actual predictions.")
+```
+
+NOTE: I doubt this is how we ever want to express uncertainty in the actual predictions.
+
+## Predictive Distribution
+
+> We can construct a vector representing **predictive uncertainty** in a single election. 
+
+Note the confidence intervals are being simulated so the numbers/graph will change each time unless a seed is set.
+
+```{r}
+set.seed(1)
+y_pred <- posterior_predict(object = model, newdata = new_data)
+head(y_pred)
+```
+
+If we were to do this by hand, we do the same as before, but add the error term to the computation (which assumes normal distribution).
+
+```{r}
+set.seed(1)
+simulations %>%
+    as.data.frame() %>%
+    mutate(error = rnorm(nrow(simulations), 0, sigma)) %>%
+    mutate(prediction = `(Intercept)` + growth*2.0 + error)
+```
+
+```{r}
+simulate_election_results_conf_int <- function(.growth) {
+
+    predictions <- posterior_predict(object=model, newdata = data.frame(growth=.growth))
+    confidence_intervals_68 <- quantile(predictions, c(0.16, 1-0.16))
+    confidence_intervals_95 <- quantile(predictions, c(0.025, 0.975))
+    data.frame(prediction=median(predictions),
+               conf.low.68=unname(confidence_intervals_68[1]),
+               conf.high.68=unname(confidence_intervals_68[2]),
+               conf.low.95=unname(confidence_intervals_95[1]),
+               conf.high.95=unname(confidence_intervals_95[2]),
+               probability_50_plus = mean(predictions > 50)) %>%
+        mutate(stat.sig = !between(50, conf.low.95, conf.high.95))
+}
+set.seed(1)
+simulate_election_results_conf_int(2)
+```
+
+```{r}
+set.seed(1)
+results <- data.frame(growth = -6:6) %>%
+    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    unnest(results) 
+results
+```
+
+Note the confidence intervals are being simulated so the numbers/graph will change each time unless a seed is set.
+
+```{r chapter_9_posterior_predict, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+results %>%
+    ggplot(aes(x=growth, y=prediction, color=stat.sig)) +
+    geom_hline(yintercept = 50, color="#DF585C") +
+    geom_point() +
+    geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
+    geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.5, alpha=0.5) +
+    scale_x_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
+    labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         x="Economic Growth (% from previous year)",
+         y="Prediction of Incumbent party's vote share.")
+```
+
+```{r chapter_9_posterior_predict, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+results %>%
+    ggplot(aes(x=growth, y=prediction)) +
+    geom_hline(yintercept = 50, color="#DF585C") +
+    geom_ribbon(aes(ymin=conf.low.68, ymax=conf.high.68), alpha=0.3) +
+    geom_ribbon(aes(ymin=conf.low.95, ymax=conf.high.95), alpha=0.3) +
+    geom_point(aes(color=stat.sig)) +
+    #geom_point() +
+    #geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=0.5) +
+    scale_x_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_color_manual(values=c("black", "purple")) +
+    labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         x="Economic Growth (% from previous year)",
+         y="Prediction of Incumbent party's vote share.")
+```
+
+```{r chapter_9_posterior_predict_prob, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+results %>%
+    mutate(growth = factor(growth)) %>%
+    ggplot(aes(x=growth, y=probability_50_plus, fill=probability_50_plus)) +
+    geom_col() +
+    geom_text(aes(label=percent(probability_50_plus, accuracy = 0.1)), vjust=-0.3) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels = scales::percent_format()) +
+    #scale_fill_gradient2(low = 'red', mid = 'white', high = 'green', midpoint = 0.5) +
+    scale_fill_gradient2(low = '#DF585C', mid = 'white', high = '#37B57F', midpoint = 0.5) +
+    labs(title="Probability of Incumbent party's vote share > 50%",
+         x="Economic Growth (% from previous year)",
+         y="Probability of Incumbent party's vote share > 50%")
 ```
