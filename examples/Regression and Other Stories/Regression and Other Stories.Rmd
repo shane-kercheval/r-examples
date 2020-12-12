@@ -466,7 +466,7 @@ See discussion in previous section regarding systematic underprediction of `y` w
 
 `log y = a + b*log x + random-noise`
 
-```{r}
+```{r chapter_3_log_log_predictions_simulated, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
 set.seed(1)
 intercept <- 4
 b_coefficient <- 3

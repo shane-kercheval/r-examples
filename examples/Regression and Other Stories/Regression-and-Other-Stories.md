@@ -33,6 +33,11 @@
     -   [Linear Predictor with
         Uncertainty](#linear-predictor-with-uncertainty)
     -   [Predictive Distribution](#predictive-distribution)
+    -   [9.3 Prior Information and Bayesian
+        Synthesis](#prior-information-and-bayesian-synthesis)
+    -   [9.5 Uniform, weakly informative, and informative priors in
+        regression](#uniform-weakly-informative-and-informative-priors-in-regression)
+        -   [Uniform prior distribution](#uniform-prior-distribution)
 
 Overview
 ========
@@ -135,8 +140,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 6.7e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.67 seconds.
+    ## Chain 1: Gradient evaluation took 7.9e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.79 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -153,15 +158,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.032231 seconds (Warm-up)
-    ## Chain 1:                0.024812 seconds (Sampling)
-    ## Chain 1:                0.057043 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.046272 seconds (Warm-up)
+    ## Chain 1:                0.043745 seconds (Sampling)
+    ## Chain 1:                0.090017 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 9e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 2: Gradient evaluation took 1.3e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -178,15 +183,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.02849 seconds (Warm-up)
-    ## Chain 2:                0.026077 seconds (Sampling)
-    ## Chain 2:                0.054567 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.088309 seconds (Warm-up)
+    ## Chain 2:                0.041834 seconds (Sampling)
+    ## Chain 2:                0.130143 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 9e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 3: Gradient evaluation took 2.9e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.29 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -203,15 +208,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.030518 seconds (Warm-up)
-    ## Chain 3:                0.025418 seconds (Sampling)
-    ## Chain 3:                0.055936 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.0459 seconds (Warm-up)
+    ## Chain 3:                0.041473 seconds (Sampling)
+    ## Chain 3:                0.087373 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 8e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 4: Gradient evaluation took 1.4e-05 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.14 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -228,9 +233,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.028083 seconds (Warm-up)
-    ## Chain 4:                0.033358 seconds (Sampling)
-    ## Chain 4:                0.061441 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.044205 seconds (Warm-up)
+    ## Chain 4:                0.041445 seconds (Sampling)
+    ## Chain 4:                0.08565 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -254,23 +259,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.7 44.2  46.3  48.3 
-    ## growth       3.1    0.7  2.1   3.1   3.9 
-    ## sigma        4.0    0.8  3.1   3.9   5.0 
+    ## (Intercept) 46.3    1.8 44.1  46.3  48.6 
+    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
+    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3179 
-    ## growth        0.0  1.0  3278 
-    ## sigma         0.0  1.0  2524 
-    ## mean_PPD      0.0  1.0  3542 
-    ## log-posterior 0.0  1.0  1733 
+    ## (Intercept)   0.0  1.0  2741 
+    ## growth        0.0  1.0  2818 
+    ## sigma         0.0  1.0  2600 
+    ## mean_PPD      0.0  1.0  3197 
+    ## log-posterior 0.0  1.0  1403 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -289,8 +294,8 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.6  
-    ## growth       3.1    0.7  
+    ## (Intercept) 46.3    1.7  
+    ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -309,7 +314,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.258159    3.051908
+    ##   46.337211    3.041839
 
 ------------------------------------------------------------------------
 
@@ -374,7 +379,6 @@ Example from \`Regression & Other Stories pg 39. (Data found elsewhere.)
 ### Example Model
 
 ``` r
-metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 head(metabolic_rate)
 ```
 
@@ -694,6 +698,7 @@ Now, let’s create predictions for all `Primate Masses` between `50` and
 `80000`, which is around the interval of our data.
 
 ``` r
+model <- lm(log(`Metabolic Rate`) ~ log(`Primate Mass`), data=metabolic_rate)
 all_predictions <- data.frame(`Primate Mass`=seq(50, 80000), check.names = FALSE)
 log_y_predictions <- predict(model, newdata=all_predictions)
 
@@ -780,7 +785,7 @@ simulated_data %>%
          subtitle = "Graphed on a log-scale.")
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-29-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-32-1.png)
 
 ------------------------------------------------------------------------
 
@@ -1475,7 +1480,7 @@ simulations %>%
     ## 6    46.60710 3.003798   52.61470
 
 ``` r
-simulate_election_results_conf_int <- function(.growth) {
+simulate_election_results_linpred_conf_int <- function(.growth) {
 
     predictions <- posterior_linpred(object=model, newdata = data.frame(growth=.growth))
     confidence_intervals <- quantile(predictions, c(0.025, 0.975))
@@ -1483,7 +1488,7 @@ simulate_election_results_conf_int <- function(.growth) {
                conf.low=unname(confidence_intervals[1]),
                conf.high=unname(confidence_intervals[2]))
 }
-simulate_election_results_conf_int(2)
+simulate_election_results_linpred_conf_int(2)
 ```
 
     ##   prediction conf.low conf.high
@@ -1491,7 +1496,7 @@ simulate_election_results_conf_int(2)
 
 ``` r
 data.frame(growth = -6:6) %>%
-    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    mutate(results = map(growth, ~simulate_election_results_linpred_conf_int(.growth=.))) %>%
     unnest(results) %>%
     ggplot(aes(x=growth, y=prediction)) +
     geom_point() +
@@ -1553,7 +1558,7 @@ simulations %>%
 ------------------------------------------------------------------------
 
 ``` r
-simulate_election_results_conf_int <- function(.growth) {
+simulate_election_results_predict_conf_int <- function(.growth) {
 
     predictions <- posterior_predict(object=model, newdata = data.frame(growth=.growth))
     confidence_intervals_68 <- quantile(predictions, c(0.16, 1-0.16))
@@ -1567,7 +1572,7 @@ simulate_election_results_conf_int <- function(.growth) {
         mutate(stat.sig = !between(50, conf.low.95, conf.high.95))
 }
 set.seed(1)
-simulate_election_results_conf_int(2)
+simulate_election_results_predict_conf_int(2)
 ```
 
     ##   prediction conf.low.68 conf.high.68 conf.low.95 conf.high.95
@@ -1578,7 +1583,7 @@ simulate_election_results_conf_int(2)
 ``` r
 set.seed(1)
 results <- data.frame(growth = -6:6) %>%
-    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    mutate(results = map(growth, ~simulate_election_results_predict_conf_int(.growth=.))) %>%
     unnest(results) 
 results
 ```
@@ -1751,3 +1756,227 @@ results %>%
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_posterior_predict_points-1.png)
+
+9.3 Prior Information and Bayesian Synthesis
+--------------------------------------------
+
+Prior estimate and standard deviation
+
+``` r
+bayesian_updating <- function(.new_vote_count, .new_sample_size) {
+ 
+    prior_estimate <- 0.524
+    prior_estimate_sd <- 0.041
+    
+    (data_estimate <- .new_vote_count / .new_sample_size)
+    (data_estimate_sd <- sqrt((.new_vote_count / .new_sample_size) * (1 - (.new_vote_count / .new_sample_size)) / .new_sample_size))
+    
+    (bayes_estimate <- ((prior_estimate / (prior_estimate_sd^2)) + (data_estimate / (data_estimate_sd^2))) / ((1 / (prior_estimate_sd^2)) + (1 / (data_estimate_sd^2))))
+    (bayes_estimate_sd <- 1 / sqrt((1 / (prior_estimate_sd^2)) + (1 / (data_estimate_sd^2))))
+    
+    print(glue::glue("Prior: { prior_estimate }; Likelihood: { data_estimate }; Posterior: { round(bayes_estimate, 4) }; standard deviation: { round(bayes_estimate_sd, 4) }"))
+    
+    x <- seq(0, 1, length.out = 1000)
+    data.frame(type="Prior Distribution", x=x, value=dnorm(x, prior_estimate, prior_estimate_sd)) %>%
+        bind_rows(data.frame(type="Likelihood / Data Distribution", x=x, value=dnorm(x, data_estimate, data_estimate_sd))) %>%
+        bind_rows(data.frame(type="Posterior", x=x, value=dnorm(x, bayes_estimate, bayes_estimate_sd))) %>%
+        mutate(type = factor(type, levels=c('Prior Distribution', 'Likelihood / Data Distribution', 'Posterior'))) %>%
+        ggplot(aes(x=x, y=value, color=type)) +
+        geom_line() +
+        coord_cartesian(xlim=c(0.4, 0.65)) +
+        scale_x_continuous(breaks = pretty_breaks(10), labels = scales::percent_format(accuracy = 1)) +
+        theme(axis.title.y=element_blank(),
+              axis.text.y=element_blank(),
+              axis.ticks.y=element_blank()) +
+        labs(title='Bayesian Updating',
+             x='% Voting Democrat')   
+}
+```
+
+``` r
+bayesian_updating(.new_vote_count = 19, .new_sample_size = 40)
+```
+
+    ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.5136; standard deviation: 0.0364
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-75-1.png)
+
+``` r
+bayesian_updating(.new_vote_count = 95, .new_sample_size = 200)
+```
+
+    ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.4959; standard deviation: 0.0268
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-76-1.png)
+
+``` r
+bayesian_updating(.new_vote_count = 190, .new_sample_size = 400)
+```
+
+    ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.4883; standard deviation: 0.0213
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-77-1.png)
+
+9.5 Uniform, weakly informative, and informative priors in regression
+---------------------------------------------------------------------
+
+### Uniform prior distribution
+
+> We can run `stan_glm` with uniform prior densities for the scale
+> parameter using the `NULL` option. (pg. 123)
+
+``` r
+uniform_model <- stan_glm(vote ~ growth, data=hibbs,
+                          refresh = 0,  # refresh = 0 supresses the default Stan sampling progress output
+                          prior_intercept = NULL,
+                          prior = NULL,
+                          prior_aux = NULL)
+print(uniform_model)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      vote ~ growth
+    ##  observations: 16
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 46.2    1.7  
+    ## growth       3.1    0.8  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 4.0    0.8   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+Compare to `lm`; close but not the same.
+
+``` r
+lm_model <- lm(vote ~ growth, data=hibbs)
+
+coef(lm_model)
+```
+
+    ## (Intercept)      growth 
+    ##   46.247648    3.060528
+
+``` r
+coef(uniform_model)
+```
+
+    ## (Intercept)      growth 
+    ##    46.22482     3.06300
+
+> These numbers are summaries of a matrix of simulations representing
+> different possible values of the parameters
+> (intercept/slope/residual-standard-deviation). `pg. 113`
+
+> We have a set of `posterior simulations` rather than a single point
+> estimate because we have uncertainty about these parameters. `pg. 113`
+
+``` r
+uniform_coef_simulations <- as.matrix(uniform_model)
+head(uniform_coef_simulations)
+```
+
+    ##           parameters
+    ## iterations (Intercept)   growth    sigma
+    ##       [1,]    44.27704 4.176405 4.495793
+    ##       [2,]    48.51854 1.642577 3.804167
+    ##       [3,]    48.53083 1.400092 4.137344
+    ##       [4,]    44.28250 4.442634 3.482860
+    ##       [5,]    45.09045 3.466920 4.832289
+    ##       [6,]    45.45151 4.391790 3.407798
+
+``` r
+uniform_coef_simulations %>%
+    as.data.frame() %>%
+    ggplot(aes(x=`(Intercept)`, y=growth)) +
+    geom_point(alpha = 0.5) +
+    geom_point(x=coef(uniform_model)['(Intercept)'], y=coef(uniform_model)['growth'], size=2, color='red') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    scale_y_continuous(breaks = pretty_breaks(10)) +
+    labs(title = "Uniform Prior - 4000 posterior draws of the Intercept and growth.",
+         subtitle = "(Posterior simulations of the coefficients); Red dot is point of model coefficients")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_uniform_prior_simulations-1.png)
+
+``` r
+uniform_coef_simulations %>%
+    as.data.frame() %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
+    #mutate(name = fct_reorder(name, coef_median)) %>%
+    ggplot(aes(x=value, y=name)) +
+    geom_density_ridges(alpha=0.5) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_uniform_prior_coefficients-1.png)
+
+``` r
+# Note that if we don't set.seed the predictions will change because they are being simulated
+simulate_election_results_predict_conf_int <- function(.model, .growth) {
+
+    predictions <- posterior_predict(object=.model, newdata = data.frame(growth=.growth))
+    confidence_intervals_68 <- quantile(predictions, c(0.16, 1-0.16))
+    confidence_intervals_95 <- quantile(predictions, c(0.025, 0.975))
+    data.frame(prediction=median(predictions),
+               conf.low.68=unname(confidence_intervals_68[1]),
+               conf.high.68=unname(confidence_intervals_68[2]),
+               conf.low.95=unname(confidence_intervals_95[1]),
+               conf.high.95=unname(confidence_intervals_95[2]),
+               probability_50_plus = mean(predictions > 50)) %>%
+        mutate(stat.sig = !between(50, conf.low.95, conf.high.95))
+}
+set.seed(1)
+simulate_election_results_predict_conf_int(.model=uniform_model, .growth=2)
+```
+
+    ##   prediction conf.low.68 conf.high.68 conf.low.95 conf.high.95
+    ## 1   52.27329    48.08116     56.68598    43.52937     61.56743
+    ##   probability_50_plus stat.sig
+    ## 1             0.71725    FALSE
+
+``` r
+set.seed(1)
+uniform_prediction_summary <- data.frame(growth = -6:6) %>%
+    mutate(results = map(growth, ~simulate_election_results_predict_conf_int(.model=uniform_model, .growth=.))) %>%
+    unnest(results) 
+head(uniform_prediction_summary)
+```
+
+    ## # A tibble: 6 x 8
+    ##   growth prediction conf.low.68 conf.high.68 conf.low.95 conf.high.95
+    ##    <int>      <dbl>       <dbl>        <dbl>       <dbl>        <dbl>
+    ## 1     -6       27.9        20.5         35.0        12.2         42.6
+    ## 2     -5       30.8        24.3         37.4        16.9         43.9
+    ## 3     -4       33.9        27.7         40.0        21.4         45.7
+    ## 4     -3       37.1        31.5         42.4        25.4         48.6
+    ## 5     -2       40.1        35.2         45.2        29.9         50.2
+    ## 6     -1       43.4        38.6         47.9        33.4         52.6
+    ## # … with 2 more variables: probability_50_plus <dbl>, stat.sig <lgl>
+
+``` r
+uniform_prediction_summary %>%
+    ggplot(aes(x=growth, y=prediction)) +
+    geom_hline(yintercept = 50, color="#DF585C") +
+    #geom_point() +
+    #geom_jitter(data=all_predictions, aes(x=growth, y=prediction, color=NULL), width=0.1, alpha=0.1) +
+    #geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
+    geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.7) +
+    scale_x_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_y_continuous(breaks = pretty_breaks(20), labels = function(.x)paste0(.x, "%")) +
+    scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
+    labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="Using Uniform Prior",
+         x="Economic Growth (% from previous year)",
+         y="Prediction of Incumbent party's vote share.")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_uniform_prior_predictions-1.png)
