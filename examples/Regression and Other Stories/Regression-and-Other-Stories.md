@@ -140,8 +140,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 7.9e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.79 seconds.
+    ## Chain 1: Gradient evaluation took 7.3e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.73 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -158,9 +158,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.046272 seconds (Warm-up)
-    ## Chain 1:                0.043745 seconds (Sampling)
-    ## Chain 1:                0.090017 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.042503 seconds (Warm-up)
+    ## Chain 1:                0.036571 seconds (Sampling)
+    ## Chain 1:                0.079074 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
@@ -183,15 +183,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.088309 seconds (Warm-up)
-    ## Chain 2:                0.041834 seconds (Sampling)
-    ## Chain 2:                0.130143 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.040244 seconds (Warm-up)
+    ## Chain 2:                0.04712 seconds (Sampling)
+    ## Chain 2:                0.087364 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 2.9e-05 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.29 seconds.
+    ## Chain 3: Gradient evaluation took 1.1e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.11 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -208,15 +208,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.0459 seconds (Warm-up)
-    ## Chain 3:                0.041473 seconds (Sampling)
-    ## Chain 3:                0.087373 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.041228 seconds (Warm-up)
+    ## Chain 3:                0.036422 seconds (Sampling)
+    ## Chain 3:                0.07765 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.4e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.14 seconds.
+    ## Chain 4: Gradient evaluation took 1.2e-05 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -233,9 +233,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.044205 seconds (Warm-up)
-    ## Chain 4:                0.041445 seconds (Sampling)
-    ## Chain 4:                0.08565 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.04345 seconds (Warm-up)
+    ## Chain 4:                0.035388 seconds (Sampling)
+    ## Chain 4:                0.078838 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -259,23 +259,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.3  48.6 
+    ## (Intercept) 46.3    1.8 44.0  46.3  48.5 
     ## growth       3.0    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.9 
+    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2741 
-    ## growth        0.0  1.0  2818 
-    ## sigma         0.0  1.0  2600 
-    ## mean_PPD      0.0  1.0  3197 
-    ## log-posterior 0.0  1.0  1403 
+    ## (Intercept)   0.0  1.0  2789 
+    ## growth        0.0  1.0  2892 
+    ## sigma         0.0  1.0  2118 
+    ## mean_PPD      0.0  1.0  2946 
+    ## log-posterior 0.0  1.0  1365 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -299,7 +299,7 @@ print(model)
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.7   
+    ## sigma 3.9    0.8   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -314,7 +314,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.337211    3.041839
+    ##   46.274861    3.036252
 
 ------------------------------------------------------------------------
 
@@ -785,7 +785,7 @@ simulated_data %>%
          subtitle = "Graphed on a log-scale.")
 ```
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-32-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_3_log_log_predictions_simulated-1.png)
 
 ------------------------------------------------------------------------
 
@@ -1799,7 +1799,7 @@ bayesian_updating(.new_vote_count = 19, .new_sample_size = 40)
 
     ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.5136; standard deviation: 0.0364
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-75-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_bayesian_updating_1-1.png)
 
 ``` r
 bayesian_updating(.new_vote_count = 95, .new_sample_size = 200)
@@ -1807,7 +1807,7 @@ bayesian_updating(.new_vote_count = 95, .new_sample_size = 200)
 
     ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.4959; standard deviation: 0.0268
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-76-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_bayesian_updating_2-1.png)
 
 ``` r
 bayesian_updating(.new_vote_count = 190, .new_sample_size = 400)
@@ -1815,7 +1815,7 @@ bayesian_updating(.new_vote_count = 190, .new_sample_size = 400)
 
     ## Prior: 0.524; Likelihood: 0.475; Posterior: 0.4883; standard deviation: 0.0213
 
-![](Regression-and-Other-Stories_files/figure-markdown_github/unnamed-chunk-77-1.png)
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_bayesian_updating_3-1.png)
 
 9.5 Uniform, weakly informative, and informative priors in regression
 ---------------------------------------------------------------------
