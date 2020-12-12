@@ -74,6 +74,7 @@ options(dplyr.summarise.inform=F)
 
 ```{r include=FALSE}
 hibbs <- read.table('data/hibbs.dat', header = TRUE)
+metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 ```
 
 # Chapter 1 - Overview
@@ -165,6 +166,10 @@ hibbs %>%
          caption='Figure 1.1')
 ```
 
+```{r include=FALSE}
+rm(model)
+```
+
 ---
 
 # Chapter 3 - Basic Methods
@@ -176,7 +181,6 @@ Example from `Regression & Other Stories pg 39. (Data found elsewhere.)
 ### Example Model
 
 ```{r message=FALSE, warning=FALSE}
-metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 head(metabolic_rate)
 ```
 
@@ -343,6 +347,23 @@ Which is quite lower than what we expected.
 
 So this rule of thumb doesn't work across large changes in `y`.
 
+```{r include=FALSE}
+rm(model)
+rm(expected_one_percent_change)
+rm(expected_percent_change_y)
+rm(log_prediction_105)
+rm(log_prediction_1050)
+rm(log_prediction_210)
+rm(one_percent_change)
+rm(one_percent_change_prediction)
+rm(percent_change)
+rm(prediction_105)
+rm(prediction_1050)
+rm(prediction_210)
+rm(prediction_9500)
+rm(primate_mass_coefficient)
+```
+
 ### Predictions
 
 According to `Introductory Econometrics, Wooldridge (pg. 206)`,
@@ -389,6 +410,7 @@ predict_from_log_y <- function(.model, .newdata) {
 Now, let's create predictions for all `Primate Masses` between `50` and `80000`, which is around the interval of our data.
 
 ```{r}
+model <- lm(log(`Metabolic Rate`) ~ log(`Primate Mass`), data=metabolic_rate)
 all_predictions <- data.frame(`Primate Mass`=seq(50, 80000), check.names = FALSE)
 log_y_predictions <- predict(model, newdata=all_predictions)
 
@@ -428,6 +450,14 @@ metabolic_rate_plot +
          subtitle = "Unscaled")
 ```
 
+```{r include=FALSE}
+rm(model)
+rm(all_predictions)
+rm(log_y_predictions)
+rm(predictions_long)
+rm(metabolic_rate_plot)
+```
+
 ---
 
 ### Simulation of Log-Log Predictions
@@ -465,6 +495,12 @@ training_data <- simulated_data[training_indices,]
 test_data <- simulated_data[-training_indices,]
 model <- lm(log(simulated_y) ~ log(simulated_x), data=training_data)
 summary(model)
+```
+
+```{r include=FALSE}
+# make sure we don't use training data by accident
+rm(training_data)
+rm(training_indices)
 ```
 
 ---
@@ -568,6 +604,21 @@ R2(pred=test_data$`Predictions - Adjusted - Simple`, y=test_data$simulated_y)
 R2(pred=test_data$`Predictions - Adjusted - Duan`, y=test_data$simulated_y)
 ```
 
+```{r include=FALSE}
+rm(intercept)
+rm(b_coefficient)
+rm(b_coefficient)
+rm(simulated_x)
+rm(noise)
+rm(simulated_y)
+rm(simulated_data)
+rm(test_data)
+rm(model)
+rm(log_y_predictions)
+rm(predictions_long)
+rm(simulated_plot)
+```
+
 # Chapter 4 - Statistcal Inference
 
 ## Confidence Interval of Proportion
@@ -588,6 +639,15 @@ Compare to R's `prop.test`.
 
 ```{r}
 prop.test(x=respond_yes, n=sample_size)
+```
+
+```{r include=FALSE}
+rm(sample_size)
+rm(respond_yes)
+rm(estimate)
+rm(standard_error)
+rm(z_scores)
+rm(confidence_interval_95)
 ```
 
 # Chapter 5 - Simulation
@@ -786,6 +846,26 @@ quantile(simulations, c(0.025, 0.975))
 hist(simulations, main = "Distribution of Sample Means")
 ```
 
+```{r include=FALSE}
+rm(probability_girl)
+rm(sample_size)
+rm(number_of_simulated_samples)
+rm(simulations)
+rm(probability_girl_if_twins)
+rm(probability_of_twins_fraternal)
+rm(probability_of_twins_identical)
+rm(simulate_birth_types)
+rm(birth_type)
+rm(simulation_results)
+rm(n_sims)
+rm(y1)
+rm(y2)
+rm(y3)
+rm(y4)
+rm(z)
+rm(constant)
+```
+
 # Chapter 9 - Prediction and Bayesian Inference
 
 ```{r}
@@ -894,7 +974,7 @@ simulations %>%
 ```
 
 ```{r}
-simulate_election_results_conf_int <- function(.growth) {
+simulate_election_results_linpred_conf_int <- function(.growth) {
 
     predictions <- posterior_linpred(object=model, newdata = data.frame(growth=.growth))
     confidence_intervals <- quantile(predictions, c(0.025, 0.975))
@@ -902,12 +982,12 @@ simulate_election_results_conf_int <- function(.growth) {
                conf.low=unname(confidence_intervals[1]),
                conf.high=unname(confidence_intervals[2]))
 }
-simulate_election_results_conf_int(2)
+simulate_election_results_linpred_conf_int(2)
 ```
 
 ```{r chapter_9_posterior_linpred, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 data.frame(growth = -6:6) %>%
-    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    mutate(results = map(growth, ~simulate_election_results_linpred_conf_int(.growth=.))) %>%
     unnest(results) %>%
     ggplot(aes(x=growth, y=prediction)) +
     geom_point() +
@@ -946,7 +1026,7 @@ simulations %>%
 ---
 
 ```{r}
-simulate_election_results_conf_int <- function(.growth) {
+simulate_election_results_predict_conf_int <- function(.growth) {
 
     predictions <- posterior_predict(object=model, newdata = data.frame(growth=.growth))
     confidence_intervals_68 <- quantile(predictions, c(0.16, 1-0.16))
@@ -960,13 +1040,13 @@ simulate_election_results_conf_int <- function(.growth) {
         mutate(stat.sig = !between(50, conf.low.95, conf.high.95))
 }
 set.seed(1)
-simulate_election_results_conf_int(2)
+simulate_election_results_predict_conf_int(2)
 ```
 
 ```{r}
 set.seed(1)
 results <- data.frame(growth = -6:6) %>%
-    mutate(results = map(growth, ~simulate_election_results_conf_int(.growth=.))) %>%
+    mutate(results = map(growth, ~simulate_election_results_predict_conf_int(.growth=.))) %>%
     unnest(results) 
 results
 ```
@@ -1060,3 +1140,212 @@ results %>%
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
+
+```{r include=FALSE}
+rm(model)
+rm(simulations)
+rm(new_data)
+rm(y_linpredict)
+rm(simulate_election_results_linpred_conf_int)
+rm(simulate_election_results_predict_conf_int)
+rm(y_pred)
+rm(results)
+rm(all_predictions)
+```
+
+## 9.3 Prior Information and Bayesian Synthesis
+
+Prior estimate and standard deviation
+
+```{r}
+bayesian_updating <- function(.new_vote_count, .new_sample_size) {
+ 
+    prior_estimate <- 0.524
+    prior_estimate_sd <- 0.041
+    
+    (data_estimate <- .new_vote_count / .new_sample_size)
+    (data_estimate_sd <- sqrt((.new_vote_count / .new_sample_size) * (1 - (.new_vote_count / .new_sample_size)) / .new_sample_size))
+    
+    (bayes_estimate <- ((prior_estimate / (prior_estimate_sd^2)) + (data_estimate / (data_estimate_sd^2))) / ((1 / (prior_estimate_sd^2)) + (1 / (data_estimate_sd^2))))
+    (bayes_estimate_sd <- 1 / sqrt((1 / (prior_estimate_sd^2)) + (1 / (data_estimate_sd^2))))
+    
+    print(glue::glue("Prior: { prior_estimate }; Likelihood: { data_estimate }; Posterior: { round(bayes_estimate, 4) }; standard deviation: { round(bayes_estimate_sd, 4) }"))
+    
+    x <- seq(0, 1, length.out = 1000)
+    data.frame(type="Prior Distribution", x=x, value=dnorm(x, prior_estimate, prior_estimate_sd)) %>%
+        bind_rows(data.frame(type="Likelihood / Data Distribution", x=x, value=dnorm(x, data_estimate, data_estimate_sd))) %>%
+        bind_rows(data.frame(type="Posterior", x=x, value=dnorm(x, bayes_estimate, bayes_estimate_sd))) %>%
+        mutate(type = factor(type, levels=c('Prior Distribution', 'Likelihood / Data Distribution', 'Posterior'))) %>%
+        ggplot(aes(x=x, y=value, color=type)) +
+        geom_line() +
+        coord_cartesian(xlim=c(0.4, 0.65)) +
+        scale_x_continuous(breaks = pretty_breaks(10), labels = scales::percent_format(accuracy = 1)) +
+        theme(axis.title.y=element_blank(),
+              axis.text.y=element_blank(),
+              axis.ticks.y=element_blank()) +
+        labs(title='Bayesian Updating',
+             x='% Voting Democrat')   
+}
+```
+
+```{r}
+bayesian_updating(.new_vote_count = 19, .new_sample_size = 40)
+```
+
+```{r}
+bayesian_updating(.new_vote_count = 95, .new_sample_size = 200)
+```
+
+```{r}
+bayesian_updating(.new_vote_count = 190, .new_sample_size = 400)
+```
+
+```{r include=FALSE}
+rm(bayesian_updating)
+```
+
+## 9.5 Uniform, weakly informative, and informative priors in regression
+
+### Uniform prior distribution
+
+> We can run `stan_glm` with uniform prior densities for the scale parameter using the `NULL` option. (pg. 123)
+
+```{r}
+uniform_model <- stan_glm(vote ~ growth, data=hibbs,
+                          refresh = 0,  # refresh = 0 supresses the default Stan sampling progress output
+                          prior_intercept = NULL,
+                          prior = NULL,
+                          prior_aux = NULL)
+print(uniform_model)
+```
+
+Compare to `lm`; close but not the same.
+
+```{r}
+lm_model <- lm(vote ~ growth, data=hibbs)
+
+coef(lm_model)
+coef(uniform_model)
+```
+
+> These numbers are summaries of a matrix of simulations representing different possible values of the parameters (intercept/slope/residual-standard-deviation). `pg. 113`
+
+> We have a set of `posterior simulations` rather than a single point estimate because we have uncertainty about these parameters. `pg. 113`
+
+```{r}
+uniform_coef_simulations <- as.matrix(uniform_model)
+head(uniform_coef_simulations)
+```
+
+```{r chapter_9_uniform_prior_simulations, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+uniform_coef_simulations %>%
+    as.data.frame() %>%
+    ggplot(aes(x=`(Intercept)`, y=growth)) +
+    geom_point(alpha = 0.5) +
+    geom_point(x=coef(uniform_model)['(Intercept)'], y=coef(uniform_model)['growth'], size=2, color='red') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    scale_y_continuous(breaks = pretty_breaks(10)) +
+    labs(title = "Uniform Prior - 4000 posterior draws of the Intercept and growth.",
+         subtitle = "(Posterior simulations of the coefficients); Red dot is point of model coefficients")
+```
+
+```{r chapter_9_uniform_prior_coefficients, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+uniform_coef_simulations %>%
+    as.data.frame() %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
+    #mutate(name = fct_reorder(name, coef_median)) %>%
+    ggplot(aes(x=value, y=name)) +
+    geom_density_ridges(alpha=0.5) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+
+```{r}
+# Note that if we don't set.seed the predictions will change because they are being simulated
+simulate_election_results_predict_conf_int <- function(.model, .growth) {
+
+    predictions <- posterior_predict(object=.model, newdata = data.frame(growth=.growth))
+    confidence_intervals_68 <- quantile(predictions, c(0.16, 1-0.16))
+    confidence_intervals_95 <- quantile(predictions, c(0.025, 0.975))
+    data.frame(prediction=median(predictions),
+               conf.low.68=unname(confidence_intervals_68[1]),
+               conf.high.68=unname(confidence_intervals_68[2]),
+               conf.low.95=unname(confidence_intervals_95[1]),
+               conf.high.95=unname(confidence_intervals_95[2]),
+               probability_50_plus = mean(predictions > 50)) %>%
+        mutate(stat.sig = !between(50, conf.low.95, conf.high.95))
+}
+set.seed(1)
+simulate_election_results_predict_conf_int(.model=uniform_model, .growth=2)
+```
+
+```{r}
+set.seed(1)
+uniform_prediction_summary <- data.frame(growth = -6:6) %>%
+    mutate(results = map(growth, ~simulate_election_results_predict_conf_int(.model=uniform_model, .growth=.))) %>%
+    unnest(results) 
+head(uniform_prediction_summary)
+```
+
+```{r chapter_9_uniform_prior_predictions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+uniform_prediction_summary %>%
+    ggplot(aes(x=growth, y=prediction)) +
+    geom_hline(yintercept = 50, color="#DF585C") +
+    #geom_point() +
+    #geom_jitter(data=all_predictions, aes(x=growth, y=prediction, color=NULL), width=0.1, alpha=0.1) +
+    #geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
+    geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.7) +
+    scale_x_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
+    scale_y_continuous(breaks = pretty_breaks(20), labels = function(.x)paste0(.x, "%")) +
+    scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
+    labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="Using Uniform Prior",
+         x="Economic Growth (% from previous year)",
+         y="Prediction of Incumbent party's vote share.")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r include=FALSE}
+rm(uniform_model)
+rm(lm_model)
+rm(uniform_coef_simulations)
+rm(uniform_prediction_summary)
+```
+
+```{r chapter_9_uniform_prior, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+
+```
+
+
+
+
+
+
+
+
+
+
+
