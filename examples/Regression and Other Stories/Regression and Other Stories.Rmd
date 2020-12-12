@@ -1188,15 +1188,15 @@ bayesian_updating <- function(.new_vote_count, .new_sample_size) {
 }
 ```
 
-```{r}
+```{r chapter_9_bayesian_updating_1, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 bayesian_updating(.new_vote_count = 19, .new_sample_size = 40)
 ```
 
-```{r}
+```{r chapter_9_bayesian_updating_1, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 bayesian_updating(.new_vote_count = 95, .new_sample_size = 200)
 ```
 
-```{r}
+```{r chapter_9_bayesian_updating_1, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 bayesian_updating(.new_vote_count = 190, .new_sample_size = 400)
 ```
 
