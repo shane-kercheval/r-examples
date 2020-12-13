@@ -38,6 +38,10 @@
     -   [9.5 Uniform, weakly informative, and informative priors in
         regression](#uniform-weakly-informative-and-informative-priors-in-regression)
         -   [Uniform prior distribution](#uniform-prior-distribution)
+        -   [Default Prior Distribution](#default-prior-distribution)
+        -   [Weekly informative prior distribution based on
+            subject-matter
+            knowledge](#weekly-informative-prior-distribution-based-on-subject-matter-knowledge)
 
 Overview
 ========
@@ -140,8 +144,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 7.3e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.73 seconds.
+    ## Chain 1: Gradient evaluation took 6.6e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.66 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -158,15 +162,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.042503 seconds (Warm-up)
-    ## Chain 1:                0.036571 seconds (Sampling)
-    ## Chain 1:                0.079074 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.034885 seconds (Warm-up)
+    ## Chain 1:                0.026394 seconds (Sampling)
+    ## Chain 1:                0.061279 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 1.3e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
+    ## Chain 2: Gradient evaluation took 8e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -183,15 +187,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.040244 seconds (Warm-up)
-    ## Chain 2:                0.04712 seconds (Sampling)
-    ## Chain 2:                0.087364 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.03445 seconds (Warm-up)
+    ## Chain 2:                0.032457 seconds (Sampling)
+    ## Chain 2:                0.066907 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 1.1e-05 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.11 seconds.
+    ## Chain 3: Gradient evaluation took 1.2e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -208,15 +212,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.041228 seconds (Warm-up)
-    ## Chain 3:                0.036422 seconds (Sampling)
-    ## Chain 3:                0.07765 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.031776 seconds (Warm-up)
+    ## Chain 3:                0.024733 seconds (Sampling)
+    ## Chain 3:                0.056509 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.2e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+    ## Chain 4: Gradient evaluation took 9e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -233,9 +237,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.04345 seconds (Warm-up)
-    ## Chain 4:                0.035388 seconds (Sampling)
-    ## Chain 4:                0.078838 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.032827 seconds (Warm-up)
+    ## Chain 4:                0.029015 seconds (Sampling)
+    ## Chain 4:                0.061842 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -259,23 +263,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.0  46.3  48.5 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## (Intercept) 46.2    1.7 44.0  46.2  48.4 
+    ## growth       3.1    0.8  2.1   3.1   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
+    ## mean_PPD 52.1    1.4 50.3  52.1  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2789 
-    ## growth        0.0  1.0  2892 
-    ## sigma         0.0  1.0  2118 
-    ## mean_PPD      0.0  1.0  2946 
-    ## log-posterior 0.0  1.0  1365 
+    ## (Intercept)   0.0  1.0  3385 
+    ## growth        0.0  1.0  3053 
+    ## sigma         0.0  1.0  2721 
+    ## mean_PPD      0.0  1.0  3853 
+    ## log-posterior 0.0  1.0  1705 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -294,12 +298,12 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.7  
-    ## growth       3.0    0.7  
+    ## (Intercept) 46.2    1.7  
+    ## growth       3.1    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.8   
+    ## sigma 3.9    0.7   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -314,7 +318,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.274861    3.036252
+    ##   46.242139    3.052775
 
 ------------------------------------------------------------------------
 
@@ -1980,3 +1984,154 @@ uniform_prediction_summary %>%
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_uniform_prior_predictions-1.png)
+
+### Default Prior Distribution
+
+> The default prior distribution can be specified implicitly (using the
+> defaults): (pg. 124)
+
+``` r
+set.seed(1)
+default_prior_model <- stan_glm(vote ~ growth, data=hibbs, refresh=0)
+print(default_prior_model)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      vote ~ growth
+    ##  observations: 16
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 46.3    1.7  
+    ## growth       3.0    0.7  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 3.9    0.7   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+> or explicitly, below. The particular choice of `2.5` as a scaling
+> factor is somewhat arbitrary, chosen to provide some stability in
+> estimation while have little influence on the coefficient estimate
+> when data are even moderately informative.
+
+``` r
+sd_x <- sd(hibbs$growth)
+sd_y <- sd(hibbs$vote)
+mean_y <- mean(hibbs$vote)
+
+
+growth_prior_mean <- 0
+growth_prior_sd <- 2.5 * sd_y / sd_x
+
+set.seed(1)
+default_prior_explicit_model <- stan_glm(vote ~ growth, data=hibbs,
+                                         refresh = 0,  # refresh = 0 supresses the default Stan sampling progress output
+                                         prior = rstanarm::normal(location = growth_prior_mean, scale = growth_prior_sd),
+                                         prior_intercept = rstanarm::normal(location = mean_y, scale = 2.5 * sd_y),
+                                         prior_aux = rstanarm::exponential(1 / sd_y))
+print(default_prior_explicit_model)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      vote ~ growth
+    ##  observations: 16
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 46.3    1.7  
+    ## growth       3.0    0.7  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 3.9    0.7   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+> These two models are the same (need to set.seed) with the only
+> difference being that for the latter we specified the priors directly.
+
+``` r
+coef(default_prior_model)
+```
+
+    ## (Intercept)      growth 
+    ##   46.267981    3.040686
+
+``` r
+coef(default_prior_explicit_model)
+```
+
+    ## (Intercept)      growth 
+    ##   46.267981    3.040686
+
+Not much difference in this case between the `uniform` and the
+`default`:
+
+``` r
+coef(default_prior_model)
+```
+
+    ## (Intercept)      growth 
+    ##   46.267981    3.040686
+
+``` r
+coef(uniform_model)
+```
+
+    ## (Intercept)      growth 
+    ##    46.22482     3.06300
+
+``` r
+growth_estimate_default_prior <- default_prior_model %>%
+    tidy() %>%
+    filter(term == 'growth')
+
+growth_estimate_uniform_prior <- uniform_model %>%
+    tidy() %>%
+    filter(term == 'growth')
+
+x <- seq(-20, 20, length.out = 1000)
+data.frame(type="Prior Distribution", x=x, value=dnorm(x, growth_prior_mean, growth_prior_sd)) %>%
+    bind_rows(data.frame(type="Uniform Prior Posterior", x=x, value=dnorm(x, growth_estimate_uniform_prior$estimate, growth_estimate_uniform_prior$std.error))) %>%
+    bind_rows(data.frame(type="Default Prior Posterior", x=x, value=dnorm(x, growth_estimate_default_prior$estimate, growth_estimate_default_prior$std.error))) %>%
+    mutate(type = factor(type, levels=c('Prior Distribution', 'Uniform Prior Posterior', 'Default Prior Posterior'))) %>%
+    ggplot(aes(x=x, y=value, color=type)) +
+    geom_line() +
+    #coord_cartesian(xlim=c(0.4, 0.65)) +
+    #scale_x_continuous(breaks = pretty_breaks(10), labels = scales::percent_format(accuracy = 1)) +
+    theme(axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank()) +
+    labs(title='`growth` coefficient - bayesian updating',
+         x='`growth` Coefficient Distribution')   
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_growth_coefficient_bayesian-1.png)
+
+``` r
+hibbs %>%
+    ggplot(aes(x=growth, y=vote)) +
+    geom_hline(yintercept = 50, color="red", linetype="dashed") +
+    geom_text(aes(label=year)) +
+    #geom_smooth(method='lm') +
+    geom_abline(intercept = coef(uniform_model)['(Intercept)'], slope = coef(uniform_model)['growth'], color='blue') +
+    geom_abline(intercept = coef(default_prior_model)['(Intercept)'], slope = coef(default_prior_model)['growth'], color='orange') +
+    scale_x_continuous(labels=function(.x)paste0(.x, '%')) +
+    scale_y_continuous(labels=function(.x)paste0(.x, '%')) +
+    labs(title="Forecasting the election from the economy",
+         y="Incuming party's vote share",
+         x="Average recent growth in personal",
+         caption='Figure 1.1')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_model_bayesian-1.png)
+
+### Weekly informative prior distribution based on subject-matter knowledge
