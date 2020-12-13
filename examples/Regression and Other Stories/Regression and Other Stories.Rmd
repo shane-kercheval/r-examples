@@ -1518,7 +1518,7 @@ We can get the simulated predictions for the first simulation by taking the valu
 Which means that, for this simulation, we can get the number of Democratic wins (i.e. number of districts where dems had greater than 50% of the vote share) by counting all of the instances where the prediction is greater than `0.5`.
 
 ```{r}
-sum(first_prediction > 0.5)
+sum(first_simulation > 0.5)
 ```
 
 We can get the outcome of each simulation by counting the number of Dem vote shares that are greater than 50%.
@@ -1607,6 +1607,7 @@ rm(model_88)
 rm(model_88_interactions)
 rm(prediction_data_90)
 rm(predictions_90)
+rm(first_simulation)
 rm(dem_wins_per_sim)
 rm(district_100_predictions)
 rm(district_medians)
