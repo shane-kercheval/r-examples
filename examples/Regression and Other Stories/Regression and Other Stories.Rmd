@@ -1307,45 +1307,105 @@ uniform_prediction_summary %>%
 ```
 
 
+### Default Prior Distribution
+
+> The default prior distribution can be specified implicitly (using the defaults): (pg. 124)
+
+```{r}
+set.seed(1)
+default_prior_model <- stan_glm(vote ~ growth, data=hibbs, refresh=0)
+print(default_prior_model)
+```
+
+> or explicitly, below. The particular choice of `2.5` as a scaling factor is somewhat arbitrary, chosen to provide some stability in estimation while have little influence on the coefficient estimate when data are even moderately informative.
+
+```{r}
+sd_x <- sd(hibbs$growth)
+sd_y <- sd(hibbs$vote)
+mean_y <- mean(hibbs$vote)
 
 
+growth_prior_mean <- 0
+growth_prior_sd <- 2.5 * sd_y / sd_x
 
+set.seed(1)
+default_prior_explicit_model <- stan_glm(vote ~ growth, data=hibbs,
+                                         refresh = 0,  # refresh = 0 supresses the default Stan sampling progress output
+                                         prior = rstanarm::normal(location = growth_prior_mean, scale = growth_prior_sd),
+                                         prior_intercept = rstanarm::normal(location = mean_y, scale = 2.5 * sd_y),
+                                         prior_aux = rstanarm::exponential(1 / sd_y))
+print(default_prior_explicit_model)
+```
 
+> These two models are the same (need to set.seed) with the only difference being that for the latter we specified the priors directly.
 
+```{r}
+coef(default_prior_model)
+coef(default_prior_explicit_model)
+```
 
+Not much difference in this case between the `uniform` and the `default`:
 
+```{r}
+coef(default_prior_model)
+coef(uniform_model)
+```
 
+```{r}
+growth_estimate_default_prior <- default_prior_model %>%
+    tidy() %>%
+    filter(term == 'growth')
 
+growth_estimate_uniform_prior <- uniform_model %>%
+    tidy() %>%
+    filter(term == 'growth')
 
+x <- seq(-20, 20, length.out = 1000)
+data.frame(type="Prior Distribution", x=x, value=dnorm(x, growth_prior_mean, growth_prior_sd)) %>%
+    bind_rows(data.frame(type="Uniform Prior Posterior", x=x, value=dnorm(x, growth_estimate_uniform_prior$estimate, growth_estimate_uniform_prior$std.error))) %>%
+    bind_rows(data.frame(type="Default Prior Posterior", x=x, value=dnorm(x, growth_estimate_default_prior$estimate, growth_estimate_default_prior$std.error))) %>%
+    mutate(type = factor(type, levels=c('Prior Distribution', 'Uniform Prior Posterior', 'Default Prior Posterior'))) %>%
+    ggplot(aes(x=x, y=value, color=type)) +
+    geom_line() +
+    #coord_cartesian(xlim=c(0.4, 0.65)) +
+    #scale_x_continuous(breaks = pretty_breaks(10), labels = scales::percent_format(accuracy = 1)) +
+    theme(axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank()) +
+    labs(title='`growth` coefficient - bayesian updating',
+         x='`growth` Coefficient Distribution')   
+```
 
+```{r figure.1.1.a2, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+hibbs %>%
+    ggplot(aes(x=growth, y=vote)) +
+    geom_hline(yintercept = 50, color="red", linetype="dashed") +
+    geom_text(aes(label=year)) +
+    #geom_smooth(method='lm') +
+    geom_abline(intercept = coef(uniform_model)['(Intercept)'], slope = coef(uniform_model)['growth'], color='blue') +
+    geom_abline(intercept = coef(default_prior_model)['(Intercept)'], slope = coef(default_prior_model)['growth'], color='orange') +
+    scale_x_continuous(labels=function(.x)paste0(.x, '%')) +
+    scale_y_continuous(labels=function(.x)paste0(.x, '%')) +
+    labs(title="Forecasting the election from the economy",
+         y="Incuming party's vote share",
+         x="Average recent growth in personal",
+         caption='Figure 1.1')
+```
 
-
-
-
-
-
-
-
-
+### Weekly informative prior distribution based on subject-matter knowledge
 
 ```{r include=FALSE}
 rm(uniform_model)
 rm(lm_model)
 rm(uniform_coef_simulations)
 rm(uniform_prediction_summary)
+rm(default_prior_model)
+rm(default_prior_explicit_model)
+rm(sd_x)
+rm(sd_y)
+rm(mean_y)
+rm(growth_prior_mean)
+rm(growth_prior_sd)
+rm(growth_estimate_default_prior)
+rm(growth_estimate_uniform_prior)
 ```
-
-```{r chapter_9_uniform_prior, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
-
-```
-
-
-
-
-
-
-
-
-
-
-
