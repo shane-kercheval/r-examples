@@ -1546,7 +1546,7 @@ mad(dem_wins_per_sim)
 quantile(dem_wins_per_sim, c(0.025, 0.5, 0.975))
 ```
 
-```{r}
+```{r chapter_10_deom_vote_share_data_outcome, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 hist(dem_wins_per_sim)
 ```
 
@@ -1570,7 +1570,7 @@ mad(district_100_predictions)
 quantile(district_100_predictions, c(0.025, 0.5, 0.975))
 ```
 
-```{r}
+```{r chapter_10_deom_vote_share_data_district, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 hist(district_100_predictions)
 ```
 
