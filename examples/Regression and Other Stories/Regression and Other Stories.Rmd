@@ -227,7 +227,7 @@ coef(model)
 
 From `pg. 40`
 
-"For example, when increasing body mass on this curve by a factor of 2, metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplgying body mass by `10` corresponds to multiplying metabolic rate by `10^0.74` = `5.5`, and so forth."
+"For example, when increasing body mass on this curve by a factor of 2, metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplying body mass by `10` corresponds to multiplying metabolic rate by `10^0.74` = `5.5`, and so forth."
 
 ```{r}
 (primate_mass_coefficient <- unname(coef(model)['log(`Primate Mass`)']))
