@@ -1601,7 +1601,6 @@ Note this gives 260 rather than 261.
 > NOTE: The model as constructed not allow for national partisan swings of the sort that happen from election to election. To put it another way, the intercept of the model predicting 1988 from 1986 is not the same as the intercept for predicting 1990 from 1988, and it would be a mistake to directly apply the first model to make predictions from the second dataset. (pg. 144)
 
 ```{r include=FALSE}
-rm(inconsistent)
 rm(election_results_88)
 rm(model_88)
 rm(model_88_interactions)
