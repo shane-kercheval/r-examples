@@ -42,6 +42,9 @@
         -   [Weekly informative prior distribution based on
             subject-matter
             knowledge](#weekly-informative-prior-distribution-based-on-subject-matter-knowledge)
+-   [Chapter 10](#chapter-10)
+    -   [Example: uncertainty in predicting congressional
+        elections](#example-uncertainty-in-predicting-congressional-elections)
 
 Overview
 ========
@@ -144,8 +147,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 6.6e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.66 seconds.
+    ## Chain 1: Gradient evaluation took 7.5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.75 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -162,15 +165,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.034885 seconds (Warm-up)
-    ## Chain 1:                0.026394 seconds (Sampling)
-    ## Chain 1:                0.061279 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.041133 seconds (Warm-up)
+    ## Chain 1:                0.036547 seconds (Sampling)
+    ## Chain 1:                0.07768 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 1.5e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.15 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -187,15 +190,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.03445 seconds (Warm-up)
-    ## Chain 2:                0.032457 seconds (Sampling)
-    ## Chain 2:                0.066907 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.043678 seconds (Warm-up)
+    ## Chain 2:                0.037866 seconds (Sampling)
+    ## Chain 2:                0.081544 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 1.2e-05 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+    ## Chain 3: Gradient evaluation took 1.3e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -212,15 +215,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.031776 seconds (Warm-up)
-    ## Chain 3:                0.024733 seconds (Sampling)
-    ## Chain 3:                0.056509 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.041857 seconds (Warm-up)
+    ## Chain 3:                0.037142 seconds (Sampling)
+    ## Chain 3:                0.078999 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 9e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 4: Gradient evaluation took 1.2e-05 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -237,9 +240,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.032827 seconds (Warm-up)
-    ## Chain 4:                0.029015 seconds (Sampling)
-    ## Chain 4:                0.061842 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.04643 seconds (Warm-up)
+    ## Chain 4:                0.045602 seconds (Sampling)
+    ## Chain 4:                0.092032 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -263,23 +266,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.2    1.7 44.0  46.2  48.4 
-    ## growth       3.1    0.8  2.1   3.1   4.0 
+    ## (Intercept) 46.3    1.7 44.2  46.3  48.4 
+    ## growth       3.0    0.7  2.1   3.0   3.9 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.3  52.1  53.8 
+    ## mean_PPD 52.0    1.5 50.2  52.1  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3385 
-    ## growth        0.0  1.0  3053 
-    ## sigma         0.0  1.0  2721 
-    ## mean_PPD      0.0  1.0  3853 
-    ## log-posterior 0.0  1.0  1705 
+    ## (Intercept)   0.0  1.0  3003 
+    ## growth        0.0  1.0  2900 
+    ## sigma         0.0  1.0  2213 
+    ## mean_PPD      0.0  1.0  2933 
+    ## log-posterior 0.0  1.0  1362 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -298,8 +301,8 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.2    1.7  
-    ## growth       3.1    0.7  
+    ## (Intercept) 46.3    1.6  
+    ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -318,7 +321,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.242139    3.052775
+    ##   46.294014    3.034288
 
 ------------------------------------------------------------------------
 
@@ -466,7 +469,7 @@ coef(model)
 From `pg. 40`
 
 “For example, when increasing body mass on this curve by a factor of 2,
-metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplgying body mass
+metabolic rate is multiplied by `2^0.74` = `1.7`. Multiplying body mass
 by `10` corresponds to multiplying metabolic rate by `10^0.74` = `5.5`,
 and so forth.”
 
@@ -2135,3 +2138,347 @@ hibbs %>%
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_model_bayesian-1.png)
 
 ### Weekly informative prior distribution based on subject-matter knowledge
+
+Chapter 10
+==========
+
+Example: uncertainty in predicting congressional elections
+----------------------------------------------------------
+
+Example from pg 140
+
+``` r
+head(congress)
+```
+
+    ## # A tibble: 6 x 9
+    ##   inc86 inc88 inc90   v86   v88   v90 v86_adj v88_adj v90_adj
+    ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>   <dbl>   <dbl>   <dbl>
+    ## 1     1     1     1 0.745 0.772 0.714   0.745   0.772   0.714
+    ## 2     1     1     1 0.674 0.636 0.597   0.674   0.636   0.597
+    ## 3     1     1     0 0.696 0.665 0.521   0.696   0.665   0.521
+    ## 4    -1    -1    -1 0.465 0.274 0.234   0.465   0.274   0.234
+    ## 5    -1    -1     0 0.391 0.264 0.477   0.391   0.264   0.477
+    ## 6    -1    -1    -1 0.358 0.334 0.256   0.358   0.334   0.256
+
+`dem_vote_share` is the democratic share of the two-party vote in each
+district.
+
+Each row is a single district.
+
+Note that the uncontested elections (i.e. only 1 person running) have
+original vote shares of `0` or `1` (i.e. dems got 0% or 100% of the vote
+in the single-person race), and those values were changed to `0.25` and
+`0.75`. These are the approximate proportion of votes received by the
+Democratic candidate had the election actually been contested. You will
+see a cross of values at the `0.25` and `0.75` (more visible on the
+latter) on the x & y axis.
+
+``` r
+create_election_results <- function(.current_dem_vote_share,
+                                    .prev_dem_vote_share,
+                                    .incumbency) {
+
+    election_results <- data.frame(dem_vote_share=.current_dem_vote_share,
+                                   prev_dem_vote_share=.prev_dem_vote_share,
+                                   incumbency=.incumbency) %>%
+        mutate(incumbency = case_when(
+                    incumbency == -1 ~ "Rep running reelection",
+                    incumbency == 0 ~ "Open", # neither of the two candidates was occupying the seat at the time.
+                    incumbency == 1 ~ "Dem running reelection",
+                    TRUE ~ 'error'),
+               incumbency = factor(incumbency, levels=c("Dem running reelection", "Rep running reelection", "Open")))
+
+    return (election_results)    
+}
+election_results_88 <- create_election_results(congress$v88_adj, congress$v86_adj, congress$inc88)
+head(election_results_88)
+```
+
+    ##   dem_vote_share prev_dem_vote_share             incumbency
+    ## 1      0.7724427           0.7450362 Dem running reelection
+    ## 2      0.6361816           0.6738455 Dem running reelection
+    ## 3      0.6649283           0.6964566 Dem running reelection
+    ## 4      0.2738342           0.4645901 Rep running reelection
+    ## 5      0.2636131           0.3910945 Rep running reelection
+    ## 6      0.3341927           0.3582454 Rep running reelection
+
+``` r
+election_results_88 %>%
+    ggplot(aes(x=prev_dem_vote_share, y=dem_vote_share, color=incumbency)) +
+    geom_abline(intercept = 0, slope = 1) +
+    geom_point(alpha=0.7) +
+    geom_smooth(method='lm', se=FALSE) +
+    geom_smooth(aes(color=NULL), method='lm', se=FALSE, color='#7A7A7A') +
+    scale_x_continuous(breaks=pretty_breaks(10), labels=scales::percent_format(1)) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels=scales::percent_format(1)) +
+    scale_color_manual(values=c("#0015BC", "#FF0000", "#1AAF54")) +
+    coord_cartesian(xlim=c(0.1, 0.9), ylim=c(0.1, 0.9)) +
+    labs(title="`88 Election results showing Democratic Vote Share vs Previous Democratic Vote Share",
+         subtitle = 'Black line represents point at which previous and current Dem vote share is unchanged.\nGray line represents single regression if incumbency is not in model.',
+         y="Democratic Vote Share",
+         x="Previous Democratic Vote Share")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_deom_vote_share_data-1.png)
+
+NOTE: In the graph above, the slopes of the colored regression lines are
+allowed to change with each incumbency group, but the slopes are very
+close; which suggests there there isn’t much interaction effects; i.e. a
+model including interaction affects would be very close to a model not
+including interaction effects.
+
+``` r
+set.seed(1)
+model_88_interactions <- stan_glm(dem_vote_share ~ prev_dem_vote_share*incumbency, data=election_results_88, refresh=0)
+print(model_88_interactions, digits=2)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      dem_vote_share ~ prev_dem_vote_share * incumbency
+    ##  observations: 435
+    ##  predictors:   6
+    ## ------
+    ##                                                      Median MAD_SD
+    ## (Intercept)                                           0.31   0.04 
+    ## prev_dem_vote_share                                   0.55   0.05 
+    ## incumbencyRep running reelection                     -0.16   0.04 
+    ## incumbencyOpen                                       -0.05   0.05 
+    ## prev_dem_vote_share:incumbencyRep running reelection -0.05   0.08 
+    ## prev_dem_vote_share:incumbencyOpen                   -0.04   0.08 
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 0.07   0.00  
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+NOte: the interaction coefficients are all close to 0 and have a large
+mad\_sd.
+
+``` r
+set.seed(1)
+model_88 <- stan_glm(dem_vote_share ~ prev_dem_vote_share + incumbency, data=election_results_88, refresh=0)
+print(model_88, digits=2)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      dem_vote_share ~ prev_dem_vote_share + incumbency
+    ##  observations: 435
+    ##  predictors:   4
+    ## ------
+    ##                                  Median MAD_SD
+    ## (Intercept)                       0.33   0.02 
+    ## prev_dem_vote_share               0.53   0.03 
+    ## incumbencyRep running reelection -0.19   0.01 
+    ## incumbencyOpen                   -0.08   0.01 
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 0.07   0.00  
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+``` r
+prediction_data_90 <- create_election_results(.current_dem_vote_share = NA,
+                                               .prev_dem_vote_share = election_results_88$dem_vote_share,  # same as congress$v88_adj
+                                               .incumbency = congress$inc90) %>%
+    select(-dem_vote_share)
+head(prediction_data_90)
+```
+
+    ##   prev_dem_vote_share             incumbency
+    ## 1           0.7724427 Dem running reelection
+    ## 2           0.6361816 Dem running reelection
+    ## 3           0.6649283                   Open
+    ## 4           0.2738342 Rep running reelection
+    ## 5           0.2636131                   Open
+    ## 6           0.3341927 Rep running reelection
+
+``` r
+set.seed(1)
+predictions_90 <- posterior_predict(model_88, newdata=prediction_data_90)
+dim(predictions_90)
+```
+
+    ## [1] 4000  435
+
+Predictions has `4000` simulations (rows) for each of the 435 predicted
+values, which corresponds to the 435 congressional districts where we
+are predicting the democratic party’s vote share.
+
+So, each row is a single simulation.
+
+`predictions_90[1, ]` gives the first simulation, and has the a
+simulated prediction for each district.
+
+`predictions_90[1, 2]` gives the predicted value for the second district
+in the first simulation.
+
+``` r
+first_simulation <- predictions_90[1, ]
+length(first_simulation)
+```
+
+    ## [1] 435
+
+``` r
+first_simulation[1:10]
+```
+
+    ##         1         2         3         4         5         6         7         8 
+    ## 0.6945900 0.6813095 0.5188555 0.3854275 0.4009969 0.2586292 0.5884467 0.3609642 
+    ##         9        10 
+    ## 0.2710319 0.7045063
+
+We can get the simulated predictions for the first simulation by taking
+the values from the first row. THere are `435` values, each value
+representing the Dem vote share for that particular district.
+
+Which means that, for this simulation, we can get the number of
+Democratic wins (i.e. number of districts where dems had greater than
+50% of the vote share) by counting all of the instances where the
+prediction is greater than `0.5`.
+
+``` r
+sum(first_simulation > 0.5)
+```
+
+    ## [1] 260
+
+We can get the outcome of each simulation by counting the number of Dem
+vote shares that are greater than 50%.
+
+``` r
+dem_wins_per_sim <- rowSums(predictions_90 > 0.5)
+dem_wins_per_sim[1:5]
+```
+
+    ## [1] 260 261 265 259 265
+
+For example:
+
+-   In the first simulation, democrats won in `260` districts.
+-   In the second simulation, democrats won in `261` districts.
+-   In the third simulation, democrats won in `265` districts.
+-   and so on.
+
+We can get an idea of uncertainty by plotting a histogram, or getting
+the prediction intervals.
+
+``` r
+median(dem_wins_per_sim)
+```
+
+    ## [1] 261
+
+``` r
+mad(dem_wins_per_sim)
+```
+
+    ## [1] 2.9652
+
+``` r
+quantile(dem_wins_per_sim, c(0.025, 0.5, 0.975))
+```
+
+    ##  2.5%   50% 97.5% 
+    ##   256   261   266
+
+``` r
+hist(dem_wins_per_sim)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_deom_vote_share_data_outcome-1.png)
+
+To get the uncertainty for any individual district, we would look at
+specific columns.
+
+To get the simulated predictions for district `100`, we look at the
+hundredth column. There are 4000 simulations.
+
+``` r
+district_100_predictions <- predictions_90[, 100]
+length(district_100_predictions)
+```
+
+    ## [1] 4000
+
+We can get the expected outcome and uncertainty by plotting a histogram
+or getting the prediction intervals.
+
+``` r
+median(district_100_predictions)
+```
+
+    ## [1] 0.595877
+
+``` r
+mad(district_100_predictions)
+```
+
+    ## [1] 0.06662707
+
+``` r
+quantile(district_100_predictions, c(0.025, 0.5, 0.975))
+```
+
+    ##      2.5%       50%     97.5% 
+    ## 0.4627831 0.5958770 0.7239949
+
+``` r
+hist(district_100_predictions)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_deom_vote_share_data_district-1.png)
+
+The probability that the democrat will win district 100 is:
+
+``` r
+mean(district_100_predictions > 0.5)
+```
+
+    ## [1] 0.91975
+
+We could have gotten the number od district wins first by getting the
+column medians (which is the expected outcome (dem vote share) for each
+each district), and then adding up the number greater than 50%.
+
+``` r
+district_medians <- apply(predictions_90, 2, median)
+length(district_medians)
+```
+
+    ## [1] 435
+
+``` r
+district_medians[100]
+```
+
+    ##      100 
+    ## 0.595877
+
+The result matches our median for district 100 above.
+
+Now we can count the number of districts above 50%
+
+``` r
+sum(district_medians > 0.5)
+```
+
+    ## [1] 260
+
+Note this gives 260 rather than 261.
+
+> NOTE: The model as constructed not allow for national partisan swings
+> of the sort that happen from election to election. To put it another
+> way, the intercept of the model predicting 1988 from 1986 is not the
+> same as the intercept for predicting 1990 from 1988, and it would be a
+> mistake to directly apply the first model to make predictions from the
+> second dataset. (pg. 144)
