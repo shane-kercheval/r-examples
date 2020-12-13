@@ -1351,7 +1351,7 @@ coef(default_prior_model)
 coef(uniform_model)
 ```
 
-```{r}
+```{r chapter_9_growth_coefficient_bayesian, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 growth_estimate_default_prior <- default_prior_model %>%
     tidy() %>%
     filter(term == 'growth')
@@ -1376,7 +1376,7 @@ data.frame(type="Prior Distribution", x=x, value=dnorm(x, growth_prior_mean, gro
          x='`growth` Coefficient Distribution')   
 ```
 
-```{r figure.1.1.a2, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+```{r chapter_9_model_bayesian, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 hibbs %>%
     ggplot(aes(x=growth, y=vote)) +
     geom_hline(yintercept = 50, color="red", linetype="dashed") +
