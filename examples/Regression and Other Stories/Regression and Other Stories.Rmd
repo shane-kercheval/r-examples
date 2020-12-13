@@ -32,6 +32,9 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
 
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
               destfile = 'data/congress.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
+              destfile = 'data/nes.csv', quiet = TRUE)
 ```
 
 # Overview
@@ -79,6 +82,7 @@ options(dplyr.summarise.inform=F)
 hibbs <- read.table('data/hibbs.dat', header = TRUE)
 metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 congress <- read_csv("data/congress.csv")
+nes_data <- read.csv("data/nes.csv", sep = ' ')
 ```
 
 # Chapter 1 - Overview
@@ -1611,4 +1615,68 @@ rm(dem_wins_per_sim)
 rm(district_100_predictions)
 rm(district_medians)
 rm(create_election_results)
+```
+
+## Fitting the same model to many datasets
+
+Example from pg. 148
+
+```{r}
+nes_local <- nes_data %>% 
+    select(year, partyid7, real_ideo, race_adj, age_discrete, educ1, female, income) %>%
+    na.omit()
+head(nes_local)
+```
+
+
+> This approach is so easy and powerful but yet is rarely used as a data-analytic tool. We suspect that one reason for its rarity of use is that, once one acknowledges the time-series structure of a dataset, it is natural to want to take the next step and model that directly. In practice, however, there is a board range of problems for which a cross-sectional analysis is informative, and for which a time-series display is appropriate to give a sense of trends. 
+
+As we see below, modeling the time-series directly would not have highlighted some of these changes in coefficient values over time.
+
+
+```{r}
+regress_year <- function (data, yr) {
+  this_year <- data[data$year==yr,]
+  set.seed(1)
+  fit <- stan_glm(partyid7 ~ real_ideo + race_adj + factor(age_discrete) +
+                      educ1 + female + income,
+                  data=this_year, warmup = 500, iter = 1500, refresh = 0,
+                  save_warmup = FALSE, cores = 1, open_progress = FALSE)
+  coefs <- cbind(coef(fit),se(fit))
+  return (coefs)
+}
+regress_year(nes_local, 1972)
+```
+
+```{r}
+summary <- array (NA, c(9,2,8)) # 3d matrix
+for (yr in seq(1972,2000,4)){
+  i <- (yr-1968)/4
+  summary[,,i] <- regress_year(nes_local, yr)
+}
+summary[,,1] # first year's results; same values as above (regress_year(nes_local, 1972))
+```
+
+```{r chapter_10_many_datasets, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+yrs <- seq(1972,2000,4)
+coef_names <- c("Intercept", "Ideology", "Black", "Age_30_44", "Age_45_64", "Age_65_up", "Education", "Female", "Income")
+par(mfrow=c(2,5), mar=c(2,3,2,2), tck=-.02, mgp=c(2,.7,0))
+for (k in 1:9){
+  plot(range(yrs), range(0,summary[k,1,]+.67*summary[k,2,],summary[k,1,]-.67*summary[k,2,]), type="n", xlab="", ylab="Coefficient", main=coef_names[k], mgp=c(1.2,.2,0), cex.main=1, cex.axis=1, cex.lab=1, tcl=-.1, bty="l", xaxt="n")
+  axis(1, c(1972,1986,2000), mgp=c(.5,.3,0))
+  abline(0,0, lty=2)
+  points(yrs, summary[k,1,], pch=20)
+  segments(yrs, summary[k,1,]-.67*summary[k,2,], yrs, summary[k,1,]+.67*summary[k,2,])
+}
+```
+
+```{r include=FALSE}
+rm(nes_local)
+rm(regress_year)
+rm(i)
+rm(summary)
+rm(yrs)
+rm(yr)
+rm(coef_names)
+rm(k)
 ```
