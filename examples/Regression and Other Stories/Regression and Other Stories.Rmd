@@ -29,6 +29,9 @@ plot_width_height_8 <- calculate_plot_width(8)
 ```{r downloading_data, eval=FALSE, include=FALSE}
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/ElectionsEconomy/data/hibbs.dat',
               destfile = 'data/hibbs.dat', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
+              destfile = 'data/congress.csv', quiet = TRUE)
 ```
 
 # Overview
@@ -75,6 +78,7 @@ options(dplyr.summarise.inform=F)
 ```{r include=FALSE}
 hibbs <- read.table('data/hibbs.dat', header = TRUE)
 metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
+congress <- read_csv("data/congress.csv")
 ```
 
 # Chapter 1 - Overview
@@ -1404,8 +1408,206 @@ rm(default_prior_explicit_model)
 rm(sd_x)
 rm(sd_y)
 rm(mean_y)
+rm(x)
 rm(growth_prior_mean)
 rm(growth_prior_sd)
 rm(growth_estimate_default_prior)
 rm(growth_estimate_uniform_prior)
+```
+
+# Chapter 10
+
+## Example: uncertainty in predicting congressional elections
+
+Example from pg 140
+
+```{r}
+head(congress)
+```
+
+`dem_vote_share` is the democratic share of the two-party vote in each district.
+
+Each row is a single district.
+
+Note that the uncontested elections (i.e. only 1 person running) have original vote shares of `0` or `1` (i.e. dems got 0% or 100% of the vote in the single-person race), and those values were changed to `0.25` and `0.75`. These are the approximate proportion of votes received by the Democratic candidate had the election actually been contested. You will see a cross of values at the `0.25` and `0.75` (more visible on the latter) on the x & y axis.
+
+```{r}
+create_election_results <- function(.current_dem_vote_share,
+                                    .prev_dem_vote_share,
+                                    .incumbency) {
+
+    election_results <- data.frame(dem_vote_share=.current_dem_vote_share,
+                                   prev_dem_vote_share=.prev_dem_vote_share,
+                                   incumbency=.incumbency) %>%
+        mutate(incumbency = case_when(
+                    incumbency == -1 ~ "Rep running reelection",
+                    incumbency == 0 ~ "Open", # neither of the two candidates was occupying the seat at the time.
+                    incumbency == 1 ~ "Dem running reelection",
+                    TRUE ~ 'error'),
+               incumbency = factor(incumbency, levels=c("Dem running reelection", "Rep running reelection", "Open")))
+
+    return (election_results)    
+}
+election_results_88 <- create_election_results(congress$v88_adj, congress$v86_adj, congress$inc88)
+head(election_results_88)
+```
+
+```{r chapter_10_deom_vote_share_data, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+election_results_88 %>%
+    ggplot(aes(x=prev_dem_vote_share, y=dem_vote_share, color=incumbency)) +
+    geom_abline(intercept = 0, slope = 1) +
+    geom_point(alpha=0.7) +
+    geom_smooth(method='lm', se=FALSE) +
+    geom_smooth(aes(color=NULL), method='lm', se=FALSE, color='#7A7A7A') +
+    scale_x_continuous(breaks=pretty_breaks(10), labels=scales::percent_format(1)) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels=scales::percent_format(1)) +
+    scale_color_manual(values=c("#0015BC", "#FF0000", "#1AAF54")) +
+    coord_cartesian(xlim=c(0.1, 0.9), ylim=c(0.1, 0.9)) +
+    labs(title="`88 Election results showing Democratic Vote Share vs Previous Democratic Vote Share",
+         subtitle = 'Black line represents point at which previous and current Dem vote share is unchanged.\nGray line represents single regression if incumbency is not in model.',
+         y="Democratic Vote Share",
+         x="Previous Democratic Vote Share")
+```
+
+NOTE: In the graph above, the slopes of the colored regression lines are allowed to change with each incumbency group, but the slopes are very close; which suggests there there isn't much interaction effects; i.e. a model including interaction affects would be very close to a model not including interaction effects.
+
+```{r}
+set.seed(1)
+model_88_interactions <- stan_glm(dem_vote_share ~ prev_dem_vote_share*incumbency, data=election_results_88, refresh=0)
+print(model_88_interactions, digits=2)
+```
+
+NOte: the interaction coefficients are all close to 0 and have a large mad_sd.
+
+```{r}
+set.seed(1)
+model_88 <- stan_glm(dem_vote_share ~ prev_dem_vote_share + incumbency, data=election_results_88, refresh=0)
+print(model_88, digits=2)
+```
+
+```{r}
+prediction_data_90 <- create_election_results(.current_dem_vote_share = NA,
+                                               .prev_dem_vote_share = election_results_88$dem_vote_share,  # same as congress$v88_adj
+                                               .incumbency = congress$inc90) %>%
+    select(-dem_vote_share)
+head(prediction_data_90)
+```
+
+```{r}
+set.seed(1)
+predictions_90 <- posterior_predict(model_88, newdata=prediction_data_90)
+dim(predictions_90)
+```
+
+Predictions has `4000` simulations (rows) for each of the 435 predicted values, which corresponds to the 435 congressional districts where we are predicting the democratic party's vote share.
+
+So, each row is a single simulation. 
+
+`predictions_90[1, ]` gives the first simulation, and has the a simulated prediction for each district.
+
+`predictions_90[1, 2]` gives the predicted value for the second district in the first simulation.
+
+```{r}
+first_simulation <- predictions_90[1, ]
+length(first_simulation)
+first_simulation[1:10]
+```
+
+We can get the simulated predictions for the first simulation by taking the values from the first row. THere are `435` values, each value representing the Dem vote share for that particular district.
+
+Which means that, for this simulation, we can get the number of Democratic wins (i.e. number of districts where dems had greater than 50% of the vote share) by counting all of the instances where the prediction is greater than `0.5`.
+
+```{r}
+sum(first_prediction > 0.5)
+```
+
+We can get the outcome of each simulation by counting the number of Dem vote shares that are greater than 50%.
+
+```{r}
+dem_wins_per_sim <- rowSums(predictions_90 > 0.5)
+dem_wins_per_sim[1:5]
+```
+
+For example:
+
+- In the first simulation, democrats won in ``r dem_wins_per_sim[1]`` districts.
+- In the second simulation, democrats won in ``r dem_wins_per_sim[2]`` districts.
+- In the third simulation, democrats won in ``r dem_wins_per_sim[3]`` districts.
+- and so on.
+
+We can get an idea of uncertainty by plotting a histogram, or getting the prediction intervals.
+
+```{r}
+median(dem_wins_per_sim)
+mad(dem_wins_per_sim)
+```
+
+```{r}
+quantile(dem_wins_per_sim, c(0.025, 0.5, 0.975))
+```
+
+```{r}
+hist(dem_wins_per_sim)
+```
+
+To get the uncertainty for any individual district, we would look at specific columns.
+
+To get the simulated predictions for district `100`, we look at the hundredth column. There are 4000 simulations.
+
+```{r}
+district_100_predictions <- predictions_90[, 100]
+length(district_100_predictions)
+```
+
+We can get the expected outcome and uncertainty by plotting a histogram or getting the prediction intervals.
+
+```{r}
+median(district_100_predictions)
+mad(district_100_predictions)
+```
+
+```{r}
+quantile(district_100_predictions, c(0.025, 0.5, 0.975))
+```
+
+```{r}
+hist(district_100_predictions)
+```
+
+The probability that the democrat will win district 100 is:
+
+```{r}
+mean(district_100_predictions > 0.5)
+```
+
+We could have gotten the number od district wins first by getting the column medians (which is the expected outcome (dem vote share) for each each district), and then adding up the number greater than 50%.
+
+```{r}
+district_medians <- apply(predictions_90, 2, median)
+length(district_medians)
+district_medians[100]
+```
+
+The result matches our median for district 100 above.
+
+Now we can count the number of districts above 50%
+
+```{r}
+sum(district_medians > 0.5)
+```
+
+Note this gives 260 rather than 261.
+
+> NOTE: The model as constructed not allow for national partisan swings of the sort that happen from election to election. To put it another way, the intercept of the model predicting 1988 from 1986 is not the same as the intercept for predicting 1990 from 1988, and it would be a mistake to directly apply the first model to make predictions from the second dataset. (pg. 144)
+
+```{r include=FALSE}
+rm(inconsistent)
+rm(election_results_88)
+rm(model_88)
+rm(model_88_interactions)
+rm(prediction_data_90)
+rm(predictions_90)
+rm(dem_wins_per_sim)
+rm(district_100_predictions)
+rm(district_medians)
 ```
