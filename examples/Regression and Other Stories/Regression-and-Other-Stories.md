@@ -45,6 +45,8 @@
 -   [Chapter 10](#chapter-10)
     -   [Example: uncertainty in predicting congressional
         elections](#example-uncertainty-in-predicting-congressional-elections)
+    -   [Fitting the same model to many
+        datasets](#fitting-the-same-model-to-many-datasets)
 
 Overview
 ========
@@ -147,8 +149,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 7.5e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.75 seconds.
+    ## Chain 1: Gradient evaluation took 8.1e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.81 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -165,15 +167,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.041133 seconds (Warm-up)
-    ## Chain 1:                0.036547 seconds (Sampling)
-    ## Chain 1:                0.07768 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.043483 seconds (Warm-up)
+    ## Chain 1:                0.035427 seconds (Sampling)
+    ## Chain 1:                0.07891 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 1.5e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.15 seconds.
+    ## Chain 2: Gradient evaluation took 1.4e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.14 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -190,15 +192,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.043678 seconds (Warm-up)
-    ## Chain 2:                0.037866 seconds (Sampling)
-    ## Chain 2:                0.081544 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.047567 seconds (Warm-up)
+    ## Chain 2:                0.045336 seconds (Sampling)
+    ## Chain 2:                0.092903 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 1.3e-05 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
+    ## Chain 3: Gradient evaluation took 1.2e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -215,15 +217,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.041857 seconds (Warm-up)
-    ## Chain 3:                0.037142 seconds (Sampling)
-    ## Chain 3:                0.078999 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.042421 seconds (Warm-up)
+    ## Chain 3:                0.040285 seconds (Sampling)
+    ## Chain 3:                0.082706 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.2e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+    ## Chain 4: Gradient evaluation took 1.3e-05 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -240,9 +242,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.04643 seconds (Warm-up)
-    ## Chain 4:                0.045602 seconds (Sampling)
-    ## Chain 4:                0.092032 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.041955 seconds (Warm-up)
+    ## Chain 4:                0.036731 seconds (Sampling)
+    ## Chain 4:                0.078686 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -267,22 +269,22 @@ summary(model)
     ## Estimates:
     ##               mean   sd   10%   50%   90%
     ## (Intercept) 46.3    1.7 44.2  46.3  48.4 
-    ## growth       3.0    0.7  2.1   3.0   3.9 
-    ## sigma        4.0    0.8  3.1   3.9   5.1 
+    ## growth       3.1    0.8  2.1   3.1   4.0 
+    ## sigma        4.0    0.8  3.1   3.9   5.0 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.2  52.1  53.8 
+    ## mean_PPD 52.1    1.4 50.4  52.1  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3003 
-    ## growth        0.0  1.0  2900 
-    ## sigma         0.0  1.0  2213 
-    ## mean_PPD      0.0  1.0  2933 
-    ## log-posterior 0.0  1.0  1362 
+    ## (Intercept)   0.0  1.0  2744 
+    ## growth        0.0  1.0  2606 
+    ## sigma         0.0  1.0  2175 
+    ## mean_PPD      0.0  1.0  3345 
+    ## log-posterior 0.0  1.0  1223 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -302,7 +304,7 @@ print(model)
     ## ------
     ##             Median MAD_SD
     ## (Intercept) 46.3    1.6  
-    ## growth       3.0    0.7  
+    ## growth       3.1    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -321,7 +323,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.294014    3.034288
+    ##   46.283680    3.052622
 
 ------------------------------------------------------------------------
 
@@ -2482,3 +2484,94 @@ Note this gives 260 rather than 261.
 > same as the intercept for predicting 1990 from 1988, and it would be a
 > mistake to directly apply the first model to make predictions from the
 > second dataset. (pg. 144)
+
+Fitting the same model to many datasets
+---------------------------------------
+
+Example from pg. 148
+
+``` r
+nes_local <- nes_data %>% 
+    select(year, partyid7, real_ideo, race_adj, age_discrete, educ1, female, income) %>%
+    na.omit()
+head(nes_local)
+```
+
+    ##       year partyid7 real_ideo race_adj age_discrete educ1 female income
+    ## 13792 1972        6         5        1            1     2      0      3
+    ## 13794 1972        6         5        1            2     2      1      4
+    ## 13795 1972        7         6        1            4     2      0      4
+    ## 13798 1972        2         4        1            3     2      0      4
+    ## 13800 1972        6         5        1            3     1      1      1
+    ## 13801 1972        2         5        1            2     4      1      3
+
+> This approach is so easy and powerful but yet is rarely used as a
+> data-analytic tool. We suspect that one reason for its rarity of use
+> is that, once one acknowledges the time-series structure of a dataset,
+> it is natural to want to take the next step and model that directly.
+> In practice, however, there is a board range of problems for which a
+> cross-sectional analysis is informative, and for which a time-series
+> display is appropriate to give a sense of trends.
+
+As we see below, modeling the time-series directly would not have
+highlighted some of these changes in coefficient values over time.
+
+``` r
+regress_year <- function (data, yr) {
+  this_year <- data[data$year==yr,]
+  set.seed(1)
+  fit <- stan_glm(partyid7 ~ real_ideo + race_adj + factor(age_discrete) +
+                      educ1 + female + income,
+                  data=this_year, warmup = 500, iter = 1500, refresh = 0,
+                  save_warmup = FALSE, cores = 1, open_progress = FALSE)
+  coefs <- cbind(coef(fit),se(fit))
+  return (coefs)
+}
+regress_year(nes_local, 1972)
+```
+
+    ##                               [,1]       [,2]
+    ## (Intercept)            1.763248876 0.38635425
+    ## real_ideo              0.484460753 0.04199652
+    ## race_adj              -1.110258318 0.18787720
+    ## factor(age_discrete)2 -0.193122932 0.14635964
+    ## factor(age_discrete)3 -0.046873675 0.13630723
+    ## factor(age_discrete)4  0.510307493 0.17660191
+    ## educ1                  0.296693958 0.06251434
+    ## female                -0.002820698 0.10438625
+    ## income                 0.162465712 0.05164427
+
+``` r
+summary <- array (NA, c(9,2,8)) # 3d matrix
+for (yr in seq(1972,2000,4)){
+  i <- (yr-1968)/4
+  summary[,,i] <- regress_year(nes_local, yr)
+}
+summary[,,1] # first year's results; same values as above (regress_year(nes_local, 1972))
+```
+
+    ##               [,1]       [,2]
+    ##  [1,]  1.763248876 0.38635425
+    ##  [2,]  0.484460753 0.04199652
+    ##  [3,] -1.110258318 0.18787720
+    ##  [4,] -0.193122932 0.14635964
+    ##  [5,] -0.046873675 0.13630723
+    ##  [6,]  0.510307493 0.17660191
+    ##  [7,]  0.296693958 0.06251434
+    ##  [8,] -0.002820698 0.10438625
+    ##  [9,]  0.162465712 0.05164427
+
+``` r
+yrs <- seq(1972,2000,4)
+coef_names <- c("Intercept", "Ideology", "Black", "Age_30_44", "Age_45_64", "Age_65_up", "Education", "Female", "Income")
+par(mfrow=c(2,5), mar=c(2,3,2,2), tck=-.02, mgp=c(2,.7,0))
+for (k in 1:9){
+  plot(range(yrs), range(0,summary[k,1,]+.67*summary[k,2,],summary[k,1,]-.67*summary[k,2,]), type="n", xlab="", ylab="Coefficient", main=coef_names[k], mgp=c(1.2,.2,0), cex.main=1, cex.axis=1, cex.lab=1, tcl=-.1, bty="l", xaxt="n")
+  axis(1, c(1972,1986,2000), mgp=c(.5,.3,0))
+  abline(0,0, lty=2)
+  points(yrs, summary[k,1,], pch=20)
+  segments(yrs, summary[k,1,]-.67*summary[k,2,], yrs, summary[k,1,]+.67*summary[k,2,])
+}
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_many_datasets-1.png)
