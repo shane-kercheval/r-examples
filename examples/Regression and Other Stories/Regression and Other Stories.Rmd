@@ -1610,4 +1610,5 @@ rm(first_simulation)
 rm(dem_wins_per_sim)
 rm(district_100_predictions)
 rm(district_medians)
+rm(create_election_results)
 ```
