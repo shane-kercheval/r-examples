@@ -1628,11 +1628,9 @@ nes_local <- nes_data %>%
 head(nes_local)
 ```
 
-
 > This approach is so easy and powerful but yet is rarely used as a data-analytic tool. We suspect that one reason for its rarity of use is that, once one acknowledges the time-series structure of a dataset, it is natural to want to take the next step and model that directly. In practice, however, there is a board range of problems for which a cross-sectional analysis is informative, and for which a time-series display is appropriate to give a sense of trends. 
 
 As we see below, modeling the time-series directly would not have highlighted some of these changes in coefficient values over time.
-
 
 ```{r}
 regress_year <- function (data, yr) {
