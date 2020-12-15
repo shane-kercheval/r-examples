@@ -47,6 +47,9 @@
         elections](#example-uncertainty-in-predicting-congressional-elections)
     -   [Fitting the same model to many
         datasets](#fitting-the-same-model-to-many-datasets)
+-   [Chapter 11](#chapter-11)
+    -   [Comparing data to replications from a fitted
+        model](#comparing-data-to-replications-from-a-fitted-model)
 
 Overview
 ========
@@ -149,8 +152,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 8.1e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.81 seconds.
+    ## Chain 1: Gradient evaluation took 5.5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.55 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -167,15 +170,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.043483 seconds (Warm-up)
-    ## Chain 1:                0.035427 seconds (Sampling)
-    ## Chain 1:                0.07891 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.032375 seconds (Warm-up)
+    ## Chain 1:                0.024778 seconds (Sampling)
+    ## Chain 1:                0.057153 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 1.4e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.14 seconds.
+    ## Chain 2: Gradient evaluation took 9e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -192,15 +195,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.047567 seconds (Warm-up)
-    ## Chain 2:                0.045336 seconds (Sampling)
-    ## Chain 2:                0.092903 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.030323 seconds (Warm-up)
+    ## Chain 2:                0.026813 seconds (Sampling)
+    ## Chain 2:                0.057136 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 1.2e-05 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+    ## Chain 3: Gradient evaluation took 9e-06 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -217,15 +220,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.042421 seconds (Warm-up)
-    ## Chain 3:                0.040285 seconds (Sampling)
-    ## Chain 3:                0.082706 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.030007 seconds (Warm-up)
+    ## Chain 3:                0.024732 seconds (Sampling)
+    ## Chain 3:                0.054739 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 1.3e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.13 seconds.
+    ## Chain 4: Gradient evaluation took 7e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -242,9 +245,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.041955 seconds (Warm-up)
-    ## Chain 4:                0.036731 seconds (Sampling)
-    ## Chain 4:                0.078686 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.027238 seconds (Warm-up)
+    ## Chain 4:                0.025119 seconds (Sampling)
+    ## Chain 4:                0.052357 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -268,23 +271,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.7 44.2  46.3  48.4 
-    ## growth       3.1    0.8  2.1   3.1   4.0 
-    ## sigma        4.0    0.8  3.1   3.9   5.0 
+    ## (Intercept) 46.3    1.8 44.1  46.4  48.5 
+    ## growth       3.0    0.7  2.1   3.0   3.9 
+    ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.4  52.1  53.8 
+    ## mean_PPD 52.0    1.5 50.1  52.0  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2744 
-    ## growth        0.0  1.0  2606 
-    ## sigma         0.0  1.0  2175 
-    ## mean_PPD      0.0  1.0  3345 
-    ## log-posterior 0.0  1.0  1223 
+    ## (Intercept)   0.0  1.0  3207 
+    ## growth        0.0  1.0  3399 
+    ## sigma         0.0  1.0  2450 
+    ## mean_PPD      0.0  1.0  3593 
+    ## log-posterior 0.0  1.0  1323 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -303,12 +306,12 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.6  
-    ## growth       3.1    0.7  
+    ## (Intercept) 46.4    1.7  
+    ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.7   
+    ## sigma 3.9    0.8   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -323,7 +326,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.283680    3.052622
+    ##   46.367759    3.027296
 
 ------------------------------------------------------------------------
 
@@ -1341,6 +1344,14 @@ head(simulations)
     ##       [5,]    46.50408 2.978387 3.019823
     ##       [6,]    46.60710 3.003798 3.251705
 
+The above matrix has columns for each model parameter (plus a column for
+`sigma` which is the `residual standard deviation`). Each row is a
+simulated outcome.
+
+In the first simulation, the `Intercept` is `47.62082`, the `growth`
+coefficient is `2.8648807`, and the `residual standard deviation` is
+`6.5216841`.
+
 ``` r
 model %>% tidy()
 ```
@@ -1531,6 +1542,13 @@ Note the confidence intervals are being simulated so the numbers/graph
 will change each time unless a seed is set.
 
 ``` r
+new_data
+```
+
+    ##   growth
+    ## 1      2
+
+``` r
 set.seed(1)
 y_pred <- posterior_predict(object = model, newdata = new_data)
 head(y_pred)
@@ -1547,12 +1565,20 @@ head(y_pred)
 If we were to do this by hand, we do the same as before, but add the
 error term to the computation (which assumes normal distribution).
 
+Therefore, in generating the values of `prediction` (i.e. the prediction
+distribution for the single prediction we are concerned with in this
+example) `posterior_predict` is taking into account both the uncertainty
+of the coefficients (because each simulation uses the simulated
+coefficients) but also the uncertainty in the prediction (because each
+simulation is simulating the error from the residual standard error,
+sigma).
+
 ``` r
 set.seed(1)
 simulations %>%
     as.data.frame() %>%
     mutate(error = rnorm(nrow(simulations), 0, sigma)) %>%
-    mutate(prediction = `(Intercept)` + growth*2.0 + error) %>%
+    mutate(prediction = `(Intercept)` + growth*2.0 + error) %>%  # 2.0 for the growth we are using for our prediction
     head()
 ```
 
@@ -2575,3 +2601,84 @@ for (k in 1:9){
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_many_datasets-1.png)
+
+Chapter 11
+==========
+
+Comparing data to replications from a fitted model
+--------------------------------------------------
+
+The example below uses the concepts from `pg. 163` but uses the
+`election_results_88` dataset from chapter 9.
+
+``` r
+election_results_88 <- create_election_results(congress$v88_adj, congress$v86_adj, congress$inc88)
+head(election_results_88)
+```
+
+    ##   dem_vote_share prev_dem_vote_share             incumbency
+    ## 1      0.7724427           0.7450362 Dem running reelection
+    ## 2      0.6361816           0.6738455 Dem running reelection
+    ## 3      0.6649283           0.6964566 Dem running reelection
+    ## 4      0.2738342           0.4645901 Rep running reelection
+    ## 5      0.2636131           0.3910945 Rep running reelection
+    ## 6      0.3341927           0.3582454 Rep running reelection
+
+``` r
+set.seed(1)
+model_88 <- stan_glm(dem_vote_share ~ prev_dem_vote_share + incumbency, data=election_results_88, refresh=0)
+fitted_88 <- posterior_predict(model_88)
+dim(fitted_88)
+```
+
+    ## [1] 4000  435
+
+`fitted_88` contains `4000` simulations (i.e. ‘fitted values’) of
+outcome variable (democratic vote share in the `435` districts)
+
+`100` rows (i.e. simulations) were taken from the 4000 simulations in
+`fitted_88`.
+
+``` r
+density_check <- election_results_88 %>% 
+    select(incumbency, dem_vote_share) %>%
+    mutate(district = row_number()) %>%
+    bind_cols(
+        fitted_88[1:100,] %>% # 100 simulations (100 rows, 435 columns for 435 outcomes (districts))
+            t() %>%  # transform so that each column is a simulation and each row 
+            as.data.frame()
+    ) %>%
+    pivot_longer(-c(incumbency, district), names_to='simulation_index') %>%
+    mutate(simulation_index = ifelse(simulation_index == 'dem_vote_share', 'Actual Dem Vote Share', str_replace(simulation_index, 'V', 'Sim ')))
+
+head(density_check)
+```
+
+    ## # A tibble: 6 x 4
+    ##   incumbency             district simulation_index      value
+    ##   <fct>                     <int> <chr>                 <dbl>
+    ## 1 Dem running reelection        1 Actual Dem Vote Share 0.772
+    ## 2 Dem running reelection        1 Sim 1                 0.589
+    ## 3 Dem running reelection        1 Sim 2                 0.798
+    ## 4 Dem running reelection        1 Sim 3                 0.802
+    ## 5 Dem running reelection        1 Sim 4                 0.811
+    ## 6 Dem running reelection        1 Sim 5                 0.722
+
+Each thin line in the graph below represents a single row of
+`fitted_88`.
+
+``` r
+density_check %>%
+    filter(simulation_index != 'Actual Dem Vote Share') %>%
+    #ggplot(aes(x=value, group=simulation_index)) + 
+    ggplot(aes(x=value, color=incumbency, group=interaction(incumbency, simulation_index))) + 
+    geom_density(size=0.1) +
+    geom_density(data=density_check %>% filter(simulation_index == 'Actual Dem Vote Share'),
+                 size=3) +
+    scale_color_manual(values=c("#0015BC", "#FF0000", "#1AAF54")) +
+    labs(title="Dem Vote Share Density - by Incumbency",
+         subtitle = "Thick lines are actual densities from the outcome variable;\nthin lines are simulated values from the fitted data",
+         x="Dem Vote Share")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_dem_fit_check-1.png)
