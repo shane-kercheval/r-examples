@@ -895,6 +895,10 @@ simulations <- as.matrix(model)
 head(simulations)
 ```
 
+The above matrix has columns for each model parameter (plus a column for `sigma` which is the `residual standard deviation`). Each row is a simulated outcome.
+
+In the first simulation, the `Intercept` is ``r simulations[1, '(Intercept)']``, the `growth` coefficient is ``r simulations[1, 'growth']``, and the `residual standard deviation` is ``r simulations[1, 'sigma']``.
+
 ```{r}
 model %>% tidy()
 ```
@@ -1015,6 +1019,10 @@ NOTE: I doubt this is how we ever want to express uncertainty in the actual pred
 Note the confidence intervals are being simulated so the numbers/graph will change each time unless a seed is set.
 
 ```{r}
+new_data
+```
+
+```{r}
 set.seed(1)
 y_pred <- posterior_predict(object = model, newdata = new_data)
 head(y_pred)
@@ -1022,12 +1030,14 @@ head(y_pred)
 
 If we were to do this by hand, we do the same as before, but add the error term to the computation (which assumes normal distribution).
 
+Therefore, in generating the values of `prediction` (i.e. the prediction distribution for the single prediction we are concerned with in this example) `posterior_predict` is taking into account both the uncertainty of the coefficients (because each simulation uses the simulated coefficients) but also the uncertainty in the prediction (because each simulation is simulating the error from the residual standard error, sigma).
+
 ```{r}
 set.seed(1)
 simulations %>%
     as.data.frame() %>%
     mutate(error = rnorm(nrow(simulations), 0, sigma)) %>%
-    mutate(prediction = `(Intercept)` + growth*2.0 + error) %>%
+    mutate(prediction = `(Intercept)` + growth*2.0 + error) %>%  # 2.0 for the growth we are using for our prediction
     head()
 ```
 
@@ -1614,7 +1624,6 @@ rm(first_simulation)
 rm(dem_wins_per_sim)
 rm(district_100_predictions)
 rm(district_medians)
-rm(create_election_results)
 ```
 
 ## Fitting the same model to many datasets
@@ -1678,3 +1687,65 @@ rm(yr)
 rm(coef_names)
 rm(k)
 ```
+
+# Chapter 11
+
+## Comparing data to replications from a fitted model
+
+The example below uses the concepts from `pg. 163` but uses the `election_results_88` dataset from chapter 9.
+
+```{r}
+election_results_88 <- create_election_results(congress$v88_adj, congress$v86_adj, congress$inc88)
+head(election_results_88)
+```
+
+```{r}
+set.seed(1)
+model_88 <- stan_glm(dem_vote_share ~ prev_dem_vote_share + incumbency, data=election_results_88, refresh=0)
+fitted_88 <- posterior_predict(model_88)
+dim(fitted_88)
+```
+
+`fitted_88` contains `4000` simulations (i.e. 'fitted values') of outcome variable (democratic vote share in the `435` districts)
+
+`100` rows (i.e. simulations) were taken from the 4000 simulations in `fitted_88`. 
+
+```{r}
+density_check <- election_results_88 %>% 
+    select(incumbency, dem_vote_share) %>%
+    mutate(district = row_number()) %>%
+    bind_cols(
+        fitted_88[1:100,] %>% # 100 simulations (100 rows, 435 columns for 435 outcomes (districts))
+            t() %>%  # transform so that each column is a simulation and each row 
+            as.data.frame()
+    ) %>%
+    pivot_longer(-c(incumbency, district), names_to='simulation_index') %>%
+    mutate(simulation_index = ifelse(simulation_index == 'dem_vote_share', 'Actual Dem Vote Share', str_replace(simulation_index, 'V', 'Sim ')))
+
+head(density_check)
+```
+
+Each thin line in the graph below represents a single row of `fitted_88`. 
+
+```{r chapter_10_dem_fit_check, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+density_check %>%
+    filter(simulation_index != 'Actual Dem Vote Share') %>%
+    #ggplot(aes(x=value, group=simulation_index)) + 
+    ggplot(aes(x=value, color=incumbency, group=interaction(incumbency, simulation_index))) + 
+    geom_density(size=0.1) +
+    geom_density(data=density_check %>% filter(simulation_index == 'Actual Dem Vote Share'),
+                 size=3) +
+    scale_color_manual(values=c("#0015BC", "#FF0000", "#1AAF54")) +
+    labs(title="Dem Vote Share Density - by Incumbency",
+         subtitle = "Thick lines are actual densities from the outcome variable;\nthin lines are simulated values from the fitted data",
+         x="Dem Vote Share")
+```
+
+```{r include=FALSE}
+rm(create_election_results)
+rm(election_results_88)
+rm(model_88)
+rm(fitted_88)
+rm(density_check)
+```
+
