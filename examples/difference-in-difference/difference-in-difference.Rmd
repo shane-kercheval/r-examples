@@ -215,7 +215,6 @@ get_regression_equation(reg_results, .round_by = 5)
 ## Coefficient interpretation
 
 Intercept coefficient is the average log(revenue) of control before applying treatment 
-
 ```{r}
 sem_per_dma %>%
     filter(variant == 'Control' & treatment_period == 0) %>%
