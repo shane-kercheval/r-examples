@@ -35,6 +35,9 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
 
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
               destfile = 'data/nes.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
+              destfile = 'data/kidiq.csv', quiet = TRUE)
 ```
 
 # Overview
@@ -83,6 +86,7 @@ hibbs <- read.table('data/hibbs.dat', header = TRUE)
 metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 congress <- read_csv("data/congress.csv")
 nes_data <- read.csv("data/nes.csv", sep = ' ')
+kid_iq <- kidiq
 ```
 
 # Chapter 1 - Overview
@@ -1748,4 +1752,3 @@ rm(model_88)
 rm(fitted_88)
 rm(density_check)
 ```
-
