@@ -1779,36 +1779,6 @@ density_check %>%
          x="Dem Vote Share")
 ```
 
-## 11.8 Cross Validation
-
-
-
-```{r}
-mae <- function(.model) {
-    mean(abs(residuals(.model)))
-}
-mae(model)
-```
-
-```{r}
-rmse = function(.model){
-  sqrt(mean((residuals(.model))^2))
-}
-rmse(model)
-```
-
-
-
-```{r}
-
-```
-
-
-
-
-
-
-
 ```{r include=FALSE}
 rm(create_election_results)
 rm(election_results_88)
@@ -1817,8 +1787,170 @@ rm(fitted_88)
 rm(density_check)
 ```
 
+## 11.6 Residual Standard Deviation and Explained R^2
 
 
+```{r}
+set.seed(1)
+model <- stan_glm(kid_score ~ mom_hs + mom_iq, data=kid_iq, refresh=0)
+print(model)
+```
+
+### `loo()` & `Posterior Predictive Log Score`
+
+```{r}
+print(loo(model))
+```
+
+See pg 176 for description of metrics.
+
+
+### `loo_compare`
+
+```{r}
+loo_compare(loo(stan_glm(kid_score ~ mom_hs + mom_iq, data=kid_iq, refresh=0)),
+            loo(stan_glm(kid_score ~ mom_hs*mom_iq, data=kid_iq, refresh=0)))
+```
+
+Seems like I get positive 3.6 elpd_diff while book gets negative, but authors code has similar numbers to mine.
+
+Different output between book and code makes it a little confusing, need to dig into explanation on pg 178.
+
+See pg 178 for description
+
+---
+
+### loo `R^2` and other metrics
+
+```{r}
+R2(y = model$y, pred = model$fitted.values)
+```
+
+Bayesian R2
+
+```{r}
+length(bayes_R2(model))
+quantile(bayes_R2(model), c(0.025, 0.5, 0.975))
+```
+
+Just for fun, Mean Absolute Error and Root Mean Squared Error
+
+```{r}
+mae <- function(.actual, .fitted) {
+    .residuals <- .actual - .fitted
+    mean(abs(.residuals))
+}
+mae(model$y, model$fitted.values)
+```
+
+```{r}
+rmse = function(.actual, .fitted){
+    .residuals <- .actual - .fitted
+    sqrt(mean((.residuals)^2))
+}
+rmse(model$y, model$fitted.values)
+```
+
+## 11.8 Cross Validation
+
+> `loo_predict()` computes mean of LOO predictive distribution.
+
+```{r}
+loo_fitted_values <- function(.model) {
+    set.seed(1)
+    loo_predict(.model)$value
+}
+loo_residuals <- function(.model) {
+    .model$y - loo_fitted_values(.model)
+}
+kid_score_loo_residuals <- loo_residuals(model)
+kid_score_residuals <- residuals(model)
+
+length(kid_score_loo_residuals) == length(kid_score_residuals)
+```
+
+```{r}
+kid_iq_residuals <-  data.frame(kid_score=kid_iq$kid_score,
+                                   `LOO Residuals`=kid_score_loo_residuals,
+                                   `In Sample Residuals`=kid_score_residuals,
+                                   check.names = FALSE)
+
+kid_iq_residuals %>%
+    pivot_longer(-kid_score) %>%
+    ggplot(aes(x=kid_score, y=value, color=name)) +
+    geom_point() +
+    geom_segment(data=kid_iq_residuals, aes(xend=kid_score, y=`In Sample Residuals`, yend=`LOO Residuals`, color=NULL)) +
+    coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3))
+```
+
+In-Sample R2:
+
+```{r}
+R2(y = model$y, pred = model$fitted.values)
+```
+
+LOO R2:
+
+```{r}
+kids_iq_loo_fitted_values <- loo_fitted_values(model)
+R2(y = model$y, pred = kids_iq_loo_fitted_values)
+```
+
+---
+
+In-Sample Bayes R2:
+
+```{r}
+kids_iq_bayes_r2 <- bayes_R2(model)
+length(kids_iq_bayes_r2)
+quantile(kids_iq_bayes_r2, c(0.025, 0.5, 0.975))
+```
+
+LOO Bayes R2:
+
+```{r}
+kids_iq_bayes_loo_r2 <- loo_R2(model)
+length(kids_iq_bayes_loo_r2)
+quantile(kids_iq_bayes_loo_r2, c(0.025, 0.5, 0.975))
+```
+
+---
+
+In Sample Mean Absolute Error:
+
+```{r}
+mae(model$y, model$fitted.values)
+```
+
+Loo Mean Absolute Error:
+
+```{r}
+mae(model$y, kids_iq_loo_fitted_values)
+```
+
+---
+
+In Sample Root Mean Squared Error:
+
+```{r}
+rmse(model$y, model$fitted.values)
+```
+
+Loo Root Mean Squared Error:
+
+```{r}
+rmse(model$y, kids_iq_loo_fitted_values)
+```
+
+```{r}
+rm(model)
+rm(kid_score_loo_residuals)
+rm(kid_score_residuals)
+rm(kid_iq_residuals)
+rm(kids_iq_bayes_r2)
+rm(kids_iq_bayes_loo_r2)
+rm(kids_iq_loo_fitted_values)
+```
 
 
 
