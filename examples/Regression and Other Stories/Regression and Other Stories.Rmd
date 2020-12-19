@@ -38,6 +38,9 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
 
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
               destfile = 'data/kidiq.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
+              destfile = 'data/earnings.csv', quiet = TRUE)
 ```
 
 # Overview
@@ -87,6 +90,7 @@ metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv"
 congress <- read_csv("data/congress.csv")
 nes_data <- read.csv("data/nes.csv", sep = ' ')
 kid_iq <- kidiq
+earnings <- read_csv("data/earnings.csv")
 ```
 
 # Chapter 1 - Overview
@@ -1955,6 +1959,12 @@ rm(kid_iq_residuals)
 rm(kids_iq_bayes_r2)
 rm(kids_iq_bayes_loo_r2)
 rm(kids_iq_loo_fitted_values)
+```
+
+# Chapter 12 - Transformations and regression
+
+```{r}
+head(earnings)
 ```
 
 
