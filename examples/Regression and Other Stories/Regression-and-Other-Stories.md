@@ -29,6 +29,8 @@
         (`MAD SD`)](#median-absolute-deviation-mad-sd)
 -   [Chapter 9 - Prediction and Bayesian
     Inference](#chapter-9---prediction-and-bayesian-inference)
+-   [pg. 104 describes how sigma (residual standard deviation) is
+    calculated.](#pg.-104-describes-how-sigma-residual-standard-deviation-is-calculated.)
     -   [Point Prediction](#point-prediction)
     -   [Linear Predictor with
         Uncertainty](#linear-predictor-with-uncertainty)
@@ -50,6 +52,15 @@
 -   [Chapter 11](#chapter-11)
     -   [Comparing data to replications from a fitted
         model](#comparing-data-to-replications-from-a-fitted-model)
+    -   [11.6 Residual Standard Deviation and Explained
+        R^2](#residual-standard-deviation-and-explained-r2)
+        -   [`loo()` &
+            `Posterior Predictive Log Score`](#loo-posterior-predictive-log-score)
+        -   [`loo_compare`](#loo_compare)
+        -   [loo `R^2` and other metrics](#loo-r2-and-other-metrics)
+    -   [11.8 Cross Validation](#cross-validation)
+-   [Chapter 12 - Transformations and
+    regression](#chapter-12---transformations-and-regression)
 
 Overview
 ========
@@ -152,8 +163,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.5e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.55 seconds.
+    ## Chain 1: Gradient evaluation took 5.6e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.56 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -170,15 +181,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.032375 seconds (Warm-up)
-    ## Chain 1:                0.024778 seconds (Sampling)
-    ## Chain 1:                0.057153 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.031689 seconds (Warm-up)
+    ## Chain 1:                0.026961 seconds (Sampling)
+    ## Chain 1:                0.05865 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 9e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 2: Gradient evaluation took 1e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -195,9 +206,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.030323 seconds (Warm-up)
-    ## Chain 2:                0.026813 seconds (Sampling)
-    ## Chain 2:                0.057136 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.034266 seconds (Warm-up)
+    ## Chain 2:                0.025409 seconds (Sampling)
+    ## Chain 2:                0.059675 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -220,15 +231,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.030007 seconds (Warm-up)
-    ## Chain 3:                0.024732 seconds (Sampling)
-    ## Chain 3:                0.054739 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.053622 seconds (Warm-up)
+    ## Chain 3:                0.02406 seconds (Sampling)
+    ## Chain 3:                0.077682 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 7e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+    ## Chain 4: Gradient evaluation took 8e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -245,9 +256,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.027238 seconds (Warm-up)
-    ## Chain 4:                0.025119 seconds (Sampling)
-    ## Chain 4:                0.052357 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.031396 seconds (Warm-up)
+    ## Chain 4:                0.025663 seconds (Sampling)
+    ## Chain 4:                0.057059 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -271,23 +282,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.4  48.5 
-    ## growth       3.0    0.7  2.1   3.0   3.9 
+    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
+    ## growth       3.0    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.1  52.0  53.8 
+    ## mean_PPD 52.0    1.4 50.3  52.0  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3207 
-    ## growth        0.0  1.0  3399 
-    ## sigma         0.0  1.0  2450 
-    ## mean_PPD      0.0  1.0  3593 
-    ## log-posterior 0.0  1.0  1323 
+    ## (Intercept)   0.0  1.0  3092 
+    ## growth        0.0  1.0  3203 
+    ## sigma         0.0  1.0  2539 
+    ## mean_PPD      0.0  1.0  3815 
+    ## log-posterior 0.0  1.0  1464 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -306,7 +317,7 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.4    1.7  
+    ## (Intercept) 46.3    1.7  
     ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
@@ -326,7 +337,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.367759    3.027296
+    ##    46.28277     3.04144
 
 ------------------------------------------------------------------------
 
@@ -1301,6 +1312,7 @@ head(hibbs)
 
 ``` r
 # refresh = 0 supresses the default Stan sampling progress output
+set.seed(1)
 model <- stan_glm(vote ~ growth, data=hibbs, refresh=0)
 print(model)
 ```
@@ -1337,20 +1349,20 @@ head(simulations)
 
     ##           parameters
     ## iterations (Intercept)   growth    sigma
-    ##       [1,]    47.62082 2.864881 6.521684
-    ##       [2,]    45.43180 3.159804 2.789614
-    ##       [3,]    45.00267 3.788277 2.664788
-    ##       [4,]    47.63697 2.772102 2.962032
-    ##       [5,]    46.50408 2.978387 3.019823
-    ##       [6,]    46.60710 3.003798 3.251705
+    ##       [1,]    46.84191 2.530584 4.863014
+    ##       [2,]    46.82430 2.902973 3.000165
+    ##       [3,]    45.71522 2.970800 4.020096
+    ##       [4,]    46.84615 3.099256 3.573461
+    ##       [5,]    46.14691 2.877877 3.853315
+    ##       [6,]    42.49051 4.333150 4.803818
 
 The above matrix has columns for each model parameter (plus a column for
 `sigma` which is the `residual standard deviation`). Each row is a
 simulated outcome.
 
-In the first simulation, the `Intercept` is `47.62082`, the `growth`
-coefficient is `2.8648807`, and the `residual standard deviation` is
-`6.5216841`.
+In the first simulation, the `Intercept` is `46.8419112`, the `growth`
+coefficient is `2.5305836`, and the `residual standard deviation` is
+`4.8630139`.
 
 ``` r
 model %>% tidy()
@@ -1359,32 +1371,82 @@ model %>% tidy()
     ## # A tibble: 2 x 3
     ##   term        estimate std.error
     ##   <chr>          <dbl>     <dbl>
-    ## 1 (Intercept)    46.3      1.69 
-    ## 2 growth          3.03     0.696
+    ## 1 (Intercept)    46.3      1.74 
+    ## 2 growth          3.04     0.741
 
 ``` r
 median(simulations[, '(Intercept)'])
 ```
 
-    ## [1] 46.3117
+    ## [1] 46.26798
 
 ``` r
 mad(simulations[, '(Intercept)'])
 ```
 
-    ## [1] 1.689381
+    ## [1] 1.74052
 
 ``` r
 median(simulations[, 'growth'])
 ```
 
-    ## [1] 3.032582
+    ## [1] 3.040686
 
 ``` r
 mad(simulations[, 'growth'])
 ```
 
-    ## [1] 0.6956641
+    ## [1] 0.7405457
+
+``` r
+median(simulations[, 'sigma'])
+```
+
+    ## [1] 3.900757
+
+``` r
+mad(simulations[, 'sigma'])
+```
+
+    ## [1] 0.7097398
+
+pg. 104 describes how sigma (residual standard deviation) is calculated.
+========================================================================
+
+They mention that
+
+> a natural way to estimate sigma would be to simply take the standard
+> deviation of the residuals \[…\], but this would slightly
+> underestimate sigma because of overfitting…
+
+You can see that if we take the standard deviation of the residuals, we
+get a slightly lower number than the sigma that is given from the model.
+
+``` r
+sd(residuals(model))
+```
+
+    ## [1] 3.635787
+
+Direct calculation:
+
+``` r
+num_coefficients <- length(coefficients(model))
+sqrt(sum(residuals(model)^2) / (length(residuals(model)) - num_coefficients))
+```
+
+    ## [1] 3.763442
+
+Although this is still lower, I assume because there is some simulation
+happening rather than the direct calculation.
+
+The residuals are equivalent to `actual - fitted`:
+
+``` r
+all(model$y - fitted(model) == residuals(model))
+```
+
+    ## [1] TRUE
 
 ------------------------------------------------------------------------
 
@@ -1439,7 +1501,7 @@ predict(object = model, newdata = new_data)
 ```
 
     ##        1 
-    ## 52.36997
+    ## 52.36826
 
 Linear Predictor with Uncertainty
 ---------------------------------
@@ -1454,12 +1516,12 @@ head(y_linpredict)
 
     ##           
     ## iterations        1
-    ##       [1,] 53.35058
-    ##       [2,] 51.75141
-    ##       [3,] 52.57922
-    ##       [4,] 53.18117
-    ##       [5,] 52.46085
-    ##       [6,] 52.61470
+    ##       [1,] 51.90308
+    ##       [2,] 52.63024
+    ##       [3,] 51.65682
+    ##       [4,] 53.04466
+    ##       [5,] 51.90266
+    ##       [6,] 51.15681
 
 > Equivalently we can use the function `posterior_epred`, which returns
 > the expected prediction for a new data point. For linear regression,
@@ -1473,12 +1535,12 @@ head(posterior_epred(object=model, newdata = new_data))
 
     ##           
     ## iterations        1
-    ##       [1,] 53.35058
-    ##       [2,] 51.75141
-    ##       [3,] 52.57922
-    ##       [4,] 53.18117
-    ##       [5,] 52.46085
-    ##       [6,] 52.61470
+    ##       [1,] 51.90308
+    ##       [2,] 52.63024
+    ##       [3,] 51.65682
+    ##       [4,] 53.04466
+    ##       [5,] 51.90266
+    ##       [6,] 51.15681
 
 To understand what these predictions are, we could have calculated them
 by hand using the simulations output.
@@ -1492,12 +1554,12 @@ simulations %>%
 ```
 
     ##   (Intercept)   growth prediction
-    ## 1    47.62082 2.864881   53.35058
-    ## 2    45.43180 3.159804   51.75141
-    ## 3    45.00267 3.788277   52.57922
-    ## 4    47.63697 2.772102   53.18117
-    ## 5    46.50408 2.978387   52.46085
-    ## 6    46.60710 3.003798   52.61470
+    ## 1    46.84191 2.530584   51.90308
+    ## 2    46.82430 2.902973   52.63024
+    ## 3    45.71522 2.970800   51.65682
+    ## 4    46.84615 3.099256   53.04466
+    ## 5    46.14691 2.877877   51.90266
+    ## 6    42.49051 4.333150   51.15681
 
 ``` r
 simulate_election_results_linpred_conf_int <- function(.growth) {
@@ -1512,7 +1574,7 @@ simulate_election_results_linpred_conf_int(2)
 ```
 
     ##   prediction conf.low conf.high
-    ## 1   52.36322 50.30846  54.50298
+    ## 1   52.36062 50.39318  54.40416
 
 ``` r
 data.frame(growth = -6:6) %>%
@@ -1555,12 +1617,12 @@ head(y_pred)
 ```
 
     ##             1
-    ## [1,] 49.26505
-    ## [2,] 52.26371
-    ## [3,] 50.35245
-    ## [4,] 57.90645
-    ## [5,] 53.45591
-    ## [6,] 49.94677
+    ## [1,] 48.85662
+    ## [2,] 53.18120
+    ## [3,] 48.29752
+    ## [4,] 58.74534
+    ## [5,] 53.17236
+    ## [6,] 47.21543
 
 If we were to do this by hand, we do the same as before, but add the
 error term to the computation (which assumes normal distribution).
@@ -1583,12 +1645,12 @@ simulations %>%
 ```
 
     ##   (Intercept)   growth    sigma      error prediction
-    ## 1    47.62082 2.864881 6.521684 -4.0855339   49.26505
-    ## 2    45.43180 3.159804 2.789614  0.5122939   52.26371
-    ## 3    45.00267 3.788277 2.664788 -2.2267734   50.35245
-    ## 4    47.63697 2.772102 2.962032  4.7252733   57.90645
-    ## 5    46.50408 2.978387 3.019823  0.9950550   53.45591
-    ## 6    46.60710 3.003798 3.251705 -2.6679209   49.94677
+    ## 1    46.84191 2.530584 4.863014 -3.0464536   48.85662
+    ## 2    46.82430 2.902973 3.000165  0.5509602   53.18120
+    ## 3    45.71522 2.970800 4.020096 -3.3593075   48.29752
+    ## 4    46.84615 3.099256 3.573461  5.7006740   58.74534
+    ## 5    46.14691 2.877877 3.853315  1.2696974   53.17236
+    ## 6    42.49051 4.333150 4.803818 -3.9413812   47.21543
 
 ------------------------------------------------------------------------
 
@@ -1611,9 +1673,9 @@ simulate_election_results_predict_conf_int(2)
 ```
 
     ##   prediction conf.low.68 conf.high.68 conf.low.95 conf.high.95
-    ## 1   52.38854    48.31445     56.54039    43.57586     61.00448
+    ## 1   52.34582     48.1972     56.60639    43.25028     61.14292
     ##   probability_50_plus stat.sig
-    ## 1             0.71825    FALSE
+    ## 1               0.719    FALSE
 
 ``` r
 set.seed(1)
@@ -1626,19 +1688,19 @@ results
     ## # A tibble: 13 x 8
     ##    growth prediction conf.low.68 conf.high.68 conf.low.95 conf.high.95
     ##     <int>      <dbl>       <dbl>        <dbl>       <dbl>        <dbl>
-    ##  1     -6       28.1        21.2         35.1        13.8         42.4
-    ##  2     -5       31.1        24.8         37.4        18.2         44.0
-    ##  3     -4       34.2        28.2         39.9        21.8         45.9
-    ##  4     -3       37.1        31.9         42.3        26.2         48.0
-    ##  5     -2       40.3        35.5         45.0        30.4         50.6
-    ##  6     -1       43.4        38.8         47.8        33.9         53.0
-    ##  7      0       46.3        41.9         50.6        37.4         55.2
-    ##  8      1       49.4        45.1         53.6        40.8         58.2
-    ##  9      2       52.2        48.3         56.5        44.0         60.8
-    ## 10      3       55.4        51.2         59.3        46.8         64.0
-    ## 11      4       58.4        54.1         62.9        49.7         67.8
-    ## 12      5       61.5        56.7         66.1        51.6         71.0
-    ## 13      6       64.4        59.5         69.5        54.1         74.7
+    ##  1     -6       28.1        20.6         35.2        12.9         43.2
+    ##  2     -5       31.0        24.3         37.6        17.5         44.5
+    ##  3     -4       34.1        28.2         40.1        21.7         46.6
+    ##  4     -3       37.0        31.8         42.5        26.1         48.7
+    ##  5     -2       40.3        35.3         45.2        30.1         50.6
+    ##  6     -1       43.4        38.8         47.9        34.1         52.8
+    ##  7      0       46.3        42.0         50.6        37.5         55.2
+    ##  8      1       49.3        45.2         53.6        40.7         58.1
+    ##  9      2       52.3        48.2         56.4        44.2         60.7
+    ## 10      3       55.4        51.1         59.3        46.7         63.7
+    ## 11      4       58.5        54.1         62.8        49.6         67.7
+    ## 12      5       61.5        56.6         66.2        51.6         71.1
+    ## 13      6       64.4        59.4         69.7        54.3         75.4
     ## # … with 2 more variables: probability_50_plus <dbl>, stat.sig <lgl>
 
 Note the confidence intervals are being simulated so the numbers/graph
@@ -1712,12 +1774,12 @@ head(posterior_predict(object=model, newdata = data.frame(growth=-2:2)))
 ```
 
     ##             1        2        3        4        5
-    ## [1,] 46.58267 55.34217 55.85036 53.39316 53.90841
-    ## [2,] 36.18921 43.53023 45.43683 50.94873 50.97626
-    ## [3,] 36.13699 38.45776 48.39274 51.15055 53.88005
-    ## [4,] 42.56424 44.40833 52.69218 53.49988 58.24306
-    ## [5,] 34.25539 43.33577 45.38951 51.45033 52.82074
-    ## [6,] 40.64915 42.16343 48.14879 51.82954 52.06827
+    ## [1,] 45.27913 52.20514 52.97842 51.54050 52.31903
+    ## [2,] 37.87475 45.27452 46.82971 52.26231 51.79659
+    ## [3,] 37.82885 38.58577 50.82949 52.24572 53.61926
+    ## [4,] 41.21643 43.19611 52.94486 53.67422 59.15144
+    ## [5,] 32.36262 43.02670 44.72471 51.53579 52.36188
+    ## [6,] 33.89755 36.03021 44.76809 50.10132 50.34956
 
 ``` r
 all_predictions <- posterior_predict(object=model, newdata = data.frame(growth=-6:6))
@@ -1725,47 +1787,47 @@ head(all_predictions, 20)
 ```
 
     ##              1        2        3        4        5        6        7        8
-    ##  [1,] 27.26693 32.33322 28.76607 33.15022 34.57823 48.08704 46.81508 51.21703
-    ##  [2,] 30.14328 29.64747 30.78392 28.90250 35.17564 44.78823 47.81599 47.56478
-    ##  [3,] 22.58081 23.33706 31.41935 38.43448 38.45445 47.11420 49.10445 47.38917
-    ##  [4,] 32.06930 39.43968 34.91375 43.50813 38.07705 43.44959 46.23782 50.93487
-    ##  [5,] 31.07284 29.31486 40.00841 34.57928 39.41087 43.09415 45.62382 49.71571
-    ##  [6,] 28.63732 30.33937 37.25512 32.14609 39.96298 44.90074 43.60733 49.78096
-    ##  [7,] 27.89311 34.84910 29.34077 41.36091 35.04268 46.57322 45.56597 55.36566
-    ##  [8,] 22.78106 29.59833 29.56383 36.68117 36.77547 40.08542 49.32242 56.71129
-    ##  [9,] 27.45513 30.07297 36.60706 35.81191 51.21570 35.35255 50.09946 45.07317
-    ## [10,] 27.32359 28.69936 38.60485 36.05598 38.70026 40.99028 43.97654 56.10664
-    ## [11,] 35.47400 36.83168 42.54231 44.85211 45.64484 49.01411 49.62550 50.39823
-    ## [12,] 22.25673 18.14444 28.10293 29.47912 41.03656 41.64295 48.10747 51.23938
-    ## [13,] 30.21465 32.03455 30.70669 39.55717 36.56647 41.98881 45.63678 50.59790
-    ## [14,] 39.85085 40.34501 35.78144 47.34916 47.53722 45.05452 52.08145 52.07576
-    ## [15,] 39.34603 37.86523 45.72294 43.88172 47.16000 51.80827 49.54676 55.55445
-    ## [16,] 35.58506 44.59870 43.61821 51.84381 45.43059 48.71842 53.98606 48.76976
-    ## [17,] 33.46959 33.77459 24.13620 30.17920 39.94170 37.24019 43.85713 52.72299
-    ## [18,] 30.87361 30.96835 34.63624 45.13329 40.04962 48.09700 50.98859 53.09266
-    ## [19,] 34.55347 29.68911 25.10473 36.54526 35.88297 32.96661 46.07625 48.53539
-    ## [20,] 29.68140 31.03276 33.13615 33.34981 43.20603 43.82724 44.13889 55.74255
+    ##  [1,] 29.29867 33.47077 31.20519 34.86864 36.32780 46.79522 46.24110 49.91782
+    ##  [2,] 33.35378 32.32523 33.05214 30.53339 36.78469 46.62747 49.38844 48.62294
+    ##  [3,] 28.35478 26.75146 36.20021 44.03903 41.32497 51.64486 51.90316 46.57130
+    ##  [4,] 29.53539 38.18211 32.47686 42.60024 35.80299 42.03948 45.15819 50.57974
+    ##  [5,] 31.99193 28.82617 41.54866 33.69848 38.94106 42.71838 45.02369 49.32241
+    ##  [6,] 16.56992 18.97997 29.09234 21.44021 32.88386 40.07409 38.05889 47.07490
+    ##  [7,] 20.05567 28.53333 22.43962 36.83751 29.79699 43.62252 42.79077 54.59286
+    ##  [8,] 22.81106 29.69341 29.24047 36.44407 36.12902 39.25654 48.72938 56.22365
+    ##  [9,] 33.96514 35.81379 42.10013 40.08134 56.41840 37.32529 52.91800 46.10469
+    ## [10,] 32.24065 32.62485 43.88731 39.26625 41.26822 42.81838 45.25648 59.35609
+    ## [11,] 27.26866 29.51533 37.21186 40.65057 42.18993 46.95509 48.26741 49.78173
+    ## [12,] 29.70068 21.83215 33.18967 32.82051 46.36280 44.94180 51.52523 53.55504
+    ## [13,] 32.79545 34.23412 31.63193 42.09595 37.35913 43.42236 47.20777 52.67891
+    ## [14,] 37.10348 37.94721 34.02531 45.30308 45.85839 43.89719 50.89641 51.26916
+    ## [15,] 31.65625 31.26840 39.43164 38.71377 42.68371 47.90813 46.80540 53.27462
+    ## [16,] 18.28585 34.93707 33.40285 48.62013 37.20043 43.43291 53.26785 44.02608
+    ## [17,] 40.06424 40.52680 35.52410 39.14048 44.80124 43.61130 47.54314 52.71107
+    ## [18,] 28.14862 29.49879 32.93942 40.37545 38.69600 44.69885 47.68531 50.21103
+    ## [19,] 32.58535 27.74201 23.20104 35.96711 35.66203 32.92255 47.49127 50.55737
+    ## [20,] 30.02505 30.87743 32.49599 32.18927 41.70647 41.81497 41.60808 52.90559
     ##              9       10       11       12       13
-    ##  [1,] 59.48901 51.64006 61.25686 60.14944 59.80178
-    ##  [2,] 56.14297 51.16957 60.43229 64.93340 61.40858
-    ##  [3,] 51.73242 58.99176 57.83935 65.30924 68.48958
-    ##  [4,] 52.28218 59.75567 57.15346 66.16872 62.20618
-    ##  [5,] 55.08878 56.35769 57.27590 62.13067 66.00643
-    ##  [6,] 53.49666 56.82682 55.82438 58.57286 71.14724
-    ##  [7,] 54.06875 57.19627 59.87327 55.53374 63.70790
-    ##  [8,] 55.42542 57.85049 58.81904 63.99051 65.58196
-    ##  [9,] 45.76719 55.58322 57.56189 62.52415 62.39559
-    ## [10,] 56.33341 54.32839 57.57029 61.61716 63.37175
-    ## [11,] 46.37298 50.70586 58.51604 58.71830 61.96215
-    ## [12,] 50.37424 54.60613 65.31832 68.73379 66.92885
-    ## [13,] 52.30561 52.64160 57.77425 57.10227 66.31723
-    ## [14,] 51.40101 57.56836 57.02827 55.71739 59.63451
-    ## [15,] 46.64437 48.65122 64.32144 73.38135 60.94164
-    ## [16,] 56.19864 56.13497 56.18857 51.84202 57.09881
-    ## [17,] 56.32049 54.10519 50.63476 56.06837 62.42092
-    ## [18,] 56.91258 55.87893 57.77936 65.87154 70.18914
-    ## [19,] 41.41528 49.57154 57.89952 63.68779 64.66678
-    ## [20,] 58.07777 54.06189 63.57910 62.23571 66.94661
+    ##  [1,] 56.48031 51.02193 58.58720 58.15577 58.29086
+    ##  [2,] 57.35327 51.50916 60.97568 65.32120 61.03501
+    ##  [3,] 50.37934 58.58658 54.10387 62.62873 64.68241
+    ##  [4,] 51.96010 60.73121 57.34678 67.97792 62.95235
+    ##  [5,] 55.25592 55.95250 56.20157 61.47373 65.49665
+    ##  [6,] 52.45976 57.27506 55.68969 59.64566 78.11765
+    ##  [7,] 53.42249 57.42449 60.89982 56.17250 66.07425
+    ##  [8,] 54.43104 56.61124 57.23213 62.35254 63.64029
+    ##  [9,] 45.77336 55.77863 56.90300 61.40822 60.14477
+    ## [10,] 58.27490 54.34744 57.11157 60.90232 61.76962
+    ## [11,] 45.28903 51.26062 61.58576 62.38587 66.99400
+    ## [12,] 50.12336 53.65616 66.04353 68.46080 63.74499
+    ## [13,] 53.97357 53.50732 59.19865 57.43844 68.37034
+    ## [14,] 51.01149 57.20078 57.07000 56.21293 60.28194
+    ## [15,] 46.08393 48.88965 64.20665 73.47072 63.04801
+    ## [16,] 57.79366 57.92769 58.27510 50.61594 60.43114
+    ## [17,] 54.98331 54.06062 52.44805 55.72949 59.51601
+    ## [18,] 53.74061 54.43061 56.83720 62.86626 66.68701
+    ## [19,] 43.27779 52.49682 61.90131 68.56289 70.03041
+    ## [20,] 54.76033 50.14453 59.31635 57.42329 61.69840
 
 ``` r
 all_predictions <- all_predictions %>%
@@ -2682,3 +2744,289 @@ density_check %>%
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_dem_fit_check-1.png)
+
+11.6 Residual Standard Deviation and Explained R^2
+--------------------------------------------------
+
+``` r
+set.seed(1)
+model <- stan_glm(kid_score ~ mom_hs + mom_iq, data=kid_iq, refresh=0)
+print(model)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      kid_score ~ mom_hs + mom_iq
+    ##  observations: 434
+    ##  predictors:   3
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 25.8    6.0  
+    ## mom_hs       6.0    2.2  
+    ## mom_iq       0.6    0.1  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 18.2    0.6  
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+### `loo()` & `Posterior Predictive Log Score`
+
+``` r
+print(loo(model))
+```
+
+    ## 
+    ## Computed from 4000 by 434 log-likelihood matrix
+    ## 
+    ##          Estimate   SE
+    ## elpd_loo  -1876.0 14.2
+    ## p_loo         4.0  0.4
+    ## looic      3752.0 28.4
+    ## ------
+    ## Monte Carlo SE of elpd_loo is 0.0.
+    ## 
+    ## All Pareto k estimates are good (k < 0.5).
+    ## See help('pareto-k-diagnostic') for details.
+
+See pg 176 for description of metrics.
+
+### `loo_compare`
+
+``` r
+loo_compare(loo(stan_glm(kid_score ~ mom_hs + mom_iq, data=kid_iq, refresh=0)),
+            loo(stan_glm(kid_score ~ mom_hs*mom_iq, data=kid_iq, refresh=0)))
+```
+
+    ##                                                                   elpd_diff
+    ## stan_glm(kid_score ~ mom_hs * mom_iq, data = kid_iq, refresh = 0)  0.0     
+    ## stan_glm(kid_score ~ mom_hs + mom_iq, data = kid_iq, refresh = 0) -3.3     
+    ##                                                                   se_diff
+    ## stan_glm(kid_score ~ mom_hs * mom_iq, data = kid_iq, refresh = 0)  0.0   
+    ## stan_glm(kid_score ~ mom_hs + mom_iq, data = kid_iq, refresh = 0)  2.7
+
+Seems like I get positive 3.6 elpd\_diff while book gets negative, but
+authors code has similar numbers to mine.
+
+Different output between book and code makes it a little confusing, need
+to dig into explanation on pg 178.
+
+See pg 178 for description
+
+------------------------------------------------------------------------
+
+### loo `R^2` and other metrics
+
+``` r
+R2(y = model$y, pred = model$fitted.values)
+```
+
+    ## [1] 0.214146
+
+Bayesian R2
+
+``` r
+length(bayes_R2(model))
+```
+
+    ## [1] 4000
+
+``` r
+quantile(bayes_R2(model), c(0.025, 0.5, 0.975))
+```
+
+    ##      2.5%       50%     97.5% 
+    ## 0.1516164 0.2141322 0.2816291
+
+Just for fun, Mean Absolute Error and Root Mean Squared Error
+
+``` r
+mae <- function(.actual, .fitted) {
+    .residuals <- .actual - .fitted
+    mean(abs(.residuals))
+}
+mae(model$y, model$fitted.values)
+```
+
+    ## [1] 14.38544
+
+``` r
+rmse = function(.actual, .fitted){
+    .residuals <- .actual - .fitted
+    sqrt(mean((.residuals)^2))
+}
+rmse(model$y, model$fitted.values)
+```
+
+    ## [1] 18.07289
+
+11.8 Cross Validation
+---------------------
+
+> `loo_predict()` computes mean of LOO predictive distribution.
+
+``` r
+loo_fitted_values <- function(.model) {
+    set.seed(1)
+    loo_predict(.model)$value
+}
+loo_residuals <- function(.model) {
+    .model$y - loo_fitted_values(.model)
+}
+kid_score_loo_residuals <- loo_residuals(model)
+```
+
+    ## Running PSIS to compute weights...
+
+``` r
+kid_score_residuals <- residuals(model)
+
+length(kid_score_loo_residuals) == length(kid_score_residuals)
+```
+
+    ## [1] TRUE
+
+``` r
+kid_iq_residuals <-  data.frame(kid_score=kid_iq$kid_score,
+                                   `LOO Residuals`=kid_score_loo_residuals,
+                                   `In Sample Residuals`=kid_score_residuals,
+                                   check.names = FALSE)
+
+kid_iq_residuals %>%
+    pivot_longer(-kid_score) %>%
+    ggplot(aes(x=kid_score, y=value, color=name)) +
+    geom_point() +
+    geom_segment(data=kid_iq_residuals, aes(xend=kid_score, y=`In Sample Residuals`, yend=`LOO Residuals`, color=NULL)) +
+    coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3)) +
+    labs(title="In Sample vs LOO Residuals",
+         subtitle="Graph zoomed in to see differences.",
+         y="Residual Values")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_11_in_sample_vs_loo-1.png)
+
+------------------------------------------------------------------------
+
+In-Sample R2:
+
+``` r
+R2(y = model$y, pred = model$fitted.values)
+```
+
+    ## [1] 0.214146
+
+LOO R2:
+
+``` r
+kids_iq_loo_fitted_values <- loo_fitted_values(model)
+```
+
+    ## Running PSIS to compute weights...
+
+``` r
+R2(y = model$y, pred = kids_iq_loo_fitted_values)
+```
+
+    ## [1] 0.203352
+
+------------------------------------------------------------------------
+
+In-Sample Bayes R2:
+
+``` r
+kids_iq_bayes_r2 <- bayes_R2(model)
+length(kids_iq_bayes_r2)
+```
+
+    ## [1] 4000
+
+``` r
+quantile(kids_iq_bayes_r2, c(0.025, 0.5, 0.975))
+```
+
+    ##      2.5%       50%     97.5% 
+    ## 0.1516164 0.2141322 0.2816291
+
+LOO Bayes R2:
+
+``` r
+kids_iq_bayes_loo_r2 <- loo_R2(model)
+length(kids_iq_bayes_loo_r2)
+```
+
+    ## [1] 4000
+
+``` r
+quantile(kids_iq_bayes_loo_r2, c(0.025, 0.5, 0.975))
+```
+
+    ##      2.5%       50%     97.5% 
+    ## 0.1351579 0.2054860 0.2701246
+
+------------------------------------------------------------------------
+
+In Sample Mean Absolute Error:
+
+``` r
+mae(model$y, model$fitted.values)
+```
+
+    ## [1] 14.38544
+
+Loo Mean Absolute Error:
+
+``` r
+mae(model$y, kids_iq_loo_fitted_values)
+```
+
+    ## [1] 14.47823
+
+------------------------------------------------------------------------
+
+In Sample Root Mean Squared Error:
+
+``` r
+rmse(model$y, model$fitted.values)
+```
+
+    ## [1] 18.07289
+
+Loo Root Mean Squared Error:
+
+``` r
+rmse(model$y, kids_iq_loo_fitted_values)
+```
+
+    ## [1] 18.19659
+
+``` r
+rm(model)
+rm(kid_score_loo_residuals)
+rm(kid_score_residuals)
+rm(kid_iq_residuals)
+rm(kids_iq_bayes_r2)
+rm(kids_iq_bayes_loo_r2)
+rm(kids_iq_loo_fitted_values)
+```
+
+Chapter 12 - Transformations and regression
+===========================================
+
+``` r
+head(earnings)
+```
+
+    ## # A tibble: 6 x 15
+    ##   height weight  male  earn earnk ethnicity education mother_education
+    ##    <dbl>  <dbl> <dbl> <dbl> <dbl> <chr>         <dbl>            <dbl>
+    ## 1     74    210     1 50000    50 White            16               16
+    ## 2     66    125     0 60000    60 White            16               16
+    ## 3     64    126     0 30000    30 White            16               16
+    ## 4     65    200     0 25000    25 White            17               17
+    ## 5     63    110     0 50000    50 Other            16               16
+    ## 6     68    165     0 62000    62 Black            18               18
+    ## # … with 7 more variables: father_education <dbl>, walk <dbl>, exercise <dbl>,
+    ## #   smokenow <dbl>, tense <dbl>, angry <dbl>, age <dbl>
