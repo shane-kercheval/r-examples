@@ -1869,7 +1869,7 @@ kid_score_residuals <- residuals(model)
 length(kid_score_loo_residuals) == length(kid_score_residuals)
 ```
 
-```{r}
+```{r chapter_11_in_sample_vs_loo, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 kid_iq_residuals <-  data.frame(kid_score=kid_iq$kid_score,
                                    `LOO Residuals`=kid_score_loo_residuals,
                                    `In Sample Residuals`=kid_score_residuals,
@@ -1880,8 +1880,13 @@ kid_iq_residuals %>%
     ggplot(aes(x=kid_score, y=value, color=name)) +
     geom_point() +
     geom_segment(data=kid_iq_residuals, aes(xend=kid_score, y=`In Sample Residuals`, yend=`LOO Residuals`, color=NULL)) +
-    coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3))
+    coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3)) +
+    labs(title="In Sample vs LOO Residuals",
+         subtitle="Graph zoomed in to see differences.",
+         y="Residual Values")
 ```
+
+---
 
 In-Sample R2:
 
