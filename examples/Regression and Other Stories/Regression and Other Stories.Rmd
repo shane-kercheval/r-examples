@@ -886,6 +886,7 @@ head(hibbs)
 
 ```{r}
 # refresh = 0 supresses the default Stan sampling progress output
+set.seed(1)
 model <- stan_glm(vote ~ growth, data=hibbs, refresh=0)
 print(model)
 ```
@@ -915,6 +916,38 @@ mad(simulations[, '(Intercept)'])
 ```{r}
 median(simulations[, 'growth'])
 mad(simulations[, 'growth'])
+```
+
+```{r}
+median(simulations[, 'sigma'])
+mad(simulations[, 'sigma'])
+```
+
+# pg. 104 describes how sigma (residual standard deviation) is calculated.
+
+They mention that 
+
+> a natural way to estimate sigma would be to simply take the standard deviation of the residuals [...], but this would slightly underestimate sigma because of overfitting... 
+
+You can see that if we take the standard deviation of the residuals, we get a slightly lower number than the sigma that is given from the model.
+
+```{r}
+sd(residuals(model))
+```
+
+Direct calculation:
+
+```{r}
+num_coefficients <- length(coefficients(model))
+sqrt(sum(residuals(model)^2) / (length(residuals(model)) - num_coefficients))
+```
+
+Although this is still lower, I assume because there is some simulation happening rather than the direct calculation.
+
+The residuals are equivalent to `actual - fitted`:
+
+```{r}
+all(model$y - fitted(model) == residuals(model))
 ```
 
 ---
@@ -1173,6 +1206,7 @@ rm(simulate_election_results_predict_conf_int)
 rm(y_pred)
 rm(results)
 rm(all_predictions)
+rm(num_coefficients)
 ```
 
 ## 9.3 Prior Information and Bayesian Synthesis
@@ -1745,6 +1779,36 @@ density_check %>%
          x="Dem Vote Share")
 ```
 
+## 11.8 Cross Validation
+
+
+
+```{r}
+mae <- function(.model) {
+    mean(abs(residuals(.model)))
+}
+mae(model)
+```
+
+```{r}
+rmse = function(.model){
+  sqrt(mean((residuals(.model))^2))
+}
+rmse(model)
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
 ```{r include=FALSE}
 rm(create_election_results)
 rm(election_results_88)
@@ -1752,3 +1816,20 @@ rm(model_88)
 rm(fitted_88)
 rm(density_check)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
