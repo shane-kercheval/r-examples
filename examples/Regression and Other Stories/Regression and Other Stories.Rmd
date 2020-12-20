@@ -2075,7 +2075,26 @@ kid_iq %>%
     summary()
 ```
 
+NOTE: now the interaction term `centered_mom_hs:centered_mom_iq` didn't change; this makes sense since the difference in slopes of the lines shouldn't have changed
 
+> Each main effect now corresponds to a predictive difference with the other input at its average value (pg 185)
+
+```{r}
+model <- lm(kid_score ~ mom_hs*mom_iq, data=kid_iq)
+
+average_mom_iq <- mean(kid_iq$mom_iq)
+predict(model, newdata = data.frame(mom_hs=1, mom_iq = average_mom_iq)) - predict(model, newdata = data.frame(mom_hs=0, mom_iq = average_mom_iq))
+```
+
+```{r}
+# in this case, since it is a boolean, the average is the percent of moms with high-school education
+# i.e. 78.57% of moms have a high school education
+average_mom_hs <- mean(kid_iq$mom_hs)
+predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 120)) - predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 119))
+predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 88)) - predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 87))
+```
+
+NOTE: it may not make sense to center `mom_hs`, it's probably more intuitive to leave as is.
 
 ### standardizing via z-score
 
@@ -2102,6 +2121,7 @@ kid_iq %>%
 
 ```{r}
 rm(model)
+rm(average_mom_iq)
 ```
 
 
