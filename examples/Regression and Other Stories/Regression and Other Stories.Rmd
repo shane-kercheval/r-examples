@@ -1793,7 +1793,6 @@ rm(density_check)
 
 ## 11.6 Residual Standard Deviation and Explained R^2
 
-
 ```{r}
 set.seed(1)
 model <- stan_glm(kid_score ~ mom_hs + mom_iq, data=kid_iq, refresh=0)
@@ -1882,8 +1881,10 @@ kid_iq_residuals <-  data.frame(kid_score=kid_iq$kid_score,
 kid_iq_residuals %>%
     pivot_longer(-kid_score) %>%
     ggplot(aes(x=kid_score, y=value, color=name)) +
+    geom_hline(yintercept = 0) +
     geom_point() +
     geom_segment(data=kid_iq_residuals, aes(xend=kid_score, y=`In Sample Residuals`, yend=`LOO Residuals`, color=NULL)) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
     coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3)) +
     labs(title="In Sample vs LOO Residuals",
          subtitle="Graph zoomed in to see differences.",
@@ -1963,19 +1964,145 @@ rm(kids_iq_loo_fitted_values)
 
 # Chapter 12 - Transformations and regression
 
+## Centering & Scaling
+
+### No transformations
+
+#### `kid_score ~ mom_hs + mom_iq`
+
 ```{r}
 head(earnings)
 ```
 
+NOTE: most of this topic can be expressed simply with `lm()` rather than `stan_glm()`, which is actually more convenient because we want to see coefficients without simulations so we know when a coefficient changes because of a transformation vs simulation.
+
+```{r chapter_12_kids_iq_no_interactions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    # from regression coefficients below
+    geom_abline(slope = 0.56391, intercept = 25.73154, color="#DF585C") +
+    geom_abline(slope = 0.56391, intercept = 25.73154 + 5.95012, color="#37B57F") +
+    geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    #geom_smooth(data= kid_iq %>% filter(mom_hs == 0), method='lm', formula = y ~ x, se=FALSE) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+```{r}
+kid_iq %>%
+    lm(kid_score ~ mom_hs + mom_iq, data=.) %>%
+    summary()
+```
+
+(see pg 134 for additional explanations of coefficient interpretations)
+
+- `Intercept`: "If a child had a moether with an IQ of `0` and who did not complete high school, then we would predict this child's test score to be 26. This is not a useful prediction, since no mothers have IQs of `0`.
+- `mom_hs`: This model assumes `mom_hs` lines have the same slope (i.e. no interaction terms; see graph above). The coefficient is `5.95012` which means that the IQ score of the group of kids whose mom had a high-school education are predicted to be, on average, `5.95012` points above the kids whose mom did not have a high-school education, at all levels of IQ (i.e. no interaction terms, same slope).`
+- `mom_iq`: the coefficient is `0.56391`, which is the slope of both the lines above and means that, on average (and holding education constant), a `1` point increase in the IQ score is associated with a `5.95012` increase in IQ score for the child. Or, from pg 134: `"When comparing two children whose mothers have the same level of education, the child whose mother is x IQ points higher is predicted to have a test score that is 6x higher, on average."`
+
+#### `kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`
+
+```{r chapter_12_kids_iq_interactions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    geom_smooth(method='lm', formula = y ~ x, se=FALSE) +
+    geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+```{r}
+kid_iq %>%
+    lm(kid_score ~ mom_hs*mom_iq, data=.) %>%
+    summary()
+```
+
+- `Intercept`: represents the predicted test scores for children whose mothers did not complete high school and had IQs of 0, not a meaningful scenaro.
+- coefficient of `mom_hs` is `51.2682`, which means that this is the predicted difference in IQ score for kids whose mom went to high-school vs no high-school **when mom's IQ is `0`**, which is meaningless.
+- coefficient of `mom_iq` is `0.9689` which means, for kids whos mom **did not** go to high-school, each additional IQ point that mom has increases the predicted score, on average, by `0.9689` points. **It is not the average over the general population.**
+- `mom_hs:mom_iq`: represents the *difference* in the **slope** for mom_iq, comparing children with mothers who did and did not complete high school: that is, the difference between the slopes of the red and green lines in the graph above. **NOTICE that we can recreate the graph above by using `geom_abline()` instead of `geom_smooth()` and supplying the intercepts and slopes manually; for the slope of the line for children whose mom did complete high school, we add (in this case a negative number, so subtract) the interaction term. 
+
+```{r chapter_12_kids_iq_interactions_manual, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    # regression line for children whose mom did not complete high school
+    geom_abline(slope = 0.9689, intercept = -11.4820,
+                color="#DF585C", size=1.2) +
+    # regression line for children whose mom did complete high school
+    geom_abline(slope = 0.9689 - 0.4843, intercept = -11.4820 + 51.2682,
+                color="#37B57F", size=1.2) +
+    #geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    #geom_smooth(data= kid_iq %>% filter(mom_hs == 0), method='lm', formula = y ~ x, se=FALSE) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+### Centering
+
+#### `kid_score ~ mom_hs + mom_iq`
+
+```{r}
+kid_iq %>%
+    mutate(centered_mom_hs = mom_hs - mean(mom_hs),
+           centered_mom_iq = mom_iq - mean(mom_iq)) %>%
+    lm(kid_score ~ centered_mom_hs+centered_mom_iq, data=.) %>%
+    summary()
+```
+
+Notice that, after centering, the value of the intercept is the average `kid_score` (but that's only the case if we don't have any interactions, which makes sense):
+
+```{r}
+mean(kid_iq$kid_score)
+```
+
+Also notice that centering did **not** change either of the coefficients for `mom_hs` or `mom_iq` compared with the original model with no interactions. **This too, is only in the case we do not have interactions.**
+
+**When we do not have interaction terms, there doesn't really seem to be a benefit from centering the variables, with regards to in interpretation (other than the intercept).**
+
+#### `kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`
+
+```{r}
+kid_iq %>%
+    mutate(centered_mom_hs = mom_hs - mean(mom_hs),
+           centered_mom_iq = mom_iq - mean(mom_iq)) %>%
+    lm(kid_score ~ centered_mom_hs*centered_mom_iq, data=.) %>%
+    summary()
+```
 
 
 
+### standardizing via z-score
+
+```{r}
+kid_iq %>%
+    mutate(centered_scaled_mom_hs = (mom_hs - mean(mom_hs)) / sd(mom_hs),
+           centered_scaled_mom_iq = (mom_iq - mean(mom_iq)) / sd(mom_iq)) %>%
+    lm(kid_score ~ centered_scaled_mom_hs*centered_scaled_mom_iq, data=.) %>%
+    summary()
+```
+
+### Center/Scaling using 2 standard deviations
+
+```{r}
+kid_iq %>%
+    mutate(centered_scaled_mom_hs = (mom_hs - mean(mom_hs)) / (2 * sd(mom_hs)),
+           centered_scaled_mom_iq = (mom_iq - mean(mom_iq)) / (2 * sd(mom_iq))) %>%
+    lm(kid_score ~ centered_scaled_mom_hs*centered_scaled_mom_iq, data=.) %>%
+    summary()
+```
+
+## Regularized horseshoe prior
 
 
-
-
-
-
+```{r}
+rm(model)
+```
 
 
 
