@@ -1767,7 +1767,13 @@ density_check <- election_results_88 %>%
 head(density_check)
 ```
 
-Each thin line in the graph below represents a single row of `fitted_88`. 
+```{r chapter_10_ppc_dens_overlay, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+bayesplot::ppc_dens_overlay(election_results_88$dem_vote_share, fitted_88[1:100,])
+```
+
+---
+
+Or we can manually create the graph, so that we can group predictions by variable. Each thin line in the graph below represents a single row of `fitted_88`. 
 
 ```{r chapter_10_dem_fit_check, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 density_check %>%
