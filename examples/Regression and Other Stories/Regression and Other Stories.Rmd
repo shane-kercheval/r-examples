@@ -2118,7 +2118,6 @@ kid_iq %>%
 
 ## Regularized horseshoe prior
 
-
 ```{r}
 rm(model)
 rm(average_mom_iq)
