@@ -2209,14 +2209,19 @@ fit_2_r2 <- data.frame(`Bayes R2`= bayes_R2(fit_2),
            `LOO R2`= loo_R2(fit_2),
            check.names = FALSE)
 
+median_bayes_r2 <- median(fit_2_r2$`Bayes R2`)
+median_loo_r2 <- median(fit_2_r2$`LOO R2`)
+
 fit_2_r2 %>%
     mutate(index=row_number()) %>%
     pivot_longer(-index) %>%
     select(-index) %>%
     ggplot(aes(x=value, color=name)) +
     geom_density() +
-    geom_vline(xintercept = median(fit_2_r2$`Bayes R2`), color='purple') +
-    geom_vline(xintercept = median(fit_2_r2$`LOO R2`), color='orange') +
+    annotate("text", median_bayes_r2, x=median_bayes_r2, y=0, label=round(median_bayes_r2, 2), color='purple', hjust=1) +
+    annotate("text", median_loo_r2, x=median_loo_r2, y=0, label=round(median_loo_r2, 2), color='orange', hjust=1) +
+    geom_vline(xintercept = median_bayes_r2, color='purple') +
+    geom_vline(xintercept = median_loo_r2, color='orange') +
     scale_color_manual(values=c('purple', 'orange')) +
     scale_x_continuous(breaks = pretty_breaks(10)) +
     labs(title="Bayes R^2 vs. LOO R^2 Density",
@@ -2234,6 +2239,9 @@ rm(fit_2_r2)
 rm(posterior_predictions)
 rm(n_sims)
 rm(sims_display)
+rm(median_loo_r2)
+rm(median_bayes_r2)
+
 ```
 
 ## Regularized horseshoe prior
