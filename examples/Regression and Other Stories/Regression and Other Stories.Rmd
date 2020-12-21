@@ -24,6 +24,13 @@ plot_width_height_5 <- calculate_plot_width(5)
 plot_width_height_6 <- calculate_plot_width(6)
 plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
+
+pivot_longer_all <- function(.x, names_to='name', values_to='value') {
+    .x %>%
+        mutate(temp____index = row_number()) %>%
+        pivot_longer(-temp____index, names_to=names_to, values_to=values_to) %>%
+        select(-temp____index)
+}
 ```
 
 ```{r downloading_data, eval=FALSE, include=FALSE}
@@ -44,6 +51,9 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
 
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
               destfile = 'data/mesquite.dat')
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Student/data/student-merged.csv',
+              destfile = 'data/student-merged.csv')
 ```
 
 # Overview
@@ -95,6 +105,10 @@ kid_iq <- kidiq
 mesquite <- read.table('data/mesquite.dat', header = TRUE)
 metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 nes_data <- read.csv("data/nes.csv", sep = ' ')
+students <- read_csv("data/student-merged.csv") %>%
+    rename(math_score = G3mat) %>% # "third period math grade given student's school" https://avehtari.github.io/ROS-Examples/Student/student.html
+    select(-starts_with("G", ignore.case = FALSE)) %>%
+    filter(math_score > 0)
 ```
 
 # Chapter 1 - Overview
@@ -963,8 +977,7 @@ all(model$y - fitted(model) == residuals(model))
 ```{r chapter_9_coefficient_joy_plot, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
     #mutate(name = fct_reorder(name, coef_median)) %>%
     ggplot(aes(x=value, y=name)) +
@@ -977,8 +990,7 @@ simulations %>%
 ```{r chapter_9_coefficient_tiefighter_plot, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     group_by(name) %>%
     summarise(coef_median = median(value),
               coef_mad = mad(value),
@@ -1184,10 +1196,8 @@ head(all_predictions, 20)
 ```{r chapter_9_posterior_predict_points, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 all_predictions <- all_predictions %>%
     as.data.frame() %>%
-    mutate(temp=1) %>%
-    pivot_longer(-temp, names_to='growth', values_to='prediction') %>%
-    mutate(growth = as.numeric(growth) - 6 - 1) %>%
-    select(-temp)
+    pivot_longer_all(names_to='growth', values_to='prediction') %>%
+    mutate(growth = as.numeric(growth) - 6 - 1)
 
 results %>%
     ggplot(aes(x=growth, y=prediction, color=stat.sig)) +
@@ -1316,8 +1326,7 @@ uniform_coef_simulations %>%
 ```{r chapter_9_uniform_prior_coefficients, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 uniform_coef_simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
     #mutate(name = fct_reorder(name, coef_median)) %>%
     ggplot(aes(x=value, y=name)) +
@@ -2213,9 +2222,7 @@ median_bayes_r2 <- median(fit_2_r2$`Bayes R2`)
 median_loo_r2 <- median(fit_2_r2$`LOO R2`)
 
 fit_2_r2 %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
-    select(-index) %>%
+    pivot_longer_all() %>%
     ggplot(aes(x=value, color=name)) +
     geom_density() +
     annotate("text", median_bayes_r2, x=median_bayes_r2, y=0, label=round(median_bayes_r2, 2), color='purple', hjust=1) +
@@ -2241,12 +2248,195 @@ rm(n_sims)
 rm(sims_display)
 rm(median_loo_r2)
 rm(median_bayes_r2)
-
 ```
 
 ## Regularized horseshoe prior
 
+Example starting on page 206 and author's code [here](https://avehtari.github.io/ROS-Examples/Student/student.html).
 
+### Default weak prior on original coefficients
 
+```{r}
+students[1:5, c(1:5)]
+```
 
+```{r}
+SEED <- 2132
+model_weak_prior <- stan_glm(math_score ~ ., data = students, seed = SEED, refresh=0)
+print(model_weak_prior)
+```
+
+```{r chapter_12_students_weak_prior, fig.height=6, fig.width=6, message=FALSE}
+ordered_levels <- as.matrix(model_weak_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_weak_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+> The plot above shows coefficient distributions without standardization of predictors; it looks liek there is a different amount of uncertainty on the relevance of the predictors. For example, it looks like `absences` has a really small reevance and high certainty.
+
+---
+
+### Default weak prior on scaled predictors
+
+```{r}
+scaled_students <- students %>%
+    select(-math_score) %>%
+    scale() %>%
+    as.data.frame() %>%
+    mutate(math_score = students$math_score) %>%
+    select(math_score, everything())
+model_weak_prior_standardized <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED, refresh=0)
+print(model_weak_prior_standardized)
+```
+
+```{r chapter_12_students_weak_prior_standardized, fig.height=6, fig.width=6, message=FALSE}
+ordered_levels <- as.matrix(model_weak_prior_standardized) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_weak_prior_standardized),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+I actually think standardization makes the coefficients themselves less interpretable, but does give a better comparison of relevance across predictors.
+
+---
+
+### Compare Bayesian R^2 and LOO R^2
+
+```{r}
+round(median(bayes_R2(model_weak_prior)), 2)
+round(median(bayes_R2(model_weak_prior_standardized)), 2)
+```
+
+```{r}
+round(median(loo_R2(model_weak_prior)), 2)
+round(median(loo_R2(model_weak_prior_standardized)), 2)
+```
+
+```{r}
+(loo1 <- loo(model_weak_prior))
+```
+
+> Medians of Bayesian R2 and LOO R2 are quite different, and p_loo is approximately 26, which indicates that the model is fitting to all predictors.
+
+---
+
+### Fit a regression model with a weakly informative prior scaled with the number of covariates
+
+```{r}
+model_weakly_informed_prior <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED,
+                 prior=normal(scale=sd(scaled_students$math_score)/sqrt(26)*sqrt(0.3),
+                              autoscale=FALSE),
+                 refresh=0)
+```
+
+```{r}
+round(median(bayes_R2(model_weakly_informed_prior)), 2)
+```
+
+```{r}
+round(median(loo_R2(model_weakly_informed_prior)), 2)
+```
+
+```{r}
+(loo2 <- loo(model_weakly_informed_prior))
+```
+
+```{r}
+loo_compare(loo1,loo2)
+```
+
+```{r chapter_12_students_weak_prior_standardized, fig.height=6, fig.width=6, message=FALSE}
+ordered_levels <- as.matrix(model_weakly_informed_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+
+bayesplot::mcmc_intervals(as.matrix(model_weakly_informed_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+```{r}
+p <- ncol(scaled_students) - 1
+p0 <- 6
+slab_scale <- sd(scaled_students$math_score)/sqrt(p0)*sqrt(0.3)
+# global scale without sigma, as the scaling by sigma happens in stan_glm
+global_scale <- p0 / (p - p0) / sqrt(nrow(scaled_students))
+model_horseshoe_prior <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED,
+                                  prior=hs(global_scale=global_scale, slab_scale=slab_scale),
+                                  refresh=0)
+```
+
+```{r}
+round(median(bayes_R2(model_horseshoe_prior)), 2)
+```
+
+```{r}
+round(median(loo_R2(model_horseshoe_prior)), 2)
+```
+
+```{r}
+(loo3 <- loo(model_horseshoe_prior))
+```
+
+```{r}
+loo_compare(loo2,loo3)
+```
+
+```{r chapter_12_students_weak_prior_standardized, fig.height=6, fig.width=6, message=FALSE}
+ordered_levels <- as.matrix(model_horseshoe_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+
+bayesplot::mcmc_intervals(as.matrix(model_horseshoe_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+```{r include=FALSE}
+rm(SEED)
+rm(model_weak_prior)
+rm(model_weak_prior_standardized)
+rm(ordered_levels)
+rm(scaled_students)
+rm(loo1)
+rm(model_weakly_informed_prior)
+rm(p0)
+rm(p)
+rm(slab_scale)
+rm(global_scale)
+rm(model_horseshoe_prior)
+rm(loo2)
+rm(loo3)
+```
 
