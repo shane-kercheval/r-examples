@@ -1813,7 +1813,6 @@ print(loo(model))
 
 See pg 176 for description of metrics.
 
-
 ### `loo_compare`
 
 ```{r}
