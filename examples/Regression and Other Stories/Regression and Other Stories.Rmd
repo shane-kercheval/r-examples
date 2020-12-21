@@ -2191,7 +2191,7 @@ bayesplot::mcmc_scatter(as.matrix(fit_2),
 
 ---
 
-```{r chapter_12_mesquite_coefficient_pairs, fig.height=9, fig.width=plot_width_height_9, message=FALSE}
+```{r chapter_12_mesquite_coefficient_pairs, fig.height=9, fig.width=9, message=FALSE}
 bayesplot::mcmc_pairs(as.matrix(fit_2), regex_pars = "^log|^gro")
 ```
 
