@@ -61,6 +61,18 @@
     -   [11.8 Cross Validation](#cross-validation)
 -   [Chapter 12 - Transformations and
     regression](#chapter-12---transformations-and-regression)
+    -   [Centering & Scaling](#centering-scaling)
+        -   [No transformations](#no-transformations)
+            -   [`kid_score ~ mom_hs + mom_iq`](#kid_score-mom_hs-mom_iq)
+            -   [`kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`](#kid_score-mom_hs-mom_iq-mom_hsmom_iq)
+        -   [Centering](#centering)
+            -   [`kid_score ~ mom_hs + mom_iq`](#kid_score-mom_hs-mom_iq-1)
+            -   [`kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`](#kid_score-mom_hs-mom_iq-mom_hsmom_iq-1)
+        -   [standardizing via z-score](#standardizing-via-z-score)
+        -   [Center/Scaling using 2 standard
+            deviations](#centerscaling-using-2-standard-deviations)
+    -   [Example](#example)
+    -   [Regularized horseshoe prior](#regularized-horseshoe-prior)
 
 Overview
 ========
@@ -163,8 +175,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.6e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.56 seconds.
+    ## Chain 1: Gradient evaluation took 5.5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.55 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -181,15 +193,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.031689 seconds (Warm-up)
-    ## Chain 1:                0.026961 seconds (Sampling)
-    ## Chain 1:                0.05865 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.026365 seconds (Warm-up)
+    ## Chain 1:                0.026387 seconds (Sampling)
+    ## Chain 1:                0.052752 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 1e-05 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
+    ## Chain 2: Gradient evaluation took 8e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -206,9 +218,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.034266 seconds (Warm-up)
-    ## Chain 2:                0.025409 seconds (Sampling)
-    ## Chain 2:                0.059675 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.03221 seconds (Warm-up)
+    ## Chain 2:                0.028393 seconds (Sampling)
+    ## Chain 2:                0.060603 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -231,15 +243,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.053622 seconds (Warm-up)
-    ## Chain 3:                0.02406 seconds (Sampling)
-    ## Chain 3:                0.077682 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.029071 seconds (Warm-up)
+    ## Chain 3:                0.025751 seconds (Sampling)
+    ## Chain 3:                0.054822 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 8e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 4: Gradient evaluation took 7e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -256,9 +268,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.031396 seconds (Warm-up)
-    ## Chain 4:                0.025663 seconds (Sampling)
-    ## Chain 4:                0.057059 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.028717 seconds (Warm-up)
+    ## Chain 4:                0.032108 seconds (Sampling)
+    ## Chain 4:                0.060825 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -282,23 +294,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
-    ## sigma        4.0    0.8  3.1   3.9   5.1 
+    ## (Intercept) 46.2    1.8 44.0  46.2  48.3 
+    ## growth       3.1    0.8  2.1   3.1   4.0 
+    ## sigma        4.0    0.9  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.4 50.3  52.0  53.8 
+    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3092 
-    ## growth        0.0  1.0  3203 
-    ## sigma         0.0  1.0  2539 
-    ## mean_PPD      0.0  1.0  3815 
-    ## log-posterior 0.0  1.0  1464 
+    ## (Intercept)   0.0  1.0  2249 
+    ## growth        0.0  1.0  2594 
+    ## sigma         0.0  1.0  2347 
+    ## mean_PPD      0.0  1.0  3419 
+    ## log-posterior 0.0  1.0  1283 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -317,8 +329,8 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.3    1.7  
-    ## growth       3.0    0.7  
+    ## (Intercept) 46.2    1.6  
+    ## growth       3.1    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -337,7 +349,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##    46.28277     3.04144
+    ##   46.207934    3.058527
 
 ------------------------------------------------------------------------
 
@@ -2726,7 +2738,16 @@ head(density_check)
     ## 5 Dem running reelection        1 Sim 4                 0.811
     ## 6 Dem running reelection        1 Sim 5                 0.722
 
-Each thin line in the graph below represents a single row of
+``` r
+bayesplot::ppc_dens_overlay(election_results_88$dem_vote_share, fitted_88[1:100,])
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_10_ppc_dens_overlay-1.png)
+
+------------------------------------------------------------------------
+
+Or we can manually create the graph, so that we can group predictions by
+variable. Each thin line in the graph below represents a single row of
 `fitted_88`.
 
 ``` r
@@ -2898,8 +2919,10 @@ kid_iq_residuals <-  data.frame(kid_score=kid_iq$kid_score,
 kid_iq_residuals %>%
     pivot_longer(-kid_score) %>%
     ggplot(aes(x=kid_score, y=value, color=name)) +
+    geom_hline(yintercept = 0) +
     geom_point() +
     geom_segment(data=kid_iq_residuals, aes(xend=kid_score, y=`In Sample Residuals`, yend=`LOO Residuals`, color=NULL)) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
     coord_cartesian(xlim = c(75, 100), ylim = c(-3, 3)) +
     labs(title="In Sample vs LOO Residuals",
          subtitle="Graph zoomed in to see differences.",
@@ -3015,6 +3038,13 @@ rm(kids_iq_loo_fitted_values)
 Chapter 12 - Transformations and regression
 ===========================================
 
+Centering & Scaling
+-------------------
+
+### No transformations
+
+#### `kid_score ~ mom_hs + mom_iq`
+
 ``` r
 head(earnings)
 ```
@@ -3030,3 +3060,478 @@ head(earnings)
     ## 6     68    165     0 62000    62 Black            18               18
     ## # … with 7 more variables: father_education <dbl>, walk <dbl>, exercise <dbl>,
     ## #   smokenow <dbl>, tense <dbl>, angry <dbl>, age <dbl>
+
+NOTE: most of this topic can be expressed simply with `lm()` rather than
+`stan_glm()`, which is actually more convenient because we want to see
+coefficients without simulations so we know when a coefficient changes
+because of a transformation vs simulation.
+
+``` r
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    # from regression coefficients below
+    geom_abline(slope = 0.56391, intercept = 25.73154, color="#DF585C") +
+    geom_abline(slope = 0.56391, intercept = 25.73154 + 5.95012, color="#37B57F") +
+    geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    #geom_smooth(data= kid_iq %>% filter(mom_hs == 0), method='lm', formula = y ~ x, se=FALSE) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_kids_iq_no_interactions-1.png)
+
+``` r
+kid_iq %>%
+    lm(kid_score ~ mom_hs + mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ mom_hs + mom_iq, data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.873 -12.663   2.404  11.356  49.545 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value             Pr(>|t|)    
+    ## (Intercept) 25.73154    5.87521   4.380            0.0000149 ***
+    ## mom_hs       5.95012    2.21181   2.690              0.00742 ** 
+    ## mom_iq       0.56391    0.06057   9.309 < 0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 18.14 on 431 degrees of freedom
+    ## Multiple R-squared:  0.2141, Adjusted R-squared:  0.2105 
+    ## F-statistic: 58.72 on 2 and 431 DF,  p-value: < 0.00000000000000022
+
+(see pg 134 for additional explanations of coefficient interpretations)
+
+-   `Intercept`: "If a child had a moether with an IQ of `0` and who did
+    not complete high school, then we would predict this child’s test
+    score to be 26. This is not a useful prediction, since no mothers
+    have IQs of `0`.
+-   `mom_hs`: This model assumes `mom_hs` lines have the same slope
+    (i.e. no interaction terms; see graph above). The coefficient is
+    `5.95012` which means that the IQ score of the group of kids whose
+    mom had a high-school education are predicted to be, on average,
+    `5.95012` points above the kids whose mom did not have a high-school
+    education, at all levels of IQ (i.e. no interaction terms, same
+    slope).\`
+-   `mom_iq`: the coefficient is `0.56391`, which is the slope of both
+    the lines above and means that, on average (and holding education
+    constant), a `1` point increase in the IQ score is associated with a
+    `5.95012` increase in IQ score for the child. Or, from pg 134:
+    `"When comparing two children whose mothers have the same level of education, the child whose mother is x IQ points higher is predicted to have a test score that is 6x higher, on average."`
+
+#### `kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`
+
+``` r
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    geom_smooth(method='lm', formula = y ~ x, se=FALSE) +
+    geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_kids_iq_interactions-1.png)
+
+``` r
+kid_iq %>%
+    lm(kid_score ~ mom_hs*mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ mom_hs * mom_iq, data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.092 -11.332   2.066  11.663  43.880 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value       Pr(>|t|)    
+    ## (Intercept)   -11.4820    13.7580  -0.835       0.404422    
+    ## mom_hs         51.2682    15.3376   3.343       0.000902 ***
+    ## mom_iq          0.9689     0.1483   6.531 0.000000000184 ***
+    ## mom_hs:mom_iq  -0.4843     0.1622  -2.985       0.002994 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 17.97 on 430 degrees of freedom
+    ## Multiple R-squared:  0.2301, Adjusted R-squared:  0.2247 
+    ## F-statistic: 42.84 on 3 and 430 DF,  p-value: < 0.00000000000000022
+
+-   `Intercept`: represents the predicted test scores for children whose
+    mothers did not complete high school and had IQs of 0, not a
+    meaningful scenaro.
+-   coefficient of `mom_hs` is `51.2682`, which means that this is the
+    predicted difference in IQ score for kids whose mom went to
+    high-school vs no high-school **when mom’s IQ is `0`**, which is
+    meaningless.
+-   coefficient of `mom_iq` is `0.9689` which means, for kids whos mom
+    **did not** go to high-school, each additional IQ point that mom has
+    increases the predicted score, on average, by `0.9689` points. **It
+    is not the average over the general population.**
+-   `mom_hs:mom_iq`: represents the *difference* in the **slope** for
+    mom\_iq, comparing children with mothers who did and did not
+    complete high school: that is, the difference between the slopes of
+    the red and green lines in the graph above. \*\*NOTICE that we can
+    recreate the graph above by using `geom_abline()` instead of
+    `geom_smooth()` and supplying the intercepts and slopes manually;
+    for the slope of the line for children whose mom did complete high
+    school, we add (in this case a negative number, so subtract) the
+    interaction term.
+
+``` r
+kid_iq %>%
+    mutate(mom_hs = ifelse(mom_hs == 1, TRUE, FALSE)) %>%
+    ggplot(aes(x=mom_iq, y=kid_score, color=mom_hs,  group=mom_hs)) +
+    geom_point() +
+    # regression line for children whose mom did not complete high school
+    geom_abline(slope = 0.9689, intercept = -11.4820,
+                color="#DF585C", size=1.2) +
+    # regression line for children whose mom did complete high school
+    geom_abline(slope = 0.9689 - 0.4843, intercept = -11.4820 + 51.2682,
+                color="#37B57F", size=1.2) +
+    #geom_smooth(aes(group=NULL, color=NULL), method='lm', formula = y ~ x, se=FALSE) +
+    scale_color_manual(values=c("#DF585C", "#37B57F")) +
+    #geom_smooth(data= kid_iq %>% filter(mom_hs == 0), method='lm', formula = y ~ x, se=FALSE) +
+    labs(title = "Kids IQ based on if Mom went to High School & Mom's IQ")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_kids_iq_interactions_manual-1.png)
+
+### Centering
+
+#### `kid_score ~ mom_hs + mom_iq`
+
+``` r
+kid_iq %>%
+    mutate(centered_mom_hs = mom_hs - mean(mom_hs),
+           centered_mom_iq = mom_iq - mean(mom_iq)) %>%
+    lm(kid_score ~ centered_mom_hs+centered_mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ centered_mom_hs + centered_mom_iq, data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.873 -12.663   2.404  11.356  49.545 
+    ## 
+    ## Coefficients:
+    ##                 Estimate Std. Error t value             Pr(>|t|)    
+    ## (Intercept)     86.79724    0.87054  99.705 < 0.0000000000000002 ***
+    ## centered_mom_hs  5.95012    2.21181   2.690              0.00742 ** 
+    ## centered_mom_iq  0.56391    0.06057   9.309 < 0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 18.14 on 431 degrees of freedom
+    ## Multiple R-squared:  0.2141, Adjusted R-squared:  0.2105 
+    ## F-statistic: 58.72 on 2 and 431 DF,  p-value: < 0.00000000000000022
+
+Notice that, after centering, the value of the intercept is the average
+`kid_score` (but that’s only the case if we don’t have any interactions,
+which makes sense):
+
+``` r
+mean(kid_iq$kid_score)
+```
+
+    ## [1] 86.79724
+
+Also notice that centering did **not** change either of the coefficients
+for `mom_hs` or `mom_iq` compared with the original model with no
+interactions. **This too, is only in the case we do not have
+interactions.**
+
+**When we do not have interaction terms, there doesn’t really seem to be
+a benefit from centering the variables, with regards to in
+interpretation (other than the intercept).**
+
+#### `kid_score ~ mom_hs + mom_iq + mom_hs:mom_iq`
+
+``` r
+kid_iq %>%
+    mutate(centered_mom_hs = mom_hs - mean(mom_hs),
+           centered_mom_iq = mom_iq - mean(mom_iq)) %>%
+    lm(kid_score ~ centered_mom_hs*centered_mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ centered_mom_hs * centered_mom_iq, data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.092 -11.332   2.066  11.663  43.880 
+    ## 
+    ## Coefficients:
+    ##                                 Estimate Std. Error t value
+    ## (Intercept)                     87.63892    0.90756  96.565
+    ## centered_mom_hs                  2.84076    2.42667   1.171
+    ## centered_mom_iq                  0.58839    0.06058   9.712
+    ## centered_mom_hs:centered_mom_iq -0.48427    0.16222  -2.985
+    ##                                             Pr(>|t|)    
+    ## (Intercept)                     < 0.0000000000000002 ***
+    ## centered_mom_hs                              0.24239    
+    ## centered_mom_iq                 < 0.0000000000000002 ***
+    ## centered_mom_hs:centered_mom_iq              0.00299 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 17.97 on 430 degrees of freedom
+    ## Multiple R-squared:  0.2301, Adjusted R-squared:  0.2247 
+    ## F-statistic: 42.84 on 3 and 430 DF,  p-value: < 0.00000000000000022
+
+NOTE: now the interaction term `centered_mom_hs:centered_mom_iq` didn’t
+change; this makes sense since the difference in slopes of the lines
+shouldn’t have changed
+
+> Each main effect now corresponds to a predictive difference with the
+> other input at its average value (pg 185)
+
+``` r
+model <- lm(kid_score ~ mom_hs*mom_iq, data=kid_iq)
+
+average_mom_iq <- mean(kid_iq$mom_iq)
+predict(model, newdata = data.frame(mom_hs=1, mom_iq = average_mom_iq)) - predict(model, newdata = data.frame(mom_hs=0, mom_iq = average_mom_iq))
+```
+
+    ##        1 
+    ## 2.840757
+
+``` r
+# in this case, since it is a boolean, the average is the percent of moms with high-school education
+# i.e. 78.57% of moms have a high school education
+average_mom_hs <- mean(kid_iq$mom_hs)
+predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 120)) - predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 119))
+```
+
+    ##         1 
+    ## 0.5883877
+
+``` r
+predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 88)) - predict(model, newdata = data.frame(mom_hs=average_mom_hs, mom_iq = 87))
+```
+
+    ##         1 
+    ## 0.5883877
+
+NOTE: it may not make sense to center `mom_hs`, it’s probably more
+intuitive to leave as is.
+
+### standardizing via z-score
+
+``` r
+kid_iq %>%
+    mutate(centered_scaled_mom_hs = (mom_hs - mean(mom_hs)) / sd(mom_hs),
+           centered_scaled_mom_iq = (mom_iq - mean(mom_iq)) / sd(mom_iq)) %>%
+    lm(kid_score ~ centered_scaled_mom_hs*centered_scaled_mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ centered_scaled_mom_hs * centered_scaled_mom_iq, 
+    ##     data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.092 -11.332   2.066  11.663  43.880 
+    ## 
+    ## Coefficients:
+    ##                                               Estimate Std. Error t value
+    ## (Intercept)                                    87.6389     0.9076  96.565
+    ## centered_scaled_mom_hs                          1.1670     0.9969   1.171
+    ## centered_scaled_mom_iq                          8.8258     0.9087   9.712
+    ## centered_scaled_mom_hs:centered_scaled_mom_iq  -2.9841     0.9996  -2.985
+    ##                                                           Pr(>|t|)    
+    ## (Intercept)                                   < 0.0000000000000002 ***
+    ## centered_scaled_mom_hs                                     0.24239    
+    ## centered_scaled_mom_iq                        < 0.0000000000000002 ***
+    ## centered_scaled_mom_hs:centered_scaled_mom_iq              0.00299 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 17.97 on 430 degrees of freedom
+    ## Multiple R-squared:  0.2301, Adjusted R-squared:  0.2247 
+    ## F-statistic: 42.84 on 3 and 430 DF,  p-value: < 0.00000000000000022
+
+### Center/Scaling using 2 standard deviations
+
+``` r
+kid_iq %>%
+    mutate(centered_scaled_mom_hs = (mom_hs - mean(mom_hs)) / (2 * sd(mom_hs)),
+           centered_scaled_mom_iq = (mom_iq - mean(mom_iq)) / (2 * sd(mom_iq))) %>%
+    lm(kid_score ~ centered_scaled_mom_hs*centered_scaled_mom_iq, data=.) %>%
+    summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = kid_score ~ centered_scaled_mom_hs * centered_scaled_mom_iq, 
+    ##     data = .)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.092 -11.332   2.066  11.663  43.880 
+    ## 
+    ## Coefficients:
+    ##                                               Estimate Std. Error t value
+    ## (Intercept)                                    87.6389     0.9076  96.565
+    ## centered_scaled_mom_hs                          2.3340     1.9937   1.171
+    ## centered_scaled_mom_iq                         17.6516     1.8175   9.712
+    ## centered_scaled_mom_hs:centered_scaled_mom_iq -11.9364     3.9983  -2.985
+    ##                                                           Pr(>|t|)    
+    ## (Intercept)                                   < 0.0000000000000002 ***
+    ## centered_scaled_mom_hs                                     0.24239    
+    ## centered_scaled_mom_iq                        < 0.0000000000000002 ***
+    ## centered_scaled_mom_hs:centered_scaled_mom_iq              0.00299 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 17.97 on 430 degrees of freedom
+    ## Multiple R-squared:  0.2301, Adjusted R-squared:  0.2247 
+    ## F-statistic: 42.84 on 3 and 430 DF,  p-value: < 0.00000000000000022
+
+Example
+-------
+
+``` r
+head(mesquite)
+```
+
+    ##   obs group diam1 diam2 total_height canopy_height density weight
+    ## 1   1   MCD   1.8  1.15         1.30          1.00       1  401.3
+    ## 2   2   MCD   1.7  1.35         1.35          1.33       1  513.7
+    ## 3   3   MCD   2.8  2.55         2.16          0.60       1 1179.2
+    ## 4   4   MCD   1.3  0.85         1.80          1.20       1  308.0
+    ## 5   5   MCD   3.3  1.90         1.55          1.05       1  855.2
+    ## 6   6   MCD   1.4  1.40         1.20          1.00       1  268.7
+
+``` r
+SEED <- 4587
+fit_2 <- stan_glm(log(weight) ~ log(diam1) + log(diam2) + log(canopy_height) + log(total_height) + log(density) + group,
+                  data=mesquite, seed=SEED, refresh=0)
+```
+
+------------------------------------------------------------------------
+
+``` r
+posterior_predictions <- posterior_predict(fit_2)
+n_sims <- nrow(posterior_predictions)
+sims_display <- sample(n_sims, 100)
+ppc_dens_overlay(log(mesquite$weight), posterior_predictions[sims_display,]) +
+    theme(axis.line.y = element_blank()) +
+    labs(title="Density of Outcome vs. Posterior (fitted) Predictions")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_posterior_density-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+bayesplot::mcmc_areas(as.matrix(fit_2), regex_pars = "^log|^gro") +
+    labs(title = "Coefficient Densities")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_coefficient_density-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+bayesplot::mcmc_areas_ridges(as.matrix(fit_2), regex_pars = "^log|^gro") +
+    labs(title = "Coefficient Densities")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_coefficient_ridges-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+bayesplot::mcmc_intervals(as.matrix(fit_2), regex_pars = "^log|^gro",
+                          prob = 0.5, prob_outer = 0.9) +
+    labs(title = "Coefficient Intervals")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_coefficient_intervals-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+bayesplot::mcmc_scatter(as.matrix(fit_2),
+                        pars = c("log(canopy_height)", "log(total_height)"),
+                        size = 1, alpha = 0.5) +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    labs(title="Joint Density",
+         x="coef of log(canopy_height)",
+         y="coef of log(total_height)")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_joint_density-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+bayesplot::mcmc_pairs(as.matrix(fit_2), regex_pars = "^log|^gro")
+```
+
+    ## Warning: Only one chain in 'x'. This plot is more useful with multiple chains.
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_coefficient_pairs-1.png)
+
+------------------------------------------------------------------------
+
+Bayesian R^2
+
+``` r
+bayesplot::mcmc_dens(data.frame(bayes_R2(fit_2))) +
+    xlab('Bayesian R^2')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_bayes_r2-1.png)
+
+``` r
+fit_2_r2 <- data.frame(`Bayes R2`= bayes_R2(fit_2),
+           `LOO R2`= loo_R2(fit_2),
+           check.names = FALSE)
+```
+
+    ## Warning: Some Pareto k diagnostic values are too high. See help('pareto-k-diagnostic') for details.
+
+``` r
+fit_2_r2 %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    select(-index) %>%
+    ggplot(aes(x=value, color=name)) +
+    geom_density() +
+    geom_vline(xintercept = median(fit_2_r2$`Bayes R2`), color='purple') +
+    geom_vline(xintercept = median(fit_2_r2$`LOO R2`), color='orange') +
+    scale_color_manual(values=c('purple', 'orange')) +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    labs(title="Bayes R^2 vs. LOO R^2 Density",
+         subtitle = "Vertical lines represent median R^2 values",
+         x="R^2")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_bayes_loo_r2-1.png)
+
+------------------------------------------------------------------------
+
+Regularized horseshoe prior
+---------------------------
