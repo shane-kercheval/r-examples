@@ -41,6 +41,9 @@ download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/maste
 
 download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
               destfile = 'data/earnings.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
+              destfile = 'data/mesquite.dat')
 ```
 
 # Overview
@@ -85,12 +88,13 @@ options(dplyr.summarise.inform=F)
 ```
 
 ```{r include=FALSE}
-hibbs <- read.table('data/hibbs.dat', header = TRUE)
-metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
 congress <- read_csv("data/congress.csv")
-nes_data <- read.csv("data/nes.csv", sep = ' ')
-kid_iq <- kidiq
 earnings <- read_csv("data/earnings.csv")
+hibbs <- read.table('data/hibbs.dat', header = TRUE)
+kid_iq <- kidiq
+mesquite <- read.table('data/mesquite.dat', header = TRUE)
+metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
+nes_data <- read.csv("data/nes.csv", sep = ' ')
 ```
 
 # Chapter 1 - Overview
@@ -2121,12 +2125,119 @@ kid_iq %>%
     summary()
 ```
 
-## Regularized horseshoe prior
-
-```{r}
+```{r include=FALSE}
 rm(model)
 rm(average_mom_iq)
+rm(average_mom_hs)
 ```
+
+## Example
+
+```{r}
+head(mesquite)
+```
+
+```{r}
+SEED <- 4587
+fit_2 <- stan_glm(log(weight) ~ log(diam1) + log(diam2) + log(canopy_height) + log(total_height) + log(density) + group,
+                  data=mesquite, seed=SEED, refresh=0)
+```
+
+---
+
+```{r chapter_12_mesquite_posterior_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+posterior_predictions <- posterior_predict(fit_2)
+n_sims <- nrow(posterior_predictions)
+sims_display <- sample(n_sims, 100)
+ppc_dens_overlay(log(mesquite$weight), posterior_predictions[sims_display,]) +
+    theme(axis.line.y = element_blank()) +
+    labs(title="Density of Outcome vs. Posterior (fitted) Predictions")
+```
+
+---
+
+```{r chapter_12_mesquite_coefficient_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+bayesplot::mcmc_areas(as.matrix(fit_2), regex_pars = "^log|^gro") +
+    labs(title = "Coefficient Densities")
+```
+
+---
+
+```{r chapter_12_mesquite_coefficient_ridges, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+bayesplot::mcmc_areas_ridges(as.matrix(fit_2), regex_pars = "^log|^gro") +
+    labs(title = "Coefficient Densities")
+```
+
+---
+
+```{r chapter_12_mesquite_coefficient_intervals, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+bayesplot::mcmc_intervals(as.matrix(fit_2), regex_pars = "^log|^gro",
+                          prob = 0.5, prob_outer = 0.9) +
+    labs(title = "Coefficient Intervals")
+```
+
+---
+
+```{r chapter_12_mesquite_joint_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+bayesplot::mcmc_scatter(as.matrix(fit_2),
+                        pars = c("log(canopy_height)", "log(total_height)"),
+                        size = 1, alpha = 0.5) +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    labs(title="Joint Density",
+         x="coef of log(canopy_height)",
+         y="coef of log(total_height)")
+```
+
+---
+
+```{r chapter_12_mesquite_coefficient_pairs, fig.height=9, fig.width=plot_width_height_9, message=FALSE}
+bayesplot::mcmc_pairs(as.matrix(fit_2), regex_pars = "^log|^gro")
+```
+
+---
+
+Bayesian R^2
+
+```{r chapter_12_mesquite_bayes_r2, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+bayesplot::mcmc_dens(data.frame(bayes_R2(fit_2))) +
+    xlab('Bayesian R^2')
+```
+
+```{r chapter_12_mesquite_bayes_loo_r2, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+fit_2_r2 <- data.frame(`Bayes R2`= bayes_R2(fit_2),
+           `LOO R2`= loo_R2(fit_2),
+           check.names = FALSE)
+
+fit_2_r2 %>%
+    mutate(index=row_number()) %>%
+    pivot_longer(-index) %>%
+    select(-index) %>%
+    ggplot(aes(x=value, color=name)) +
+    geom_density() +
+    geom_vline(xintercept = median(fit_2_r2$`Bayes R2`), color='purple') +
+    geom_vline(xintercept = median(fit_2_r2$`LOO R2`), color='orange') +
+    scale_color_manual(values=c('purple', 'orange')) +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    labs(title="Bayes R^2 vs. LOO R^2 Density",
+         subtitle = "Vertical lines represent median R^2 values",
+         x="R^2")
+```
+
+---
+
+
+```{r include=FALSE}
+rm(SEED)
+rm(fit_2)
+rm(fit_2_r2)
+rm(posterior_predictions)
+rm(n_sims)
+rm(sims_display)
+```
+
+## Regularized horseshoe prior
+
 
 
 
