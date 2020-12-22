@@ -2440,3 +2440,60 @@ rm(loo2)
 rm(loo3)
 ```
 
+# Chapter 13 - Logistic Regression
+
+## Logit & Inverse Logit distributions
+
+```{r}
+logit(0)
+logit(0.5)
+logit(1)
+```
+
+---
+
+```{r chapter_13_logit_distribution, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+curve(rstanarm::logit(x), 0, 1, main="Logit Distribution")
+abline(h=0, col="red", lty=2, lwd=3)
+abline(v=0.5, col="red", lty=2, lwd=3)
+```
+
+---
+
+```{r chapter_13_inv_logit_distribution, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+curve(rstanarm::invlogit(x), -6, 6, main="Inverse Logit Distribution")
+abline(v=rstanarm::logit(0.5), col="red", lty=2, lwd=3)
+abline(h=0.5, col="red", lty=2, lwd=3)
+```
+
+---
+
+Now, lets map the `x` values associated with line/model for `-1.4 + 0.3x` to values `0-1`.
+
+Above, `x=0` is the value that results at the midway-point (`0.5`) of the curve.
+
+What is the value of `x` in equation `-1.4 + 0.3x` associated with the mid-point of our Inverse Logit Distribution?
+
+There might be a better way, but we will cheat with `optimize`. Basically, we give it a function and a range of values to test, and it will tell us which value of `x` is associated with the smallest value (i.e. the value we are "optimizing" for). In this case, the destribution doesn't have a natural maximum or minimum that we want to optimize (e.g. like the normal distribution) so we have to modify the function to subtract `0.5` from the absolute value of result from invlogit function, since that will result in very small numbers of `x` that are close to the value of 0.5 on the y-axis.
+
+```{r}
+xmin <- optimize(function (x) abs(rstanarm::invlogit( -1.4 + 0.33*x ) - 0.5),
+                 c(0, 10), # search `x` values 0 through 10
+                 tol = 0.0001)
+xmin
+```
+
+```{r}
+rstanarm::invlogit( -1.4 + 0.33*xmin$minimum )
+```
+
+```{r chapter_13_inv_logit_distribution, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+curve(rstanarm::invlogit( -1.4 + 0.33*x ), -10, 20, main="Inverse Logit Distribution")
+abline(v=xmin$minimum, col="red", lty=2, lwd=3)
+abline(h=0.5, col="red", lty=2, lwd=3)
+```
+
+---
+
+## Example
+
