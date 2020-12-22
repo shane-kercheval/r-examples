@@ -1064,10 +1064,10 @@ data.frame(growth = -6:6) %>%
     scale_x_continuous(breaks = pretty_breaks(20)) +
     scale_y_continuous(breaks = pretty_breaks(10)) +
     labs(title="Uncertainty in the value of the fitted regression LINE (not the prediction)",
-         subtitle="NOTE: I doubt this is how we ever want to express uncertainty in the actual predictions.")
+         subtitle="NOTE: We can use this type of prediction to make statements about uncertainty in the population.")
 ```
 
-NOTE: I doubt this is how we ever want to express uncertainty in the actual predictions.
+We can use this type of prediction to make statements about uncertainty in the population. In order to make display uncertainty for individuals, we need to use `posterior_predict`, described next.
 
 ## Predictive Distribution
 
@@ -1141,6 +1141,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -1160,6 +1161,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("black", "purple")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -1210,6 +1212,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(20), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -2496,4 +2499,114 @@ abline(h=0.5, col="red", lty=2, lwd=3)
 ---
 
 ## Example
+
+```{r}
+nes_1992 <- nes_data %>%
+    filter(year == 1992 & !is.na(rvote) & !is.na(dvote) & (rvote==1 | dvote==1))
+
+rownames(nes_1992) <- NULL
+
+nes_1992 %>%
+    select(rvote, dvote, age, gender, race, income)
+```
+
+```{r}
+set.seed(1)
+model_1 <- stan_glm(rvote ~ income, family=binomial(link="logit"), data=nes_1992, refresh=0)
+print(model_1)
+```
+
+> We fitted the model as `Pr(y_i = 1) = logit^-1(-1.4 + 0.3 * income) (p.g 218)
+
+We can get the probabilities i.e. expected outcome via `posterior_epred`:
+
+```{r}
+new_data <- data.frame(income=5)
+head(posterior_epred(object=model_1, newdata = new_data))
+```
+
+**We can use this type of prediction (above) to make statements about uncertainty about the population (pg 224)**
+
+Alternatively, we can get the binary prediction (`0` or `1`) via `posterior_predict`:
+
+```{r}
+head(posterior_predict(object=model_1, newdata = new_data))
+```
+
+**We can use this type of prediction (above) to make statements about uncertainty about individual people (pg 224).**
+
+Or, prediction given a range of input values:
+
+```{r}
+new_data <- data.frame(income=1:5)
+
+expected_predictions <- posterior_epred(model_1, newdata=new_data)
+head(expected_predictions)
+```
+
+```{r}
+apply(expected_predictions, 2, function(.x) quantile(.x, c(0, .5, 1)))
+```
+
+```{r}
+colMeans(expected_predictions)
+```
+
+
+
+```{r}
+binary_predictions <- posterior_predict(model_1, newdata=new_data, type='link')
+head(binary_predictions)
+```
+
+```{r}
+apply(binary_predictions, 2, function(.x) quantile(.x, c(0, .5, 1)))
+```
+
+```{r}
+colMeans(binary_predictions)
+```
+
+
+NOTE explain posterior_epred vs posterior_predict.. The below graph is making statemtns about the pouplation. posterior_predict.. is making statements about individuals
+
+```{r chapter_12_nes_1992_predictions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+expected_predictions <- expected_predictions %>%
+    as.data.frame() %>%
+    pivot_longer_all(names_to='income', values_to='prediction') %>%
+    mutate(income = as.numeric(income))
+
+expected_predictions %>%
+    ggplot(aes(x=income, y=prediction, color=NULL)) +
+    geom_jitter(width=0.1, alpha=0.1) +
+    geom_hline(yintercept = 0.5, color='red') +
+    geom_vline(xintercept = xmin$minimum, color='red') +
+    #geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
+    #geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.7) +
+    geom_line(data=data.frame(x=seq(-6, 12, by=0.1)) %>%
+                  mutate(y= map_dbl(x, ~rstanarm::invlogit( coef(model_1)['(Intercept)'] + coef(model_1)['income'] * .))),
+              aes(x=x, y=y), color='purple') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    scale_y_continuous(breaks = pretty_breaks(10), labels = percent_format(accuracy = 1)) +
+    #scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
+    labs(title="Prediction of Probability that Vote is Republican, given Income.",
+         subtitle="Purple line is logit function for model; red lines are 50% point",
+         x="Income Level",
+         y="Prediction of Probability")
+```
+
+
+
+```{r include=FALSE}
+rm(xmin)
+rm(nes_1992)
+rm(model_1)
+rm(new_data)
+rm(expected_predictions)
+rm(binary_predictions)
+```
+
+
+
+
 
