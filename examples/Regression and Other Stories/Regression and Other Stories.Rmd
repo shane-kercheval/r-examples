@@ -2651,12 +2651,15 @@ colMeans(individual_simulations_across_income)
 
 `rowSums` should take each simulation and give the number of people who voted republican (1 for each of the 5 income levels). The result is a vector of 4000 integers.
 
-If we take the average, we should be calculating how many people, on average, vote republican of a random sample of 1 person from each income level..
+If we take the average of that number, we should be calculating how many people, on average, vote republican of a random sample of 1 person from each income level..
 
 ```{r}
 mean(rowSums(individual_simulations_across_income))
 ```
 
+```{r chapter-12-misc}
+hist(rowSums(individual_simulations_across_income))
+```
 
 ```{r include=FALSE}
 rm(xmin)
