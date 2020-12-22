@@ -2531,7 +2531,6 @@ coefficient_simulations <- as.matrix(model_1)
 head(coefficient_simulations)
 ```
 
-
 ```{r chapter_12_mesquite_coefficient_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 bayesplot::mcmc_areas(as.matrix(model_1)) +
                       #regex_pars = "^log|^gro") +
@@ -2541,48 +2540,114 @@ bayesplot::mcmc_areas(as.matrix(model_1)) +
 ```{r chapter_13_logistic_coef_densities, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 bayesplot::mcmc_intervals(as.matrix(model_1), 
                           #regex_pars = "^log|^gro",
-                          prob = 0.5, prob_outer = 0.95) +
+                          prob = 0.75, prob_outer = 0.99) +
     labs(title = "Coefficient Intervals")
 ```
 
-##
-
+## `posterior_epred()`
 
 We can get the probabilities i.e. expected outcome via `posterior_epred`:
 
 ```{r}
-new_data <- data.frame(income=5)
-head(posterior_epred(object=model_1, newdata = new_data))
-```
-
-**We can use this type of prediction (above) to make statements about uncertainty about the population (pg 224)**
-
-Alternatively, we can get the binary prediction (`0` or `1`) via `posterior_predict`:
-
-```{r}
-head(posterior_predict(object=model_1, newdata = new_data))
-```
-
-**We can use this type of prediction (above) to make statements about uncertainty about individual people (pg 224).**
-
-Or, prediction given a range of input values:
-
-```{r}
 new_data <- data.frame(income=1:5)
+population_simulations_across_income <- posterior_epred(object=model_1, newdata = new_data)
+head(population_simulations_across_income)
+```
 
-expected_predictions <- posterior_epred(model_1, newdata=new_data)
-head(expected_predictions)
+This gives the same values as `invlogit(posterior_linpred(...))`:
+
+```{r}
+head(invlogit(posterior_linpred(object=model_1, newdata = new_data)))
+```
+
+---
+
+We can use this type of prediction (above) to make statements about uncertainty about the **population** (pg 224)
+
+```{r}
+mean(population_simulations_across_income[, 5])
+sd(population_simulations_across_income[, 5])
+```
+ 
+ > According to our fitted model, the percentage of Bush supporters in the **population**  at that time, among people with income `level 5`, was probably in the range of `56%` (the same as computed using `predict()`) +- `%3` (pg 223)
+
+---
+
+What is the posterior probability `that Bush was more popular among people with income level 5 than among people with income level 4`? (Again, a question about the population, not about individuals.)
+
+```{r}
+mean(population_simulations_across_income[, 5] > population_simulations_across_income[, 4])
+```
+
+---
+
+> 99% posterior distribution for the **difference** in support for Bush, comparing people in the richest to the second-richest category
+
+```{r}
+quantile(population_simulations_across_income[,5] - population_simulations_across_income[,4], c(0.005, 0.025, 0.5, 0.975, 0.995))
 ```
 
 ```{r}
-apply(expected_predictions, 2, function(.x) quantile(.x, c(0, .5, 1)))
+median(population_simulations_across_income[, 5])
+median(population_simulations_across_income[, 4])
 ```
 
 ```{r}
-colMeans(expected_predictions)
+median(population_simulations_across_income[, 5]) - median(population_simulations_across_income[, 4])
 ```
 
+---
 
+```{r chapter_12_nes_1992_predictions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+t(apply(population_simulations_across_income, 2, function(.x) quantile(.x, c(0, 0.025, 0.25, 0.5, 0.75, 0.975, 1)))) %>%
+    as.data.frame() %>%
+    mutate(income=row_number()) %>%
+    #pivot_longer(-income)
+    ggplot(aes(x=income, y=`50%`)) +
+    geom_point(size=4) +
+    geom_errorbar(aes(ymin=`25%`, ymax=`75%`), width=0, size=2.5) +
+    geom_errorbar(aes(ymin=`2.5%`, ymax=`97.5%`), width=0, size=1) +
+    geom_errorbar(aes(ymin=`0%`, ymax=`100%`), width=0.1, size=0.25) +
+
+    geom_hline(yintercept = 0.5, color='red') +
+    geom_vline(xintercept = xmin$minimum, color='red') +
+    geom_line(data=data.frame(x=seq(0, 6, by=0.1)) %>%
+                  mutate(y= map_dbl(x, ~rstanarm::invlogit( coef(model_1)['(Intercept)'] + coef(model_1)['income'] * .))),
+              aes(x=x, y=y), color='purple') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    scale_y_continuous(breaks = pretty_breaks(10), labels = percent_format(accuracy = 1)) +
+    labs(title="Population Uncertainty that Vote is Republican, given Income.",
+         subtitle="Purple line is logit function for model; red lines are 50% point",
+         x="Income Level",
+         y="Prediction of Probability")
+```
+
+---
+
+## `posterior_predict()`
+
+> To get the uncertainty for a **single voter** corresponding to some **invidual data point**, we use the posterior prediction (pg 224):
+
+Which has values of `0`, `1`, `1`, `0`, etc., corresponding to possible values of `vote` among people with `income=1`, `2`, etc.. 
+
+```{r}
+set.seed(1)
+individual_simulations_across_income <- posterior_predict(object=model_1, newdata = new_data)
+head(individual_simulations_across_income)
+```
+
+> We can use this type of prediction (above) to make statements about uncertainty about **individual people** (pg 224).
+
+
+> Taking the average of these simulations of column 5 gives `0.56`, which is equivalent to the point prediction.
+
+```{r}
+mean(individual_simulations_across_income[, 5])
+```
+
+```{r}
+colMeans(individual_simulations_across_income)
+```
 
 ```{r}
 binary_predictions <- posterior_predict(model_1, newdata=new_data, type='link')
@@ -2597,45 +2662,9 @@ apply(binary_predictions, 2, function(.x) quantile(.x, c(0, .5, 1)))
 colMeans(binary_predictions)
 ```
 
+```{r}
 
-NOTE explain posterior_epred vs posterior_predict.. The below graph is making statemtns about the pouplation. posterior_predict.. is making statements about individuals
-
-```{r chapter_12_nes_1992_predictions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
-expected_predictions <- expected_predictions %>%
-    as.data.frame() %>%
-    pivot_longer_all(names_to='income', values_to='prediction') %>%
-    mutate(income = as.numeric(income))
-
-expected_predictions %>%
-    ggplot(aes(x=income, y=prediction, color=NULL)) +
-    geom_jitter(width=0.1, alpha=0.1) +
-    geom_hline(yintercept = 0.5, color='red') +
-    geom_vline(xintercept = xmin$minimum, color='red') +
-    #geom_errorbar(aes(ymin=conf.low.68, ymax=conf.high.68), width=0.5) +
-    #geom_errorbar(aes(ymin=conf.low.95, ymax=conf.high.95), width=0.7) +
-    geom_line(data=data.frame(x=seq(-6, 12, by=0.1)) %>%
-                  mutate(y= map_dbl(x, ~rstanarm::invlogit( coef(model_1)['(Intercept)'] + coef(model_1)['income'] * .))),
-              aes(x=x, y=y), color='purple') +
-    scale_x_continuous(breaks = pretty_breaks(10)) +
-    scale_y_continuous(breaks = pretty_breaks(10), labels = percent_format(accuracy = 1)) +
-    #scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
-    labs(title="Prediction of Probability that Vote is Republican, given Income.",
-         subtitle="Purple line is logit function for model; red lines are 50% point",
-         x="Income Level",
-         y="Prediction of Probability")
 ```
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2646,8 +2675,9 @@ rm(xmin)
 rm(nes_1992)
 rm(model_1)
 rm(new_data)
-rm(expected_predictions)
-rm(binary_predictions)
+rm(population_simulations_across_income)
+rm(individual_simulations_across_income)
+rm(coefficient_simulations)
 ```
 
 
