@@ -2649,25 +2649,13 @@ mean(individual_simulations_across_income[, 5])
 colMeans(individual_simulations_across_income)
 ```
 
-```{r}
-binary_predictions <- posterior_predict(model_1, newdata=new_data, type='link')
-head(binary_predictions)
-```
+`rowSums` should take each simulation and give the number of people who voted republican (1 for each of the 5 income levels). The result is a vector of 4000 integers.
+
+If we take the average, we should be calculating how many people, on average, vote republican of a random sample of 1 person from each income level..
 
 ```{r}
-apply(binary_predictions, 2, function(.x) quantile(.x, c(0, .5, 1)))
+mean(rowSums(individual_simulations_across_income))
 ```
-
-```{r}
-colMeans(binary_predictions)
-```
-
-```{r}
-
-```
-
-
-
 
 
 ```{r include=FALSE}
