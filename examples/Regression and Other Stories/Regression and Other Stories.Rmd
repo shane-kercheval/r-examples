@@ -2802,9 +2802,114 @@ predict_switch(.dist100 = average_distance, .arsenic = average_arsenic+1) -
 predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
 ```
 
+## Centered Model
+
+```{r}
+set.seed(2)
+model_centered <- stan_glm(switch ~ c_dist100*c_arsenic, family=binomial(link="logit"),
+                           data = wells %>%
+                               mutate(c_dist100 = dist100 - mean(dist100),
+                                      c_arsenic = arsenic - mean(arsenic)),
+                           refresh=0)
+print(model_centered, digits = 2)
+```
+
+Same values that we manually calculated above
+
+```{r}
+rstanarm::invlogit(coef(model_centered)['(Intercept)'])
+```
+
+```{r message=FALSE, warning=FALSE}
+coef(model_centered) %>%
+    tidy() %>%
+    filter(names %in% c('c_dist100', 'c_arsenic')) %>%
+    mutate(probability = x / 4)
+```
+
+```{r}
+coef(model_centered)['c_dist100:c_arsenic']
+coef(model)['dist100:arsenic']
+```
+
+## Interactions
+
+> Note that the interaction term is not quite "statistically significant" in that the estimate is not quite two standard errors away from zero.
+
+We can visualize the interactions.
+
+```{r}
+quantile(wells$arsenic, c(0, 0.35, .5, 1))
+```
+
+Note: the book uses `invlogit(cbind(1, x/100, 0.5, 0.5*x/100) %*% coef(model))` where `x` are values of `dist` and then use `%*%` to multiply the values against the corresponding coefficients, and then sum to get the linear prediction, and then `invlogit` to get the probability prediction.
+
+While this might be faster, at a glance it is hard to tell what is going on, and the code isn't explained.
+
+We can just use `predict()` to get the same thing, which I already wrapped in a helper function, `predict_switch`, above.
+
+Also, they are using an arsenic level of `0.5` which is actually below (although slightly) the minimum arsenic level in the data, and comparing that to an arsenic value of 1, which is less than the median. Seems like weird and arbitrary references. I'll use min/medium/max values.
+
+```{r}
+quantile(wells$arsenic, c(0, .5, 1))
+```
+
+```{r}
+dist_x <- 100
+
+invlogit(cbind(1, dist_x/100, 0.5, 0.5*dist_x/100) %*% coef(model))
+predict_switch(.dist100 = dist_x/100, .arsenic = 0.5)
+```
+
+
+```{r chapter_14_interaction_plots, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+library(rstan)
+library(rstanarm)
+
+set.seed(2)
+model_interaction <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=wells, refresh=0)
+model_no_interaction <- stan_glm(switch ~ dist100+arsenic, family=binomial(link="logit"), data=wells, refresh=0)
+
+jitter_binary <- function(a, jitt=.05){
+  a + (1-2*a)*runif(length(a),0,jitt)
+}
+predict_switch <- function(.model, .dist100, .arsenic) {
+    predict(.model,
+            newdata = data.frame(dist100=.dist100, arsenic=.arsenic),
+            type='response')
+}
+
+plot_prob_swiching_given_distance <- function(.model) {
+
+    plot(wells$dist, jitter_binary(wells$switch), xlim=c(0, max(wells$dist)))
+    for(arsenic_quantile in c(0, 0.5, 0.95, 1)) {
+        arsenic_value <- quantile(wells$arsenic, arsenic_quantile)
+        curve(predict_switch(.model, .dist100=x/100, .arsenic = arsenic_value), add=TRUE, col='red')
+        
+        text_y <- predict_switch(.model, .dist100=0, .arsenic = arsenic_value)
+        text(.25, text_y, paste("if arsenic = ", arsenic_value), adj=0, cex=.8, col = 'red')
+    }
+    
+}
+plot_prob_swiching_given_distance(model_no_interaction)
+plot_prob_swiching_given_distance(model_interaction)
+```
+
+```{r}
+
+```
+
+
 ```{r include=FALSE}
 rm(model)
+rm(model_centered)
+rm(model_interaction)
+rm(model_no_interaction)
 rm(predict_switch)
 rm(average_distance)
 rm(average_arsenic)
+rm(jitter_binary)
+rm(arsenic_quantile)
+rm(arsenic_value)
+rm(text_y)
 ```
