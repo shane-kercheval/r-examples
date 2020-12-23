@@ -2481,7 +2481,14 @@ Above, `x=0` is the value that results at the midway-point (`0.5`) of the curve.
 
 What is the value of `x` in equation `-1.4 + 0.3x` associated with the mid-point of our Inverse Logit Distribution?
 
-There might be a better way, but we will cheat with `optimize`. Basically, we give it a function and a range of values to test, and it will tell us which value of `x` is associated with the smallest value (i.e. the value we are "optimizing" for). In this case, the destribution doesn't have a natural maximum or minimum that we want to optimize (e.g. like the normal distribution) so we have to modify the function to subtract `0.5` from the absolute value of result from invlogit function, since that will result in very small numbers of `x` that are close to the value of 0.5 on the y-axis.
+There might be a better way, but we will cheat with `optimize`. Basically, we give it a function and a range of values to test, and it will tell us which value of `x` is associated with the smallest value (i.e. the value we are "optimizing" for). In this case, the destribution doesn't have a natural maximum or minimum that we want to optimize (e.g. like the normal distribution) so we have to modify the function to subtract `0.5` from the result from invlogit function and take the absolute value, since that will result in very small numbers of `x` that are close to the value of 0.5 on the y-axis.
+
+```{r}
+abs(1-0.5) # not close to 0.5
+abs(0-0.5) # not close to 0.5
+abs(0.51 - 0.5) # fairly close to 0.5
+abs(0.49 - 0.5) # fairly close to 0.5
+```
 
 ```{r}
 xmin <- optimize(function (x) abs(rstanarm::invlogit( -1.4 + 0.33*x ) - 0.5),
@@ -2558,7 +2565,7 @@ population_simulations_across_income <- posterior_epred(object=model_1, newdata 
 head(population_simulations_across_income)
 ```
 
-This gives the same values as `invlogit(posterior_linpred(...))`:
+`This gives the same values as `invlogit(posterior_linpred(...))` (i.e. `posterior_epred` & posterior_predict are doing the `invlogit` for us):
 
 ```{r}
 head(invlogit(posterior_linpred(object=model_1, newdata = new_data)))
@@ -2601,6 +2608,18 @@ median(population_simulations_across_income[, 5]) - median(population_simulation
 ```
 
 ---
+
+```{r}
+# the function is similar to what we used above, except using the model directly to get the probability
+# and subtracting 0.5 and then taking the absolute number
+# the result is that the smallest numbers will be the closes to the midpoint of the curve where the probability
+# is 0.5
+# rather than hard-code the equation; this finds the midpoint for any model (have to adjust the `interval` parameter)
+xmin <- optimize(f=function (.x) abs(predict(object=model_1, newdata = data.frame(income=.x), type='response') - 0.5),
+                 interval=c(0, 10), # search `x` values 0 through 10
+                 tol = 0.0001)
+xmin
+```
 
 ```{r chapter_12_nes_1992_predictions, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 t(apply(population_simulations_across_income, 2, function(.x) quantile(.x, c(0, 0.025, 0.25, 0.5, 0.75, 0.975, 1)))) %>%
@@ -2651,6 +2670,20 @@ mean(individual_simulations_across_income[, 5])
 
 ```{r}
 colMeans(individual_simulations_across_income)
+```
+
+---
+
+Note that we can the "same" (although not exact) numbers if we use `predict()`.
+
+`predict()` by default gives us back the linear prediction for `B*X`. If we want the probability, we need to use `type='response'`.
+
+> Alternatively, we could directly compute the predcition using the point esimtatewith `invlogit()`. Because the logistic transformation is nonlinear, the result from performing `invlogit` on the fitted linear predictor is not quite identical to what is obtained from `predict`, but in this case, the difference is tiny ... pg 223
+
+```{r}
+predict(object=model_1, newdata = new_data)
+predict(object=model_1, newdata = new_data, type='response')
+rstanarm::invlogit(predict(object=model_1, newdata = new_data))
 ```
 
 ---
