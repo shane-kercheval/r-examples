@@ -2722,6 +2722,8 @@ model <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=
 print(model, digits = 2)
 ```
 
+---
+
 > Intercept is the estimated probabilty of switching, if the distance to the nearest safe well is `0` and the arsenic level of the current well is `0`. This is impossible and we do not try to interpret. (pg 243)
 
 ```{r}
@@ -2732,6 +2734,8 @@ rstanarm::invlogit(coef(model)['(Intercept)'])
 
 ```{r}
 rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic))))
+predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic)),
+        type='response')
 ```
 
 > The probability of switching at average values of the data is `59%` (pg. 243)
@@ -2755,13 +2759,24 @@ Then we use the `divide by 4` trick to approximate predictive differences on the
 We can check this by plugging in values and using the `predict` function to get the point prediction for average the average arsenic value where A) `dist100` is at it's average value and B) `dist100` is increased by 1 unit (which corresponds to an increase `100` meters.)
 
 ```{r}
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100)+1, arsenic=mean(wells$arsenic))))
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic))))
+predict_switch <- function(.dist100, .arsenic) {
+    predict(model,
+            newdata = data.frame(dist100=.dist100, arsenic=.arsenic),
+            type='response')
+}
+
+(average_distance <- mean(wells$dist100))
+(average_arsenic <- mean(wells$arsenic))
 ```
 
 ```{r}
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100)+1, arsenic=mean(wells$arsenic)))) -
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic))))
+predict_switch(.dist100 = average_distance+1, .arsenic = average_arsenic)
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
+```
+
+```{r}
+predict_switch(.dist100 = average_distance+1, .arsenic = average_arsenic) -
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
 ```
 
 Pretty close.
@@ -2783,10 +2798,13 @@ Then we use the `divide by 4` trick to approximate predictive differences on the
 ```
 
 ```{r}
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic)+1))) -
-rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic))))
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic+1) -
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
 ```
 
 ```{r include=FALSE}
 rm(model)
+rm(predict_switch)
+rm(average_distance)
+rm(average_arsenic)
 ```
