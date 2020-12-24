@@ -2661,7 +2661,6 @@ head(individual_simulations_across_income)
 
 > We can use this type of prediction (above) to make statements about uncertainty about **individual people** (pg 224).
 
-
 > Taking the average of these simulations of column 5 gives `0.56`, which is equivalent to the point prediction.
 
 ```{r}
