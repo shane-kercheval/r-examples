@@ -2371,7 +2371,7 @@ round(median(loo_R2(model_weakly_informed_prior)), 2)
 loo_compare(loo1,loo2)
 ```
 
-```{r chapter_12_students_weak_prior_standardized, fig.height=6, fig.width=6, message=FALSE}
+```{r chapter_12_students_weakly_informed_prior, fig.height=6, fig.width=6, message=FALSE}
 ordered_levels <- as.matrix(model_weakly_informed_prior) %>%
     as.data.frame() %>%
     select(-`(Intercept)`, -sigma) %>%
@@ -2414,7 +2414,7 @@ round(median(loo_R2(model_horseshoe_prior)), 2)
 loo_compare(loo2,loo3)
 ```
 
-```{r chapter_12_students_weak_prior_standardized, fig.height=6, fig.width=6, message=FALSE}
+```{r chapter_14_mcmc_intervals_horseshoe_prior, fig.height=6, fig.width=6, message=FALSE}
 ordered_levels <- as.matrix(model_horseshoe_prior) %>%
     as.data.frame() %>%
     select(-`(Intercept)`, -sigma) %>%
