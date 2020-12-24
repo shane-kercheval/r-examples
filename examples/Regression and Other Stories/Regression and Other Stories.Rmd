@@ -2715,6 +2715,8 @@ rm(coefficient_simulations)
 head(wells)
 ```
 
+---
+
 ```{r}
 set.seed(2)
 model <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=wells, refresh=0)
@@ -2843,10 +2845,14 @@ coef(model_centered) %>%
     mutate(probability = x / 4)
 ```
 
+Interaction didn't change from by centering.
+
 ```{r}
-coef(model_centered)['c_dist100:c_arsenic']
 coef(model)['dist100:arsenic']
+coef(model_centered)['c_dist100:c_arsenic']
 ```
+
+---
 
 ## Interactions
 
@@ -2854,27 +2860,23 @@ coef(model)['dist100:arsenic']
 
 We can visualize the interactions.
 
-```{r}
-quantile(wells$arsenic, c(0, 0.35, .5, 1))
-```
-
 Note: the book uses `invlogit(cbind(1, x/100, 0.5, 0.5*x/100) %*% coef(model))` where `x` are values of `dist` and then use `%*%` to multiply the values against the corresponding coefficients, and then sum to get the linear prediction, and then `invlogit` to get the probability prediction.
 
-While this might be faster, at a glance it is hard to tell what is going on, and the code isn't explained.
+While this might be faster, or explain what is actually happening 'under the hood', at a glance it is hard to tell what is going on, and the code isn't explained.
 
 We can just use `predict()` to get the same thing, which I already wrapped in a helper function, `predict_switch`, above.
-
-Also, they are using an arsenic level of `0.5` which is actually below (although slightly) the minimum arsenic level in the data, and comparing that to an arsenic value of 1, which is less than the median. Seems like weird and arbitrary references. I'll use min/medium/max values.
-
-```{r}
-quantile(wells$arsenic, c(0, .5, 1))
-```
 
 ```{r}
 dist_x <- 100
 
 invlogit(cbind(1, dist_x/100, 0.5, 0.5*dist_x/100) %*% coef(model))
 predict_switch(.dist100 = dist_x/100, .arsenic = 0.5)
+```
+
+Also, they are using an arsenic level of `0.5` which is actually below (although slightly) the minimum arsenic level in the data, and comparing that to an arsenic value of 1, which is less than the median. The range only captures around the lowest 35% of arsenic levels. Seems like weird and arbitrary references. I'll use min/medium/max values.
+
+```{r}
+quantile(wells$arsenic, c(0, .5, 1))
 ```
 
 ```{r chapter_14_interaction_plots, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
@@ -2888,6 +2890,7 @@ model_no_interaction <- stan_glm(switch ~ dist100+arsenic, family=binomial(link=
 jitter_binary <- function(a, jitt=.05){
   a + (1-2*a)*runif(length(a),0,jitt)
 }
+
 predict_switch <- function(.model, .dist100, .arsenic) {
     predict(.model,
             newdata = data.frame(dist100=.dist100, arsenic=.arsenic),
@@ -2910,8 +2913,91 @@ plot_prob_swiching_given_distance(model_no_interaction)
 plot_prob_swiching_given_distance(model_interaction)
 ```
 
+## Average Predictive Difference in Probability (of `switching`)
+
+See pg 251
+
+```{r}
+set.seed(1)
+model_full <- stan_glm(switch ~ dist100 + arsenic + educ4 + dist100:educ4 + arsenic:educ4, family=binomial(link="logit"), data=wells, refresh=0)
+#model_full <- stan_glm(switch ~ dist100*arsenic*educ4, family=binomial(link="logit"), data=wells, refresh=0)
+#model_full <- stan_glm(switch ~ dist100 + arsenic + educ4, family=binomial(link="logit"), data=wells, refresh=0)
+print(model_full, 2)
+```
+
+Note: `educ4` has a negative coefficient. But `educ4` in general has a positive impact in general. **This highlights the fact that you should not only look at the main coefficient when there are interactions.**
+
+This is because this is the value if dist100 and arsenic are both `0`, the latter being impossible. We'll see below that, on average, education has a positive impact.
+
+```{r chapter_14_wells_model_full, fig.height=4, fig.width=4, message=FALSE}
+ordered_levels <- as.matrix(model_full) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_full),
+                          pars=vars(-'(Intercept)'),
+                          prob=0.50,
+                          prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+```{r}
+new_data_dist_100_0 <- wells %>% select(arsenic, educ4) %>% mutate(dist100=0)
+new_data_dist_100_1 <- wells %>% select(arsenic, educ4) %>% mutate(dist100=1)
+
+head(new_data_dist_100_0)
+head(new_data_dist_100_1)
+```
+
+
+```{r}
+new_data_dist_100_0$prediction <- predict(model_full, newdata = new_data_dist_100_0, type='response')
+new_data_dist_100_1$prediction <- predict(model_full, newdata = new_data_dist_100_1, type='response')
+delta <- wells %>% select(arsenic, educ4) %>% mutate(delta = new_data_dist_100_1$prediction - new_data_dist_100_0$prediction)
+head(delta)
+```
+
+> The result is `-0.21`, implying that, on average in the data, households that are 100 meters from the nearest safe well are `21%` less likely to switch, compared to households that are right next to the nearest safe well, 
+
+```{r}
+mean(new_data_dist_100_1$prediction - new_data_dist_100_0$prediction)
+mean(delta$delta)
+```
+
+```{r}
+quantile(delta$delta, c(0, 0.25, .5, .75, 1))
+```
+
+```{r chapter_14_average_predictive_diff_delta, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+hist(delta$delta)
+```
+
+```{r chapter_14_average_predictive_diff_expanded, fig.height=6, fig.width=plot_width_height_6, message=FALSE, warning=FALSE}
+new_data_dist_100_0 %>%
+    bind_rows(new_data_dist_100_1) %>%
+    mutate(dist100 = paste(dist100 * 100, 'meters')) %>%
+    ggplot(aes(x=arsenic, y=prediction, color=dist100, group=dist100, size=educ4)) +
+    geom_point(alpha=0.4, shape=1) +
+    geom_smooth(formula = y~x, aes(color=NULL), method='loess', se=FALSE) +
+    coord_cartesian(xlim=c(0, 10)) +
+    scale_x_continuous(breaks=pretty_breaks(10)) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels=percent_format(accuracy = 1)) +
+    labs(title="Predictive Difference in Probability of Switching",
+         subtitle="Comparing households 100 meters away from nearest safe well to those right next to one;\nacross all levels of arsenic/educ4",
+         y="Probability of Switching (prediction)")
+```
+
+## Residuals
+
+
 ```{r include=FALSE}
 rm(model)
+rm(model_full)
 rm(model_centered)
 rm(model_interaction)
 rm(model_no_interaction)
@@ -2921,6 +3007,10 @@ rm(average_arsenic)
 rm(jitter_binary)
 rm(arsenic_quantile)
 rm(arsenic_value)
+rm(dist_x)
 rm(text_y)
 rm(ordered_levels)
+rm(new_data_dist_100_0)
+rm(new_data_dist_100_1)
+rm(delta)
 ```
