@@ -2501,7 +2501,7 @@ xmin
 rstanarm::invlogit( -1.4 + 0.33*xmin$minimum )
 ```
 
-```{r chapter_13_inv_logit_distribution, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
+```{r chapter_13_inv_logit_distribution_function, fig.height=5, fig.width=plot_width_height_5, message=FALSE}
 curve(rstanarm::invlogit( -1.4 + 0.33*x ), -10, 20, main="Inverse Logit Distribution")
 abline(v=xmin$minimum, col="red", lty=2, lwd=3)
 abline(h=0.5, col="red", lty=2, lwd=3)
