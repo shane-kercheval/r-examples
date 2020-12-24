@@ -2542,13 +2542,13 @@ coefficient_simulations <- as.matrix(model_1)
 head(coefficient_simulations)
 ```
 
-```{r chapter_12_mesquite_coefficient_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+```{r chapter_13_mcmc_areas_coefficient_density, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 bayesplot::mcmc_areas(as.matrix(model_1)) +
                       #regex_pars = "^log|^gro") +
     labs(title = "Coefficient Densities")
 ```
 
-```{r chapter_13_logistic_coef_densities, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
+```{r chapter_13_logistic_coef_intervals, fig.height=6, fig.width=plot_width_height_6, message=FALSE}
 bayesplot::mcmc_intervals(as.matrix(model_1), 
                           #regex_pars = "^log|^gro",
                           prob = 0.75, prob_outer = 0.99) +
