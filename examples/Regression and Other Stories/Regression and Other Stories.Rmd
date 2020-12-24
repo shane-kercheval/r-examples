@@ -2814,6 +2814,23 @@ model_centered <- stan_glm(switch ~ c_dist100*c_arsenic, family=binomial(link="l
 print(model_centered, digits = 2)
 ```
 
+```{r chapter_14_wells_model_centered, fig.height=4, fig.width=4, message=FALSE}
+ordered_levels <- as.matrix(model_centered) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_centered),
+                          pars=vars(-'(Intercept)'),
+                          prob=0.50,
+                          prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
 Same values that we manually calculated above
 
 ```{r}
@@ -2861,7 +2878,6 @@ invlogit(cbind(1, dist_x/100, 0.5, 0.5*dist_x/100) %*% coef(model))
 predict_switch(.dist100 = dist_x/100, .arsenic = 0.5)
 ```
 
-
 ```{r chapter_14_interaction_plots, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
 library(rstan)
 library(rstanarm)
@@ -2895,11 +2911,6 @@ plot_prob_swiching_given_distance(model_no_interaction)
 plot_prob_swiching_given_distance(model_interaction)
 ```
 
-```{r}
-
-```
-
-
 ```{r include=FALSE}
 rm(model)
 rm(model_centered)
@@ -2912,4 +2923,5 @@ rm(jitter_binary)
 rm(arsenic_quantile)
 rm(arsenic_value)
 rm(text_y)
+rm(ordered_levels)
 ```
