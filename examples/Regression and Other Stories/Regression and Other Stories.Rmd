@@ -2520,7 +2520,8 @@ nes_1992 <- nes_data %>%
 rownames(nes_1992) <- NULL
 
 nes_1992 %>%
-    select(rvote, dvote, age, gender, race, income)
+    select(rvote, dvote, age, gender, race, income) %>%
+    head()
 ```
 
 ### Model

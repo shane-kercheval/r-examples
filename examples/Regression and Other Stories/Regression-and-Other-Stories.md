@@ -73,6 +73,31 @@
             deviations](#centerscaling-using-2-standard-deviations)
     -   [Example](#example)
     -   [Regularized horseshoe prior](#regularized-horseshoe-prior)
+        -   [Default weak prior on original
+            coefficients](#default-weak-prior-on-original-coefficients)
+        -   [Default weak prior on scaled
+            predictors](#default-weak-prior-on-scaled-predictors)
+        -   [Compare Bayesian R^2 and LOO
+            R^2](#compare-bayesian-r2-and-loo-r2)
+        -   [Fit a regression model with a weakly informative prior
+            scaled with the number of
+            covariates](#fit-a-regression-model-with-a-weakly-informative-prior-scaled-with-the-number-of-covariates)
+-   [Chapter 13 - Logistic
+    Regression](#chapter-13---logistic-regression)
+    -   [Logit & Inverse Logit
+        distributions](#logit-inverse-logit-distributions)
+    -   [Example](#example-1)
+        -   [Data](#data)
+        -   [Model](#model)
+        -   [Coefficient Uncertainties](#coefficient-uncertainties)
+    -   [`posterior_epred()`](#posterior_epred)
+    -   [`posterior_predict()`](#posterior_predict)
+-   [Chapter 14](#chapter-14)
+    -   [Centered Model](#centered-model)
+    -   [Interactions](#interactions)
+    -   [Average Predictive Difference in Probability (of
+        `switching`)](#average-predictive-difference-in-probability-of-switching)
+    -   [Residuals](#residuals)
 
 Overview
 ========
@@ -175,8 +200,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.5e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.55 seconds.
+    ## Chain 1: Gradient evaluation took 5.3e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.53 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -193,15 +218,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.026365 seconds (Warm-up)
-    ## Chain 1:                0.026387 seconds (Sampling)
-    ## Chain 1:                0.052752 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.033145 seconds (Warm-up)
+    ## Chain 1:                0.027833 seconds (Sampling)
+    ## Chain 1:                0.060978 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 8e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+    ## Chain 2: Gradient evaluation took 1e-05 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -218,15 +243,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.03221 seconds (Warm-up)
-    ## Chain 2:                0.028393 seconds (Sampling)
-    ## Chain 2:                0.060603 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.033771 seconds (Warm-up)
+    ## Chain 2:                0.026762 seconds (Sampling)
+    ## Chain 2:                0.060533 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 9e-06 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 3: Gradient evaluation took 1e-05 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -243,15 +268,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.029071 seconds (Warm-up)
-    ## Chain 3:                0.025751 seconds (Sampling)
+    ## Chain 3:  Elapsed Time: 0.029582 seconds (Warm-up)
+    ## Chain 3:                0.02524 seconds (Sampling)
     ## Chain 3:                0.054822 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 7e-06 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+    ## Chain 4: Gradient evaluation took 8e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -268,9 +293,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.028717 seconds (Warm-up)
-    ## Chain 4:                0.032108 seconds (Sampling)
-    ## Chain 4:                0.060825 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.034143 seconds (Warm-up)
+    ## Chain 4:                0.025528 seconds (Sampling)
+    ## Chain 4:                0.059671 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -294,23 +319,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.2    1.8 44.0  46.2  48.3 
-    ## growth       3.1    0.8  2.1   3.1   4.0 
-    ## sigma        4.0    0.9  3.1   3.9   5.1 
+    ## (Intercept) 46.3    1.8 44.1  46.2  48.5 
+    ## growth       3.1    0.8  2.1   3.0   4.0 
+    ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.0    1.5 50.2  52.0  53.9 
+    ## mean_PPD 52.0    1.5 50.1  52.0  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  2249 
-    ## growth        0.0  1.0  2594 
-    ## sigma         0.0  1.0  2347 
-    ## mean_PPD      0.0  1.0  3419 
-    ## log-posterior 0.0  1.0  1283 
+    ## (Intercept)   0.0  1.0  3106 
+    ## growth        0.0  1.0  2998 
+    ## sigma         0.0  1.0  2555 
+    ## mean_PPD      0.0  1.0  3575 
+    ## log-posterior 0.0  1.0  1382 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -329,8 +354,8 @@ print(model)
     ##  predictors:   2
     ## ------
     ##             Median MAD_SD
-    ## (Intercept) 46.2    1.6  
-    ## growth       3.1    0.7  
+    ## (Intercept) 46.2    1.7  
+    ## growth       3.0    0.7  
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
@@ -349,7 +374,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.207934    3.058527
+    ##   46.223194    3.049002
 
 ------------------------------------------------------------------------
 
@@ -1465,8 +1490,7 @@ all(model$y - fitted(model) == residuals(model))
 ``` r
 simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
     #mutate(name = fct_reorder(name, coef_median)) %>%
     ggplot(aes(x=value, y=name)) +
@@ -1481,8 +1505,7 @@ simulations %>%
 ``` r
 simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     group_by(name) %>%
     summarise(coef_median = median(value),
               coef_mad = mad(value),
@@ -1598,13 +1621,14 @@ data.frame(growth = -6:6) %>%
     scale_x_continuous(breaks = pretty_breaks(20)) +
     scale_y_continuous(breaks = pretty_breaks(10)) +
     labs(title="Uncertainty in the value of the fitted regression LINE (not the prediction)",
-         subtitle="NOTE: I doubt this is how we ever want to express uncertainty in the actual predictions.")
+         subtitle="NOTE: We can use this type of prediction to make statements about uncertainty in the population.")
 ```
 
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_9_posterior_linpred-1.png)
 
-NOTE: I doubt this is how we ever want to express uncertainty in the
-actual predictions.
+We can use this type of prediction to make statements about uncertainty
+in the population. In order to make display uncertainty for individuals,
+we need to use `posterior_predict`, described next.
 
 Predictive Distribution
 -----------------------
@@ -1731,6 +1755,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -1752,6 +1777,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(10), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("black", "purple")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -1844,10 +1870,8 @@ head(all_predictions, 20)
 ``` r
 all_predictions <- all_predictions %>%
     as.data.frame() %>%
-    mutate(temp=1) %>%
-    pivot_longer(-temp, names_to='growth', values_to='prediction') %>%
-    mutate(growth = as.numeric(growth) - 6 - 1) %>%
-    select(-temp)
+    pivot_longer_all(names_to='growth', values_to='prediction') %>%
+    mutate(growth = as.numeric(growth) - 6 - 1)
 
 results %>%
     ggplot(aes(x=growth, y=prediction, color=stat.sig)) +
@@ -1860,6 +1884,7 @@ results %>%
     scale_y_continuous(breaks = pretty_breaks(20), labels = function(.x)paste0(.x, "%")) +
     scale_color_manual(values=c("#7A7A7A", "#7AA9CF")) +
     labs(title="Prediction of Incumbent party's vote share, given various economic growth values.",
+         subtitle="We can use this type of prediction to make statements about uncertainty about an individual",
          x="Economic Growth (% from previous year)",
          y="Prediction of Incumbent party's vote share.")
 ```
@@ -2017,8 +2042,7 @@ uniform_coef_simulations %>%
 ``` r
 uniform_coef_simulations %>%
     as.data.frame() %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
+    pivot_longer_all() %>%
     #mutate(stat.sig = factor(stat.sig, levels=c("TRUE", "FALSE"))) %>%
     #mutate(name = fct_reorder(name, coef_median)) %>%
     ggplot(aes(x=value, y=name)) +
@@ -3046,20 +3070,16 @@ Centering & Scaling
 #### `kid_score ~ mom_hs + mom_iq`
 
 ``` r
-head(earnings)
+head(kid_iq)
 ```
 
-    ## # A tibble: 6 x 15
-    ##   height weight  male  earn earnk ethnicity education mother_education
-    ##    <dbl>  <dbl> <dbl> <dbl> <dbl> <chr>         <dbl>            <dbl>
-    ## 1     74    210     1 50000    50 White            16               16
-    ## 2     66    125     0 60000    60 White            16               16
-    ## 3     64    126     0 30000    30 White            16               16
-    ## 4     65    200     0 25000    25 White            17               17
-    ## 5     63    110     0 50000    50 Other            16               16
-    ## 6     68    165     0 62000    62 Black            18               18
-    ## # … with 7 more variables: father_education <dbl>, walk <dbl>, exercise <dbl>,
-    ## #   smokenow <dbl>, tense <dbl>, angry <dbl>, age <dbl>
+    ##   kid_score mom_hs    mom_iq mom_age
+    ## 1        65      1 121.11753      27
+    ## 2        98      1  89.36188      25
+    ## 3        85      1 115.44316      27
+    ## 4        83      1  99.44964      25
+    ## 5       115      1  92.74571      27
+    ## 6        98      0 107.90184      18
 
 NOTE: most of this topic can be expressed simply with `lm()` rather than
 `stan_glm()`, which is actually more convenient because we want to see
@@ -3514,14 +3534,17 @@ fit_2_r2 <- data.frame(`Bayes R2`= bayes_R2(fit_2),
     ## Warning: Some Pareto k diagnostic values are too high. See help('pareto-k-diagnostic') for details.
 
 ``` r
+median_bayes_r2 <- median(fit_2_r2$`Bayes R2`)
+median_loo_r2 <- median(fit_2_r2$`LOO R2`)
+
 fit_2_r2 %>%
-    mutate(index=row_number()) %>%
-    pivot_longer(-index) %>%
-    select(-index) %>%
+    pivot_longer_all() %>%
     ggplot(aes(x=value, color=name)) +
     geom_density() +
-    geom_vline(xintercept = median(fit_2_r2$`Bayes R2`), color='purple') +
-    geom_vline(xintercept = median(fit_2_r2$`LOO R2`), color='orange') +
+    annotate("text", median_bayes_r2, x=median_bayes_r2, y=0, label=round(median_bayes_r2, 2), color='purple', hjust=1) +
+    annotate("text", median_loo_r2, x=median_loo_r2, y=0, label=round(median_loo_r2, 2), color='orange', hjust=1) +
+    geom_vline(xintercept = median_bayes_r2, color='purple') +
+    geom_vline(xintercept = median_loo_r2, color='orange') +
     scale_color_manual(values=c('purple', 'orange')) +
     scale_x_continuous(breaks = pretty_breaks(10)) +
     labs(title="Bayes R^2 vs. LOO R^2 Density",
@@ -3529,9 +3552,2653 @@ fit_2_r2 %>%
          x="R^2")
 ```
 
+    ## Warning: Ignoring unknown aesthetics: xmin
+
+    ## Warning: Ignoring unknown aesthetics: xmin
+
 ![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_mesquite_bayes_loo_r2-1.png)
 
 ------------------------------------------------------------------------
 
 Regularized horseshoe prior
 ---------------------------
+
+Example starting on page 206 and author’s code
+[here](https://avehtari.github.io/ROS-Examples/Student/student.html).
+
+### Default weak prior on original coefficients
+
+``` r
+students[1:5, c(1:5)]
+```
+
+    ## # A tibble: 5 x 5
+    ##   math_score school   sex   age address
+    ##        <dbl>  <dbl> <dbl> <dbl>   <dbl>
+    ## 1         10      0     0    15       0
+    ## 2          5      0     0    15       0
+    ## 3         13      0     0    15       0
+    ## 4          8      0     0    15       0
+    ## 5         10      0     0    15       0
+
+``` r
+SEED <- 2132
+model_weak_prior <- stan_glm(math_score ~ ., data = students, seed = SEED, refresh=0)
+print(model_weak_prior)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      math_score ~ .
+    ##  observations: 343
+    ##  predictors:   27
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 15.6    3.2  
+    ## school      -0.7    0.6  
+    ## sex          0.6    0.4  
+    ## age         -0.2    0.2  
+    ## address      0.5    0.4  
+    ## famsize      0.3    0.4  
+    ## Pstatus     -0.2    0.5  
+    ## Medu         0.2    0.2  
+    ## Fedu         0.2    0.2  
+    ## traveltime   0.0    0.3  
+    ## studytime    0.4    0.2  
+    ## failures    -0.9    0.3  
+    ## schoolsup   -2.3    0.5  
+    ## famsup      -0.4    0.4  
+    ## paid        -0.6    0.3  
+    ## activities   0.1    0.3  
+    ## nursery     -0.2    0.4  
+    ## higher       0.1    1.0  
+    ## internet     0.7    0.5  
+    ## romantic    -0.2    0.4  
+    ## famrel       0.0    0.2  
+    ## freetime     0.0    0.2  
+    ## goout       -0.4    0.2  
+    ## Dalc         0.1    0.2  
+    ## Walc        -0.2    0.2  
+    ## health      -0.2    0.1  
+    ## absences    -0.1    0.0  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 2.9    0.1   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+``` r
+ordered_levels <- as.matrix(model_weak_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_weak_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_students_weak_prior-1.png)
+
+> The plot above shows coefficient distributions without standardization
+> of predictors; it looks liek there is a different amount of
+> uncertainty on the relevance of the predictors. For example, it looks
+> like `absences` has a really small reevance and high certainty.
+
+------------------------------------------------------------------------
+
+### Default weak prior on scaled predictors
+
+``` r
+scaled_students <- students %>%
+    select(-math_score) %>%
+    scale() %>%
+    as.data.frame() %>%
+    mutate(math_score = students$math_score) %>%
+    select(math_score, everything())
+model_weak_prior_standardized <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED, refresh=0)
+print(model_weak_prior_standardized)
+```
+
+    ## stan_glm
+    ##  family:       gaussian [identity]
+    ##  formula:      math_score ~ .
+    ##  observations: 343
+    ##  predictors:   27
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 11.6    0.1  
+    ## school      -0.2    0.2  
+    ## sex          0.3    0.2  
+    ## age         -0.2    0.2  
+    ## address      0.2    0.2  
+    ## famsize      0.1    0.2  
+    ## Pstatus     -0.1    0.2  
+    ## Medu         0.2    0.2  
+    ## Fedu         0.3    0.2  
+    ## traveltime   0.0    0.2  
+    ## studytime    0.3    0.2  
+    ## failures    -0.6    0.2  
+    ## schoolsup   -0.8    0.2  
+    ## famsup      -0.2    0.2  
+    ## paid        -0.3    0.2  
+    ## activities   0.1    0.2  
+    ## nursery     -0.1    0.2  
+    ## higher       0.0    0.2  
+    ## internet     0.3    0.2  
+    ## romantic    -0.1    0.2  
+    ## famrel       0.0    0.2  
+    ## freetime     0.0    0.2  
+    ## goout       -0.4    0.2  
+    ## Dalc         0.1    0.2  
+    ## Walc        -0.3    0.2  
+    ## health      -0.3    0.2  
+    ## absences    -0.6    0.2  
+    ## 
+    ## Auxiliary parameter(s):
+    ##       Median MAD_SD
+    ## sigma 2.9    0.1   
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+``` r
+ordered_levels <- as.matrix(model_weak_prior_standardized) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_weak_prior_standardized),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_students_weak_prior_standardized-1.png)
+
+I actually think standardization makes the coefficients themselves less
+interpretable, but does give a better comparison of relevance across
+predictors.
+
+------------------------------------------------------------------------
+
+### Compare Bayesian R^2 and LOO R^2
+
+``` r
+round(median(bayes_R2(model_weak_prior)), 2)
+```
+
+    ## [1] 0.31
+
+``` r
+round(median(bayes_R2(model_weak_prior_standardized)), 2)
+```
+
+    ## [1] 0.31
+
+``` r
+round(median(loo_R2(model_weak_prior)), 2)
+```
+
+    ## Warning: Some Pareto k diagnostic values are slightly high. See help('pareto-k-diagnostic') for details.
+
+    ## [1] 0.16
+
+``` r
+round(median(loo_R2(model_weak_prior_standardized)), 2)
+```
+
+    ## Warning: Some Pareto k diagnostic values are slightly high. See help('pareto-k-diagnostic') for details.
+
+    ## [1] 0.16
+
+``` r
+(loo1 <- loo(model_weak_prior))
+```
+
+    ## 
+    ## Computed from 4000 by 343 log-likelihood matrix
+    ## 
+    ##          Estimate   SE
+    ## elpd_loo   -864.7 12.6
+    ## p_loo        26.5  2.0
+    ## looic      1729.4 25.1
+    ## ------
+    ## Monte Carlo SE of elpd_loo is 0.1.
+    ## 
+    ## All Pareto k estimates are good (k < 0.5).
+    ## See help('pareto-k-diagnostic') for details.
+
+> Medians of Bayesian R2 and LOO R2 are quite different, and p\_loo is
+> approximately 26, which indicates that the model is fitting to all
+> predictors.
+
+------------------------------------------------------------------------
+
+### Fit a regression model with a weakly informative prior scaled with the number of covariates
+
+``` r
+model_weakly_informed_prior <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED,
+                 prior=normal(scale=sd(scaled_students$math_score)/sqrt(26)*sqrt(0.3),
+                              autoscale=FALSE),
+                 refresh=0)
+```
+
+``` r
+round(median(bayes_R2(model_weakly_informed_prior)), 2)
+```
+
+    ## [1] 0.26
+
+``` r
+round(median(loo_R2(model_weakly_informed_prior)), 2)
+```
+
+    ## [1] 0.19
+
+``` r
+(loo2 <- loo(model_weakly_informed_prior))
+```
+
+    ## 
+    ## Computed from 4000 by 343 log-likelihood matrix
+    ## 
+    ##          Estimate   SE
+    ## elpd_loo   -860.0 12.3
+    ## p_loo        21.3  1.6
+    ## looic      1720.1 24.7
+    ## ------
+    ## Monte Carlo SE of elpd_loo is 0.1.
+    ## 
+    ## All Pareto k estimates are good (k < 0.5).
+    ## See help('pareto-k-diagnostic') for details.
+
+``` r
+loo_compare(loo1,loo2)
+```
+
+    ##                             elpd_diff se_diff
+    ## model_weakly_informed_prior  0.0       0.0   
+    ## model_weak_prior            -4.7       1.8
+
+``` r
+ordered_levels <- as.matrix(model_weakly_informed_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+
+bayesplot::mcmc_intervals(as.matrix(model_weakly_informed_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_students_weakly_informed_prior-1.png)
+
+``` r
+p <- ncol(scaled_students) - 1
+p0 <- 6
+slab_scale <- sd(scaled_students$math_score)/sqrt(p0)*sqrt(0.3)
+# global scale without sigma, as the scaling by sigma happens in stan_glm
+global_scale <- p0 / (p - p0) / sqrt(nrow(scaled_students))
+model_horseshoe_prior <- stan_glm(math_score ~ ., data = scaled_students, seed = SEED,
+                                  prior=hs(global_scale=global_scale, slab_scale=slab_scale),
+                                  refresh=0)
+```
+
+``` r
+round(median(bayes_R2(model_horseshoe_prior)), 2)
+```
+
+    ## [1] 0.23
+
+``` r
+round(median(loo_R2(model_horseshoe_prior)), 2)
+```
+
+    ## [1] 0.19
+
+``` r
+(loo3 <- loo(model_horseshoe_prior))
+```
+
+    ## 
+    ## Computed from 4000 by 343 log-likelihood matrix
+    ## 
+    ##          Estimate   SE
+    ## elpd_loo   -860.3 12.3
+    ## p_loo        19.0  1.4
+    ## looic      1720.6 24.6
+    ## ------
+    ## Monte Carlo SE of elpd_loo is 0.1.
+    ## 
+    ## All Pareto k estimates are good (k < 0.5).
+    ## See help('pareto-k-diagnostic') for details.
+
+``` r
+loo_compare(loo2,loo3)
+```
+
+    ##                             elpd_diff se_diff
+    ## model_weakly_informed_prior  0.0       0.0   
+    ## model_horseshoe_prior       -0.3       1.7
+
+``` r
+ordered_levels <- as.matrix(model_horseshoe_prior) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`, -sigma) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+
+bayesplot::mcmc_intervals(as.matrix(model_horseshoe_prior),
+                          pars=vars(-'(Intercept)', -sigma),
+                 prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_mcmc_intervals_horseshoe_prior-1.png)
+
+Chapter 13 - Logistic Regression
+================================
+
+Logit & Inverse Logit distributions
+-----------------------------------
+
+``` r
+logit(0)
+```
+
+    ## [1] -Inf
+
+``` r
+logit(0.5)
+```
+
+    ## [1] 0
+
+``` r
+logit(1)
+```
+
+    ## [1] Inf
+
+------------------------------------------------------------------------
+
+``` r
+curve(rstanarm::logit(x), 0, 1, main="Logit Distribution")
+abline(h=0, col="red", lty=2, lwd=3)
+abline(v=0.5, col="red", lty=2, lwd=3)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_13_logit_distribution-1.png)
+
+------------------------------------------------------------------------
+
+``` r
+curve(rstanarm::invlogit(x), -6, 6, main="Inverse Logit Distribution")
+abline(v=rstanarm::logit(0.5), col="red", lty=2, lwd=3)
+abline(h=0.5, col="red", lty=2, lwd=3)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_13_inv_logit_distribution-1.png)
+
+------------------------------------------------------------------------
+
+Now, lets map the `x` values associated with line/model for
+`-1.4 + 0.3x` to values `0-1`.
+
+Above, `x=0` is the value that results at the midway-point (`0.5`) of
+the curve.
+
+What is the value of `x` in equation `-1.4 + 0.3x` associated with the
+mid-point of our Inverse Logit Distribution?
+
+There might be a better way, but we will cheat with `optimize`.
+Basically, we give it a function and a range of values to test, and it
+will tell us which value of `x` is associated with the smallest value
+(i.e. the value we are “optimizing” for). In this case, the destribution
+doesn’t have a natural maximum or minimum that we want to optimize
+(e.g. like the normal distribution) so we have to modify the function to
+subtract `0.5` from the result from invlogit function and take the
+absolute value, since that will result in very small numbers of `x` that
+are close to the value of 0.5 on the y-axis.
+
+``` r
+abs(1-0.5) # not close to 0.5
+```
+
+    ## [1] 0.5
+
+``` r
+abs(0-0.5) # not close to 0.5
+```
+
+    ## [1] 0.5
+
+``` r
+abs(0.51 - 0.5) # fairly close to 0.5
+```
+
+    ## [1] 0.01
+
+``` r
+abs(0.49 - 0.5) # fairly close to 0.5
+```
+
+    ## [1] 0.01
+
+``` r
+xmin <- optimize(function (x) abs(rstanarm::invlogit( -1.4 + 0.33*x ) - 0.5),
+                 c(0, 10), # search `x` values 0 through 10
+                 tol = 0.0001)
+xmin
+```
+
+    ## $minimum
+    ## [1] 4.242408
+    ## 
+    ## $objective
+    ## [1] 0.000001360035
+
+``` r
+rstanarm::invlogit( -1.4 + 0.33*xmin$minimum )
+```
+
+    ## [1] 0.4999986
+
+``` r
+curve(rstanarm::invlogit( -1.4 + 0.33*x ), -10, 20, main="Inverse Logit Distribution")
+abline(v=xmin$minimum, col="red", lty=2, lwd=3)
+abline(h=0.5, col="red", lty=2, lwd=3)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_13_inv_logit_distribution_function-1.png)
+
+------------------------------------------------------------------------
+
+Example
+-------
+
+### Data
+
+``` r
+nes_1992 <- nes_data %>%
+    filter(year == 1992 & !is.na(rvote) & !is.na(dvote) & (rvote==1 | dvote==1))
+
+rownames(nes_1992) <- NULL
+
+nes_1992 %>%
+    select(rvote, dvote, age, gender, race, income)
+```
+
+    ##      rvote dvote age gender race income
+    ## 1        1     0  41      2    4      4
+    ## 2        1     0  83      2    1      2
+    ## 3        0     1  67      2    2      1
+    ## 4        1     0  28      1    1      2
+    ## 5        0     1  71      2    4      3
+    ## 6        0     1  53      2    1      4
+    ## 7        1     0  60      1    1      2
+    ## 8        1     0  53      2    1      4
+    ## 9        0     1  20      1    3      1
+    ## 10       1     0  31      2    1      4
+    ## 11       1     0  48      2    3      4
+    ## 12       1     0  83      2    1      1
+    ## 13       0     1  29      2    1      3
+    ## 14       0     1  68      1    1      2
+    ## 15       0     1  30      1    1      3
+    ## 16       1     0  65      1    1      3
+    ## 17       0     1  39      2    1      2
+    ## 18       1     0  33      1    1      3
+    ## 19       0     1  33      1    1      4
+    ## 20       0     1  69      2    1      3
+    ## 21       0     1  30      2    1      3
+    ## 22       1     0  72      2    1      2
+    ## 23       1     0  39      1    1      4
+    ## 24       0     1  36      1    1      3
+    ## 25       1     0  64      1    1      4
+    ## 26       1     0  31      1    1      4
+    ## 27       0     1  71      2    2      2
+    ## 28       1     0  35      2    1      3
+    ## 29       1     0  89      2    1      2
+    ## 30       0     1  56      2    4      3
+    ## 31       1     0  64      2    1      3
+    ## 32       0     1  62      1    1      3
+    ## 33       0     1  69      2    2      2
+    ## 34       1     0  33      1    1      5
+    ## 35       1     0  23      1    1      3
+    ## 36       0     1  30      1    1      3
+    ## 37       1     0  43      1    1      3
+    ## 38       0     1  27      1    2      4
+    ## 39       1     0  80      1    1      1
+    ## 40       0     1  37      1    1      4
+    ## 41       0     1  32      1    5      3
+    ## 42       1     0  53      1    1      4
+    ## 43       1     0  54      2    4      4
+    ## 44       0     1  68      1    5      2
+    ## 45       0     1  36      2    5      2
+    ## 46       1     0  35      2    1      3
+    ## 47       0     1  39      1    2      1
+    ## 48       0     1  54      2    1      4
+    ## 49       0     1  34      1    2      3
+    ## 50       1     0  27      2    1      2
+    ## 51       1     0  62      2    1      1
+    ## 52       1     0  44      2    1      2
+    ## 53       0     1  71      1    1      3
+    ## 54       0     1  70      1    2      2
+    ## 55       1     0  35      1    1      4
+    ## 56       0     1  54      2    1      2
+    ## 57       1     0  37      1    1      5
+    ## 58       0     1  58      2    2      1
+    ## 59       0     1  77      1    1      1
+    ## 60       0     1  53      1    2      4
+    ## 61       0     1  42      2    2      1
+    ## 62       0     1  35      2    2      4
+    ## 63       0     1  44      2    1      4
+    ## 64       0     1  39      2    1      3
+    ## 65       1     0  30      2    1      4
+    ## 66       0     1  49      2    1      2
+    ## 67       1     0  32      2    1      3
+    ## 68       0     1  45      2    1      4
+    ## 69       0     1  78      2    2      4
+    ## 70       0     1  84      2    1      2
+    ## 71       0     1  59      2    1      4
+    ## 72       1     0  34      1    1      4
+    ## 73       1     0  28      2    1      4
+    ## 74       1     0  58      2    1      4
+    ## 75       0     1  43      1    1      4
+    ## 76       1     0  83      2    1      4
+    ## 77       1     0  51      1    1      5
+    ## 78       1     0  65      1    1      4
+    ## 79       1     0  67      2    1      2
+    ## 80       0     1  38      2    1      4
+    ## 81       1     0  33      2    1      2
+    ## 82       1     0  26      1    1      3
+    ## 83       0     1  23      1    1      1
+    ## 84       0     1  34      2    2      5
+    ## 85       1     0  63      1    1      4
+    ## 86       1     0  48      1    1      4
+    ## 87       1     0  85      1    1      4
+    ## 88       1     0  30      1    1      3
+    ## 89       0     1  81      1    1      4
+    ## 90       1     0  39      1    1      4
+    ## 91       1     0  40      1    1      4
+    ## 92       1     0  38      1    1      4
+    ## 93       0     1  43      1    1      4
+    ## 94       0     1  46      2    2      2
+    ## 95       0     1  55      2    1      3
+    ## 96       0     1  46      2    2      4
+    ## 97       0     1  36      1    1      1
+    ## 98       0     1  25      2    1      2
+    ## 99       1     0  36      2    1      4
+    ## 100      1     0  78      1    1      4
+    ## 101      0     1  65      2    1      3
+    ## 102      0     1  31      1    1      3
+    ## 103      1     0  37      2    1      3
+    ## 104      0     1  51      2    1      4
+    ## 105      1     0  38      2    5      2
+    ## 106      0     1  34      2    2      2
+    ## 107      1     0  35      2    1      2
+    ## 108      0     1  24      1    1      2
+    ## 109      0     1  39      1    1      2
+    ## 110      1     0  39      2    1      4
+    ## 111      1     0  41      1    1      3
+    ## 112      0     1  60      2    1      2
+    ## 113      1     0  51      1    1      4
+    ## 114      0     1  41      1    1      4
+    ## 115      1     0  70      2    1      4
+    ## 116      0     1  71      1    1      3
+    ## 117      1     0  79      2    1      2
+    ## 118      1     0  32      1    1      4
+    ## 119      1     0  37      2    1      4
+    ## 120      0     1  33      2    2      3
+    ## 121      0     1  69      2    2      1
+    ## 122      0     1  50      1    1      5
+    ## 123      0     1  51      2    1      3
+    ## 124      1     0  60      2    1      3
+    ## 125      0     1  67      2    1      3
+    ## 126      0     1  40      1    1      1
+    ## 127      1     0  39      2    1      4
+    ## 128      0     1  37      2    1      4
+    ## 129      0     1  23      2    1      3
+    ## 130      0     1  35      2    1      5
+    ## 131      0     1  48      1    1      4
+    ## 132      1     0  81      1    1      1
+    ## 133      0     1  23      2    2      3
+    ## 134      0     1  88      2    1      2
+    ## 135      1     0  31      1    3      4
+    ## 136      1     0  71      2    1      3
+    ## 137      1     0  73      2    1      2
+    ## 138      0     1  19      1    1      4
+    ## 139      0     1  39      1    5      3
+    ## 140      0     1  65      2    1      3
+    ## 141      1     0  35      2    1      5
+    ## 142      0     1  65      1    1      2
+    ## 143      0     1  62      2    5      1
+    ## 144      0     1  43      2    2      2
+    ## 145      1     0  21      2    4      3
+    ## 146      0     1  51      2    1      2
+    ## 147      1     0  26      2    5      2
+    ## 148      0     1  31      1    1      2
+    ## 149      1     0  35      2    1      3
+    ## 150      1     0  65      1    1      4
+    ## 151      0     1  43      1    1      3
+    ## 152      0     1  59      1    1      4
+    ## 153      0     1  45      2    1      3
+    ## 154      0     1  54      2    1      3
+    ## 155      1     0  57      2    1      3
+    ## 156      0     1  60      2    1      2
+    ## 157      1     0  49      2    1      5
+    ## 158      0     1  31      2    1      4
+    ## 159      1     0  58      1    1      3
+    ## 160      0     1  31      2    1      4
+    ## 161      1     0  59      2    1      4
+    ## 162      0     1  40      1    1      4
+    ## 163      0     1  33      1    2      4
+    ## 164      0     1  68      1    1      4
+    ## 165      0     1  27      2    1      4
+    ## 166      1     0  45      1    1      4
+    ## 167      0     1  74      1    1      2
+    ## 168      1     0  18      1    1      4
+    ## 169      1     0  21      1    5      3
+    ## 170      1     0  65      2    1      3
+    ## 171      1     0  37      1    1      4
+    ## 172      1     0  34      1    1      4
+    ## 173      0     1  25      2    5      4
+    ## 174      1     0  35      2    1      3
+    ## 175      0     1  44      1    4      3
+    ## 176      0     1  29      2    1      4
+    ## 177      0     1  40      2    1      4
+    ## 178      1     0  32      2    1      4
+    ## 179      1     0  46      2    1      3
+    ## 180      0     1  43      1    1      4
+    ## 181      1     0  30      2    1      4
+    ## 182      1     0  35      1    1      3
+    ## 183      1     0  34      2    1      3
+    ## 184      1     0  23      2    1      2
+    ## 185      0     1  45      2    2      3
+    ## 186      0     1  44      1    1      4
+    ## 187      0     1  31      2    4      2
+    ## 188      0     1  69      2    1      4
+    ## 189      0     1  46      2    1      1
+    ## 190      0     1  27      2    1      3
+    ## 191      1     0  19      2    1      2
+    ## 192      1     0  35      2    1      4
+    ## 193      0     1  22      2    2      2
+    ## 194      1     0  41      2    1      3
+    ## 195      0     1  33      1    2      4
+    ## 196      0     1  19      1    2      1
+    ## 197      1     0  31      1    1      4
+    ## 198      0     1  35      2    1      2
+    ## 199      0     1  37      2    2      4
+    ## 200      0     1  42      1    2      5
+    ## 201      0     1  51      1    5      3
+    ## 202      1     0  55      2    1      5
+    ## 203      1     0  61      2    2      2
+    ## 204      1     0  36      1    1      2
+    ## 205      1     0  31      1    1      4
+    ## 206      0     1  49      2    2      1
+    ## 207      1     0  41      1    2      3
+    ## 208      1     0  62      2    1      1
+    ## 209      0     1  49      2    5      2
+    ## 210      1     0  66      2    5      2
+    ## 211      0     1  32      2    1      4
+    ## 212      1     0  24      1    1      3
+    ## 213      0     1  54      1    1      4
+    ## 214      0     1  51      1    1      5
+    ## 215      0     1  58      1    1      1
+    ## 216      1     0  32      1    3      4
+    ## 217      1     0  35      2    1      2
+    ## 218      0     1  42      1    1      4
+    ## 219      1     0  41      1    1      4
+    ## 220      0     1  57      1    2      4
+    ## 221      1     0  33      1    1      3
+    ## 222      1     0  74      2    1      4
+    ## 223      0     1  72      2    1      4
+    ## 224      0     1  38      1    1      4
+    ## 225      0     1  43      2    1      5
+    ## 226      0     1  37      2    1      4
+    ## 227      1     0  32      2    1      4
+    ## 228      0     1  34      1    5      3
+    ## 229      0     1  65      1    1      4
+    ## 230      0     1  44      2    1      4
+    ## 231      1     0  36      2    1      4
+    ## 232      1     0  81      1    1      3
+    ## 233      0     1  23      2    1      5
+    ## 234      0     1  36      1    1      2
+    ## 235      1     0  18      2    5      3
+    ## 236      0     1  63      2    1      1
+    ## 237      1     0  52      2    1      4
+    ## 238      1     0  54      2    5      4
+    ## 239      1     0  52      2    1      4
+    ## 240      1     0  74      2    1      2
+    ## 241      0     1  67      2    1      2
+    ## 242      1     0  29      1    1      3
+    ## 243      0     1  33      2    2      3
+    ## 244      0     1  57      1    3      4
+    ## 245      1     0  87      2    1      4
+    ## 246      0     1  31      2    1      4
+    ## 247      1     0  37      2    1      3
+    ## 248      1     0  38      2    1      4
+    ## 249      1     0  69      1    1      5
+    ## 250      0     1  57      1    4      2
+    ## 251      0     1  35      1    1      4
+    ## 252      1     0  49      1    1      4
+    ## 253      1     0  82      2    1      1
+    ## 254      0     1  43      1    1      5
+    ## 255      1     0  56      1    3      3
+    ## 256      1     0  70      1    1      2
+    ## 257      1     0  33      2    1      4
+    ## 258      1     0  37      1    1      3
+    ## 259      1     0  78      2    1      4
+    ## 260      0     1  38      2    1      1
+    ## 261      0     1  28      2    1      4
+    ## 262      0     1  80      2    2      2
+    ## 263      1     0  65      2    1      3
+    ## 264      1     0  34      1    2      3
+    ## 265      0     1  70      2    1      2
+    ## 266      1     0  36      1    1      3
+    ## 267      1     0  33      1    1      3
+    ## 268      0     1  54      2    1      4
+    ## 269      0     1  45      2    2      1
+    ## 270      0     1  25      2    1      1
+    ## 271      1     0  39      2    1      1
+    ## 272      1     0  51      1    1      4
+    ## 273      0     1  43      2    1      3
+    ## 274      0     1  45      2    1      5
+    ## 275      0     1  72      2    1      1
+    ## 276      0     1  34      1    2      3
+    ## 277      0     1  47      1    1      4
+    ## 278      1     0  51      1    1      4
+    ## 279      0     1  57      2    5      2
+    ## 280      1     0  46      2    3      4
+    ## 281      1     0  68      2    1      2
+    ## 282      0     1  40      1    2      3
+    ## 283      0     1  18      2    5      1
+    ## 284      0     1  21      1    2      3
+    ## 285      1     0  50      1    1      4
+    ## 286      1     0  38      2    1      4
+    ## 287      0     1  28      1    1      2
+    ## 288      1     0  72      1    1      2
+    ## 289      1     0  34      1    1      3
+    ## 290      0     1  44      1    1      4
+    ## 291      0     1  45      1    1      4
+    ## 292      1     0  32      1    1      3
+    ## 293      0     1  52      2    1      5
+    ## 294      1     0  37      2    3      4
+    ## 295      0     1  43      2    1      3
+    ## 296      0     1  44      2    1      3
+    ## 297      0     1  49      2    1      2
+    ## 298      0     1  26      2    1      3
+    ## 299      0     1  19      1    1      1
+    ## 300      1     0  20      2    1      1
+    ## 301      1     0  30      2    1      4
+    ## 302      0     1  79      2    2      2
+    ## 303      0     1  82      2    4      2
+    ## 304      1     0  38      1    1      3
+    ## 305      1     0  34      2    1      5
+    ## 306      1     0  57      1    1      4
+    ## 307      1     0  69      1    1      2
+    ## 308      1     0  25      1    2      3
+    ## 309      1     0  79      1    1      2
+    ## 310      1     0  34      1    1      4
+    ## 311      0     1  49      2    1      4
+    ## 312      0     1  65      2    1      1
+    ## 313      0     1  40      2    2      3
+    ## 314      0     1  66      2    1      4
+    ## 315      1     0  68      2    1      5
+    ## 316      0     1  29      2    1      2
+    ## 317      0     1  26      1    2      3
+    ## 318      0     1  50      2    1      3
+    ## 319      1     0  35      2    1      3
+    ## 320      0     1  53      1    2      3
+    ## 321      1     0  71      2    1      4
+    ## 322      1     0  47      2    4      3
+    ## 323      0     1  73      2    1      2
+    ## 324      1     0  35      1    3      2
+    ## 325      0     1  40      1    4      3
+    ## 326      0     1  32      1    5      2
+    ## 327      0     1  21      2    1      3
+    ## 328      0     1  33      2    1      3
+    ## 329      1     0  28      2    1      4
+    ## 330      0     1  31      2    2      4
+    ## 331      1     0  68      1    1      1
+    ## 332      0     1  71      1    1      1
+    ## 333      0     1  42      2    4      3
+    ## 334      0     1  69      1    1      3
+    ## 335      1     0  43      1    1      4
+    ## 336      1     0  32      2    1      4
+    ## 337      1     0  29      2    1      5
+    ## 338      0     1  47      1    2      3
+    ## 339      1     0  51      1    1      4
+    ## 340      1     0  63      2    1      2
+    ## 341      0     1  35      1    2      4
+    ## 342      1     0  28      1    1      4
+    ## 343      0     1  46      2    1      2
+    ## 344      1     0  26      2    1      4
+    ## 345      0     1  38      2    1      4
+    ## 346      0     1  34      2    2      1
+    ## 347      0     1  47      2    1      5
+    ## 348      0     1  47      1    1      3
+    ## 349      1     0  30      1    1      3
+    ## 350      0     1  40      2    1      5
+    ## 351      0     1  70      2    1      1
+    ## 352      0     1  23      1    1      1
+    ## 353      1     0  48      2    2      4
+    ## 354      1     0  55      1    1      3
+    ## 355      0     1  25      2    1      3
+    ## 356      1     0  68      1    1      5
+    ## 357      0     1  29      1    2      4
+    ## 358      1     0  32      1    1      3
+    ## 359      0     1  84      2    2      2
+    ## 360      1     0  32      2    1      3
+    ## 361      1     0  42      1    1      5
+    ## 362      0     1  34      1    1      4
+    ## 363      1     0  53      2    1      4
+    ## 364      0     1  55      2    2      3
+    ## 365      0     1  67      2    1      3
+    ## 366      1     0  37      2    1      4
+    ## 367      0     1  41      1    1      4
+    ## 368      0     1  18      2    1      3
+    ## 369      0     1  48      1    1      4
+    ## 370      0     1  52      1    1      4
+    ## 371      0     1  49      1    1      4
+    ## 372      0     1  43      2    1      4
+    ## 373      0     1  32      2    2      2
+    ## 374      0     1  71      1    1      4
+    ## 375      0     1  44      1    1      5
+    ## 376      0     1  48      2    1      3
+    ## 377      0     1  42      2    1      3
+    ## 378      0     1  31      1    1      3
+    ## 379      0     1  36      1    1      3
+    ## 380      0     1  34      1    1      3
+    ## 381      1     0  51      1    1      4
+    ## 382      0     1  54      2    1      4
+    ## 383      0     1  33      2    1      3
+    ## 384      1     0  53      2    1      3
+    ## 385      0     1  28      1    1      4
+    ## 386      0     1  23      2    2      1
+    ## 387      1     0  36      2    1      3
+    ## 388      0     1  42      1    1      5
+    ## 389      0     1  40      2    1      5
+    ## 390      0     1  34      2    2      4
+    ## 391      1     0  49      2    1      4
+    ## 392      1     0  31      2    3      4
+    ## 393      1     0  31      2    5      3
+    ## 394      1     0  37      1    1      4
+    ## 395      0     1  37      2    1      3
+    ## 396      0     1  41      2    1      4
+    ## 397      1     0  48      2    1      4
+    ## 398      0     1  29      1    1      4
+    ## 399      0     1  36      1    1      3
+    ## 400      1     0  62      1    1      4
+    ## 401      0     1  37      2    1      3
+    ## 402      0     1  64      2    1      3
+    ## 403      1     0  40      1    1      4
+    ## 404      0     1  37      2    1      3
+    ## 405      1     0  80      2    1      1
+    ## 406      0     1  26      2    2      2
+    ## 407      0     1  40      2    1      4
+    ## 408      0     1  37      1    1      4
+    ## 409      1     0  64      1    1      4
+    ## 410      0     1  26      2    1      3
+    ## 411      0     1  35      1    1      4
+    ## 412      1     0  54      2    1      4
+    ## 413      0     1  53      2    1      3
+    ## 414      1     0  54      2    1      3
+    ## 415      1     0  68      2    1      3
+    ## 416      0     1  61      1    1      4
+    ## 417      1     0  20      1    1      3
+    ## 418      0     1  31      2    1      3
+    ## 419      1     0  36      1    1      4
+    ## 420      0     1  47      2    1      4
+    ## 421      0     1  33      2    1      4
+    ## 422      0     1  44      1    1      3
+    ## 423      0     1  53      2    1      4
+    ## 424      1     0  32      2    1      4
+    ## 425      1     0  29      2    1      4
+    ## 426      0     1  76      1    1      3
+    ## 427      1     0  36      1    1      5
+    ## 428      0     1  19      2    5      2
+    ## 429      1     0  73      1    1      5
+    ## 430      0     1  49      2    1      5
+    ## 431      1     0  83      2    1      4
+    ## 432      0     1  38      1    1      3
+    ## 433      0     1  55      2    1      4
+    ## 434      1     0  38      1    1      2
+    ## 435      0     1  71      1    5      2
+    ## 436      1     0  27      2    5      3
+    ## 437      0     1  29      1    2      3
+    ## 438      0     1  33      2    1      4
+    ## 439      0     1  19      2    2      4
+    ## 440      1     0  36      1    1      4
+    ## 441      1     0  31      1    1      5
+    ## 442      1     0  75      2    1      3
+    ## 443      0     1  45      1    1      1
+    ## 444      1     0  64      2    1      2
+    ## 445      0     1  29      2    2      3
+    ## 446      1     0  65      1    1      4
+    ## 447      0     1  84      1    1      2
+    ## 448      1     0  27      1    1      3
+    ## 449      1     0  46      1    1      4
+    ## 450      0     1  35      2    1      2
+    ## 451      0     1  61      1    1      5
+    ## 452      0     1  59      2    1      1
+    ## 453      1     0  34      1    1      3
+    ## 454      0     1  41      1    1      3
+    ## 455      1     0  51      1    1      4
+    ## 456      0     1  40      2    1      4
+    ## 457      0     1  33      1    1      3
+    ## 458      0     1  20      1    2      2
+    ## 459      0     1  58      2    1      4
+    ## 460      0     1  31      2    1      3
+    ## 461      1     0  72      1    1      4
+    ## 462      0     1  30      2    1      4
+    ## 463      1     0  55      1    1      4
+    ## 464      0     1  39      2    1      4
+    ## 465      0     1  53      2    1      2
+    ## 466      0     1  58      1    1      3
+    ## 467      0     1  38      1    2      4
+    ## 468      0     1  43      1    1      5
+    ## 469      0     1  33      2    1      3
+    ## 470      0     1  51      2    1      3
+    ## 471      0     1  22      2    1      3
+    ## 472      1     0  27      2    1      4
+    ## 473      0     1  46      2    1      4
+    ## 474      0     1  40      1    1      2
+    ## 475      0     1  22      1    1      4
+    ## 476      0     1  26      1    2      4
+    ## 477      1     0  60      1    1      4
+    ## 478      0     1  40      2    2      1
+    ## 479      1     0  31      1    1      2
+    ## 480      0     1  78      1    1      1
+    ## 481      0     1  38      1    1      4
+    ## 482      0     1  52      2    2      4
+    ## 483      0     1  60      1    1      5
+    ## 484      0     1  65      2    1      3
+    ## 485      0     1  51      2    1      4
+    ## 486      0     1  37      2    1      3
+    ## 487      1     0  30      1    1      4
+    ## 488      1     0  44      1    1      5
+    ## 489      0     1  39      1    5      3
+    ## 490      0     1  20      2    1      1
+    ## 491      0     1  48      2    2      3
+    ## 492      0     1  66      2    1      5
+    ## 493      1     0  28      1    1      4
+    ## 494      0     1  53      1    1      4
+    ## 495      1     0  20      2    1      1
+    ## 496      0     1  42      2    1      4
+    ## 497      0     1  33      2    2      2
+    ## 498      0     1  31      1    1      1
+    ## 499      1     0  31      2    1      4
+    ## 500      0     1  21      2    2      3
+    ## 501      0     1  48      1    1      3
+    ## 502      0     1  37      2    2      4
+    ## 503      1     0  27      1    1      4
+    ## 504      1     0  52      1    1      4
+    ## 505      0     1  31      2    1      3
+    ## 506      1     0  37      2    1      2
+    ## 507      0     1  52      1    1      4
+    ## 508      0     1  32      2    1      4
+    ## 509      1     0  26      2    1      5
+    ## 510      1     0  30      2    5      3
+    ## 511      0     1  43      2    4      2
+    ## 512      1     0  33      2    1      5
+    ## 513      0     1  66      1    2      2
+    ## 514      0     1  21      2    2      2
+    ## 515      1     0  23      1    1      4
+    ## 516      0     1  64      1    1      3
+    ## 517      0     1  71      2    1      3
+    ## 518      0     1  65      1    1      1
+    ## 519      0     1  69      2    5      2
+    ## 520      0     1  30      2    1      4
+    ## 521      0     1  56      2    5      4
+    ## 522      1     0  37      1    1      3
+    ## 523      0     1  80      1    2      2
+    ## 524      1     0  34      2    1      4
+    ## 525      0     1  59      1    2      5
+    ## 526      1     0  58      2    1      4
+    ## 527      0     1  53      2    1      3
+    ## 528      0     1  33      1    3      3
+    ## 529      0     1  55      2    1      4
+    ## 530      1     0  26      2    1      4
+    ## 531      0     1  28      1    1      4
+    ## 532      0     1  71      2    1      3
+    ## 533      1     0  58      1    1      4
+    ## 534      0     1  42      1    1      4
+    ## 535      0     1  31      2    1      4
+    ## 536      0     1  50      2    1      5
+    ## 537      0     1  25      1    1      2
+    ## 538      0     1  57      2    2      2
+    ## 539      1     0  42      2    1      4
+    ## 540      1     0  37      1    1      2
+    ## 541      0     1  34      2    1      2
+    ## 542      1     0  33      2    1      3
+    ## 543      1     0  45      2    1      4
+    ## 544      0     1  18      2    1      3
+    ## 545      0     1  48      1    5      2
+    ## 546      0     1  25      2    1      3
+    ## 547      0     1  41      1    1      3
+    ## 548      0     1  79      2    2      1
+    ## 549      0     1  72      2    1      1
+    ## 550      1     0  68      2    2      2
+    ## 551      0     1  59      2    2      3
+    ## 552      0     1  63      1    1      3
+    ## 553      1     0  45      1    1      4
+    ## 554      0     1  27      1    1      3
+    ## 555      0     1  32      2    2      1
+    ## 556      1     0  39      2    1      4
+    ## 557      1     0  70      2    1      2
+    ## 558      0     1  38      1    2      3
+    ## 559      1     0  81      2    1      2
+    ## 560      0     1  60      1    1      4
+    ## 561      0     1  36      2    2      3
+    ## 562      0     1  35      1    1      3
+    ## 563      0     1  83      1    2      1
+    ## 564      0     1  60      1    4      3
+    ## 565      1     0  83      2    1      1
+    ## 566      1     0  37      2    1      3
+    ## 567      0     1  66      2    1      3
+    ## 568      0     1  70      1    2      1
+    ## 569      0     1  33      2    1      3
+    ## 570      0     1  68      2    1      3
+    ## 571      1     0  43      1    1      4
+    ## 572      0     1  28      2    1      4
+    ## 573      0     1  40      1    1      4
+    ## 574      0     1  39      2    1      3
+    ## 575      0     1  29      1    1      3
+    ## 576      0     1  40      2    1      2
+    ## 577      1     0  50      1    1      3
+    ## 578      0     1  68      1    2      4
+    ## 579      0     1  86      2    1      1
+    ## 580      0     1  56      2    1      5
+    ## 581      0     1  29      1    1      2
+    ## 582      1     0  76      1    1      2
+    ## 583      1     0  70      2    1      2
+    ## 584      0     1  77      2    1      3
+    ## 585      1     0  28      2    1      2
+    ## 586      1     0  25      1    1      3
+    ## 587      0     1  46      2    1      3
+    ## 588      1     0  83      2    1      2
+    ## 589      0     1  81      2    1      1
+    ## 590      0     1  82      1    1      4
+    ## 591      0     1  81      2    1      1
+    ## 592      1     0  35      2    1      4
+    ## 593      1     0  42      2    1      4
+    ## 594      1     0  46      2    1      5
+    ## 595      0     1  61      1    1      3
+    ## 596      0     1  48      2    1      4
+    ## 597      0     1  26      2    1      3
+    ## 598      0     1  50      2    1      4
+    ## 599      1     0  58      2    1      3
+    ## 600      0     1  82      1    1      3
+    ## 601      0     1  68      2    1      4
+    ## 602      1     0  77      1    1      3
+    ## 603      0     1  76      2    1      1
+    ## 604      1     0  29      2    1      3
+    ## 605      1     0  40      1    1      4
+    ## 606      0     1  21      1    1      3
+    ## 607      1     0  35      1    1      3
+    ## 608      0     1  36      2    1      2
+    ## 609      0     1  50      2    1      4
+    ## 610      0     1  57      1    1      4
+    ## 611      1     0  33      2    1      4
+    ## 612      0     1  40      1    1      4
+    ## 613      0     1  24      1    1      4
+    ## 614      1     0  75      1    1      3
+    ## 615      1     0  24      2    1      1
+    ## 616      1     0  30      1    1      3
+    ## 617      1     0  54      2    1      3
+    ## 618      1     0  50      2    1      2
+    ## 619      1     0  46      2    1      3
+    ## 620      0     1  57      2    2      4
+    ## 621      0     1  87      2    2      1
+    ## 622      1     0  49      1    1      3
+    ## 623      0     1  26      2    1      1
+    ## 624      1     0  27      1    1      4
+    ## 625      1     0  32      1    1      3
+    ## 626      0     1  39      2    1      4
+    ## 627      1     0  27      1    1      3
+    ## 628      0     1  43      2    1      3
+    ## 629      1     0  55      1    1      4
+    ## 630      1     0  32      1    1      4
+    ## 631      1     0  47      1    1      4
+    ## 632      1     0  50      1    1      3
+    ## 633      0     1  37      1    1      2
+    ## 634      0     1  54      2    2      2
+    ## 635      1     0  30      2    1      3
+    ## 636      0     1  53      2    2      3
+    ## 637      1     0  35      1    4      4
+    ## 638      0     1  67      2    4      3
+    ## 639      0     1  35      2    2      2
+    ## 640      0     1  73      1    1      2
+    ## 641      0     1  36      1    2      3
+    ## 642      0     1  60      2    1      4
+    ## 643      0     1  25      2    1      3
+    ## 644      1     0  32      1    4      4
+    ## 645      0     1  36      1    1      3
+    ## 646      1     0  40      1    1      4
+    ## 647      0     1  69      2    1      1
+    ## 648      0     1  70      2    1      2
+    ## 649      0     1  40      2    1      4
+    ## 650      1     0  66      2    1      2
+    ## 651      0     1  45      1    1      4
+    ## 652      0     1  63      2    1      4
+    ## 653      1     0  55      2    1      4
+    ## 654      0     1  28      2    1      3
+    ## 655      0     1  61      1    1      1
+    ## 656      1     0  43      1    1      4
+    ## 657      0     1  43      1    1      4
+    ## 658      1     0  42      2    1      4
+    ## 659      0     1  64      1    1      3
+    ## 660      0     1  43      2    1      3
+    ## 661      0     1  49      2    2      1
+    ## 662      0     1  46      1    1      4
+    ## 663      1     0  47      1    1      4
+    ## 664      0     1  56      1    2      3
+    ## 665      0     1  75      2    2      1
+    ## 666      0     1  30      1    5      1
+    ## 667      1     0  35      1    1      4
+    ## 668      0     1  68      1    1      3
+    ## 669      1     0  29      2    1      2
+    ## 670      1     0  82      2    1      1
+    ## 671      1     0  75      2    1      4
+    ## 672      1     0  56      2    1      3
+    ## 673      1     0  36      2    1      4
+    ## 674      0     1  76      2    1      2
+    ## 675      0     1  42      1    1      1
+    ## 676      1     0  36      2    1      3
+    ## 677      0     1  46      2    1      4
+    ## 678      0     1  23      1    1      3
+    ## 679      0     1  44      2    1      4
+    ## 680      1     0  47      1    1      4
+    ## 681      1     0  35      2    1      3
+    ## 682      1     0  40      2    1      3
+    ## 683      0     1  37      1    1      3
+    ## 684      0     1  38      2    1      4
+    ## 685      0     1  39      2    1      3
+    ## 686      1     0  45      2    1      3
+    ## 687      0     1  65      2    1      1
+    ## 688      1     0  36      1    1      3
+    ## 689      1     0  74      1    1      3
+    ## 690      1     0  31      2    1      2
+    ## 691      0     1  37      2    1      3
+    ## 692      1     0  48      2    1      5
+    ## 693      0     1  63      2    1      3
+    ## 694      1     0  61      2    1      4
+    ## 695      0     1  47      2    1      2
+    ## 696      1     0  62      2    1      3
+    ## 697      1     0  46      1    1      5
+    ## 698      0     1  20      2    2      1
+    ## 699      0     1  66      2    1      3
+    ## 700      1     0  39      1    1      3
+    ## 701      1     0  49      2    1      4
+    ## 702      1     0  48      1    3      5
+    ## 703      1     0  44      1    1      3
+    ## 704      1     0  82      1    1      2
+    ## 705      0     1  52      2    1      3
+    ## 706      0     1  77      2    1      2
+    ## 707      1     0  58      2    1      3
+    ## 708      1     0  61      1    1      4
+    ## 709      0     1  34      2    1      5
+    ## 710      0     1  42      2    5      2
+    ## 711      0     1  71      2    1      1
+    ## 712      1     0  66      1    1      3
+    ## 713      0     1  42      1    1      2
+    ## 714      1     0  24      2    1      1
+    ## 715      1     0  76      2    4      1
+    ## 716      0     1  46      1    1      1
+    ## 717      0     1  82      1    1      3
+    ## 718      0     1  68      1    1      2
+    ## 719      0     1  75      1    1      2
+    ## 720      0     1  76      1    1      2
+    ## 721      0     1  75      1    5      2
+    ## 722      1     0  60      2    1      2
+    ## 723      1     0  34      1    1      5
+    ## 724      1     0  46      1    5      4
+    ## 725      0     1  31      1    1      3
+    ## 726      1     0  49      2    1      3
+    ## 727      1     0  53      1    1      3
+    ## 728      0     1  68      2    4      3
+    ## 729      1     0  43      2    1      2
+    ## 730      1     0  62      1    1      4
+    ## 731      0     1  51      2    2      4
+    ## 732      0     1  75      2    1      2
+    ## 733      0     1  53      1    1      5
+    ## 734      0     1  42      2    1      5
+    ## 735      1     0  61      1    1      4
+    ## 736      0     1  64      1    1      3
+    ## 737      1     0  70      2    1      3
+    ## 738      0     1  82      2    2      1
+    ## 739      0     1  69      1    1      2
+    ## 740      0     1  44      1    1      4
+    ## 741      0     1  22      1    1      1
+    ## 742      1     0  28      2    1      5
+    ## 743      1     0  32      1    1      4
+    ## 744      0     1  63      2    2      2
+    ## 745      0     1  46      2    1      3
+    ## 746      0     1  39      1    1      4
+    ## 747      0     1  70      2    2      1
+    ## 748      0     1  56      1    2      1
+    ## 749      1     0  60      1    1      3
+    ## 750      0     1  32      2    1      2
+    ## 751      0     1  68      2    1      1
+    ## 752      1     0  31      2    5      2
+    ## 753      0     1  56      1    1      2
+    ## 754      1     0  46      2    1      3
+    ## 755      0     1  37      2    1      2
+    ## 756      1     0  76      2    1      3
+    ## 757      0     1  48      1    1      4
+    ## 758      1     0  83      2    1      3
+    ## 759      0     1  33      1    1      3
+    ## 760      0     1  51      2    1      4
+    ## 761      0     1  70      2    1      1
+    ## 762      1     0  77      2    1      1
+    ## 763      0     1  51      2    1      4
+    ## 764      0     1  23      2    1      2
+    ## 765      1     0  39      2    1      4
+    ## 766      0     1  44      2    1      5
+    ## 767      0     1  60      2    1      4
+    ## 768      0     1  41      1    5      4
+    ## 769      0     1  42      1    1      3
+    ## 770      0     1  35      2    2      4
+    ## 771      0     1  55      1    1      3
+    ## 772      0     1  32      1    1      4
+    ## 773      1     0  69      1    1      3
+    ## 774      0     1  28      1    1      2
+    ## 775      1     0  24      1    1      3
+    ## 776      1     0  43      1    1      4
+    ## 777      0     1  81      2    1      2
+    ## 778      0     1  54      2    1      3
+    ## 779      0     1  22      2    4      1
+    ## 780      1     0  32      1    1      2
+    ## 781      1     0  58      2    5      1
+    ## 782      0     1  64      2    1      2
+    ## 783      0     1  82      2    1      3
+    ## 784      1     0  51      1    1      3
+    ## 785      1     0  55      1    1      4
+    ## 786      0     1  36      1    5      3
+    ## 787      1     0  25      1    1      4
+    ## 788      0     1  41      2    1      4
+    ## 789      0     1  35      2    2      2
+    ## 790      0     1  77      1    1      3
+    ## 791      0     1  33      2    2      3
+    ## 792      0     1  81      1    1      2
+    ## 793      0     1  72      2    1      1
+    ## 794      0     1  64      2    1      1
+    ## 795      0     1  37      2    1      4
+    ## 796      0     1  82      1    1      1
+    ## 797      1     0  53      1    1      4
+    ## 798      0     1  78      1    2      2
+    ## 799      1     0  57      1    1      2
+    ## 800      0     1  69      1    1      3
+    ## 801      0     1  56      2    2      3
+    ## 802      0     1  67      1    1      3
+    ## 803      1     0  23      1    1      2
+    ## 804      1     0  75      1    1      4
+    ## 805      0     1  70      1    1      3
+    ## 806      0     1  50      1    1      3
+    ## 807      1     0  32      1    1      4
+    ## 808      0     1  40      1    1      3
+    ## 809      1     0  33      2    3      4
+    ## 810      1     0  58      2    1      2
+    ## 811      0     1  30      2    2      2
+    ## 812      1     0  37      2    1      2
+    ## 813      1     0  50      2    1      4
+    ## 814      0     1  75      1    1      3
+    ## 815      0     1  31      1    2      4
+    ## 816      0     1  29      2    1      4
+    ## 817      1     0  53      1    1      3
+    ## 818      1     0  37      2    1      4
+    ## 819      0     1  25      1    1      1
+    ## 820      0     1  69      2    1      2
+    ## 821      1     0  71      2    1      2
+    ## 822      0     1  67      2    1      3
+    ## 823      1     0  25      2    1      5
+    ## 824      0     1  59      2    1      4
+    ## 825      1     0  63      1    1      3
+    ## 826      0     1  42      1    1      2
+    ## 827      0     1  64      1    1      2
+    ## 828      1     0  44      2    5      3
+    ## 829      1     0  37      1    1      3
+    ## 830      0     1  71      2    1      1
+    ## 831      0     1  67      2    1      3
+    ## 832      0     1  59      1    2      1
+    ## 833      1     0  33      1    1      4
+    ## 834      0     1  28      1    1      3
+    ## 835      0     1  64      2    2      2
+    ## 836      0     1  41      2    1      3
+    ## 837      1     0  71      2    1      3
+    ## 838      0     1  58      1    1      4
+    ## 839      0     1  61      1    3      4
+    ## 840      0     1  61      1    1      4
+    ## 841      1     0  34      1    1      3
+    ## 842      0     1  71      1    1      3
+    ## 843      0     1  30      2    1      4
+    ## 844      0     1  33      2    1      3
+    ## 845      0     1  75      2    1      3
+    ## 846      0     1  49      1    1      3
+    ## 847      1     0  52      1    1      4
+    ## 848      1     0  50      2    1      5
+    ## 849      0     1  27      2    1      4
+    ## 850      0     1  37      1    1      4
+    ## 851      0     1  57      1    2      3
+    ## 852      0     1  47      1    1      3
+    ## 853      1     0  49      2    1      2
+    ## 854      0     1  21      2    2      1
+    ## 855      0     1  59      1    5      1
+    ## 856      1     0  72      1    1      4
+    ## 857      1     0  56      2    1      5
+    ## 858      0     1  80      1    1      1
+    ## 859      1     0  53      2    1      2
+    ## 860      0     1  30      2    4      2
+    ## 861      0     1  27      2    1      3
+    ## 862      0     1  57      2    1      4
+    ## 863      0     1  46      2    1      2
+    ## 864      0     1  46      2    2      2
+    ## 865      1     0  77      2    1      2
+    ## 866      0     1  58      1    1      4
+    ## 867      0     1  60      1    1      3
+    ## 868      1     0  41      2    1      4
+    ## 869      0     1  49      1    1      4
+    ## 870      1     0  27      2    1      2
+    ## 871      0     1  45      2    1      3
+    ## 872      1     0  29      1    1      3
+    ## 873      0     1  27      1    5      3
+    ## 874      1     0  81      2    1      3
+    ## 875      0     1  70      2    1      3
+    ## 876      1     0  26      2    1      4
+    ## 877      0     1  25      1    1      3
+    ## 878      1     0  64      1    1      3
+    ## 879      1     0  65      1    1      3
+    ## 880      0     1  66      2    1      1
+    ## 881      0     1  23      2    5      1
+    ## 882      0     1  45      1    1      4
+    ## 883      0     1  72      2    1      1
+    ## 884      1     0  22      2    1      4
+    ## 885      0     1  24      2    1      1
+    ## 886      1     0  33      2    1      3
+    ## 887      1     0  65      2    1      3
+    ## 888      1     0  30      1    1      4
+    ## 889      0     1  54      1    1      5
+    ## 890      1     0  43      1    1      4
+    ## 891      1     0  67      1    1      5
+    ## 892      0     1  20      1    1      1
+    ## 893      0     1  31      1    1      4
+    ## 894      0     1  44      2    1      3
+    ## 895      0     1  55      2    5      1
+    ## 896      1     0  75      2    1      2
+    ## 897      0     1  83      1    1      2
+    ## 898      1     0  40      2    1      5
+    ## 899      1     0  27      1    1      2
+    ## 900      1     0  43      1    4      4
+    ## 901      0     1  37      2    1      4
+    ## 902      0     1  29      1    2      2
+    ## 903      0     1  66      1    1      2
+    ## 904      0     1  25      2    1      3
+    ## 905      0     1  20      1    1      4
+    ## 906      0     1  44      2    2      3
+    ## 907      0     1  29      2    1      4
+    ## 908      0     1  33      1    1      4
+    ## 909      0     1  82      1    1      2
+    ## 910      0     1  48      2    2      2
+    ## 911      0     1  76      2    1      2
+    ## 912      0     1  53      2    1      5
+    ## 913      0     1  59      2    2      1
+    ## 914      1     0  45      2    1      4
+    ## 915      0     1  51      2    1      1
+    ## 916      1     0  38      1    1      4
+    ## 917      0     1  58      2    1      3
+    ## 918      1     0  44      2    1      3
+    ## 919      0     1  53      2    1      3
+    ## 920      0     1  25      2    1      3
+    ## 921      1     0  58      1    1      4
+    ## 922      0     1  44      1    1      4
+    ## 923      0     1  42      1    5      4
+    ## 924      0     1  20      1    1      2
+    ## 925      1     0  64      1    1      4
+    ## 926      0     1  54      2    1      2
+    ## 927      0     1  74      2    1      1
+    ## 928      0     1  49      1    1      4
+    ## 929      0     1  71      2    1      1
+    ## 930      1     0  29      1    1      1
+    ## 931      0     1  20      2    1      4
+    ## 932      0     1  62      1    1      4
+    ## 933      1     0  64      2    1      1
+    ## 934      1     0  45      1    1      4
+    ## 935      1     0  46      1    1      4
+    ## 936      1     0  30      1    1      3
+    ## 937      1     0  38      2    5      2
+    ## 938      0     1  49      1    1      4
+    ## 939      0     1  29      1    1      4
+    ## 940      0     1  31      2    2      1
+    ## 941      0     1  34      2    1      3
+    ## 942      0     1  68      1    2      3
+    ## 943      0     1  44      1    2      3
+    ## 944      0     1  57      1    2      2
+    ## 945      1     0  41      1    1      3
+    ## 946      1     0  69      2    1      3
+    ## 947      0     1  41      2    1      4
+    ## 948      0     1  79      2    1      2
+    ## 949      0     1  52      1    1      1
+    ## 950      0     1  64      2    1      1
+    ## 951      0     1  54      2    2      2
+    ## 952      0     1  53      1    3      4
+    ## 953      1     0  39      2    1      5
+    ## 954      0     1  45      2    1      3
+    ## 955      1     0  38      2    1      4
+    ## 956      0     1  35      1    1      3
+    ## 957      0     1  30      1    2      4
+    ## 958      1     0  70      2    4      3
+    ## 959      0     1  29      2    1      2
+    ## 960      0     1  34      2    1      3
+    ## 961      0     1  38      2    1      4
+    ## 962      0     1  25      2    1      1
+    ## 963      0     1  72      2    1      2
+    ## 964      0     1  20      1    1      4
+    ## 965      0     1  28      1    1      3
+    ## 966      0     1  25      2    1      3
+    ## 967      0     1  69      2    1      3
+    ## 968      0     1  39      1    1      4
+    ## 969      0     1  51      1    2      3
+    ## 970      0     1  58      1    5      2
+    ## 971      1     0  40      1    1      5
+    ## 972      1     0  36      2    5      4
+    ## 973      1     0  65      2    1      3
+    ## 974      0     1  78      2    1      3
+    ## 975      1     0  78      2    1      5
+    ## 976      0     1  91      1    1      2
+    ## 977      0     1  26      2    2      4
+    ## 978      1     0  81      2    1      2
+    ## 979      0     1  72      2    1      3
+    ## 980      1     0  35      1    1      3
+    ## 981      1     0  68      1    1      3
+    ## 982      1     0  85      2    1      4
+    ## 983      0     1  40      2    1      3
+    ## 984      1     0  58      1    1      2
+    ## 985      0     1  39      1    3      4
+    ## 986      0     1  63      2    5      1
+    ## 987      0     1  31      1    2      4
+    ## 988      0     1  35      2    1      4
+    ## 989      1     0  58      2    1      3
+    ## 990      0     1  41      2    4      4
+    ## 991      0     1  31      1    2      4
+    ## 992      0     1  61      1    1      3
+    ## 993      1     0  31      2    1      3
+    ## 994      1     0  39      2    1      3
+    ## 995      1     0  30      1    1      3
+    ## 996      0     1  60      1    1      2
+    ## 997      0     1  48      2    1      4
+    ## 998      1     0  51      2    1      4
+    ## 999      0     1  29      2    5      3
+    ## 1000     0     1  43      1    1      4
+    ## 1001     0     1  32      2    2      3
+    ## 1002     0     1  40      1    1      3
+    ## 1003     0     1  76      2    1      3
+    ## 1004     0     1  36      1    2      2
+    ## 1005     1     0  76      2    1      2
+    ## 1006     0     1  56      1    1      3
+    ## 1007     0     1  76      2    1      2
+    ## 1008     1     0  38      2    1      4
+    ## 1009     1     0  34      1    1      4
+    ## 1010     1     0  25      1    5      3
+    ## 1011     0     1  59      2    1      4
+    ## 1012     0     1  35      1    5      3
+    ## 1013     1     0  34      1    1      4
+    ## 1014     1     0  44      2    1      4
+    ## 1015     1     0  35      2    1      4
+    ## 1016     0     1  60      1    1      1
+    ## 1017     0     1  80      1    2      4
+    ## 1018     1     0  48      2    1      1
+    ## 1019     1     0  21      2    1      3
+    ## 1020     1     0  34      1    1      3
+    ## 1021     0     1  35      1    5      2
+    ## 1022     0     1  37      2    2      2
+    ## 1023     1     0  81      2    2      3
+    ## 1024     1     0  62      2    1      4
+    ## 1025     1     0  84      2    1      2
+    ## 1026     0     1  55      1    1      4
+    ## 1027     0     1  37      2    1      3
+    ## 1028     0     1  44      1    2      5
+    ## 1029     1     0  37      1    1      4
+    ## 1030     0     1  42      1    2      2
+    ## 1031     0     1  32      1    1      3
+    ## 1032     0     1  41      2    2      4
+    ## 1033     0     1  51      2    1      5
+    ## 1034     1     0  53      1    3      4
+    ## 1035     0     1  23      1    1      4
+    ## 1036     1     0  39      1    1      3
+    ## 1037     0     1  43      2    2      4
+    ## 1038     0     1  84      1    1      2
+    ## 1039     1     0  45      1    1      3
+    ## 1040     0     1  34      2    1      2
+    ## 1041     0     1  64      2    1      1
+    ## 1042     1     0  27      2    4      3
+    ## 1043     1     0  20      1    1      4
+    ## 1044     1     0  51      1    1      4
+    ## 1045     0     1  23      1    1      4
+    ## 1046     0     1  50      1    1      3
+    ## 1047     1     0  28      2    1      4
+    ## 1048     0     1  76      2    1      2
+    ## 1049     1     0  45      1    1      4
+    ## 1050     1     0  43      2    1      5
+    ## 1051     1     0  36      2    1      4
+    ## 1052     0     1  51      2    1      3
+    ## 1053     1     0  64      2    1      4
+    ## 1054     1     0  83      2    1      1
+    ## 1055     1     0  47      2    1      4
+    ## 1056     1     0  69      1    1      4
+    ## 1057     1     0  31      1    1      3
+    ## 1058     1     0  31      1    1      4
+    ## 1059     1     0  33      2    5      3
+    ## 1060     0     1  67      2    1      2
+    ## 1061     0     1  59      2    1      5
+    ## 1062     0     1  21      1    1      4
+    ## 1063     1     0  41      2    1      4
+    ## 1064     0     1  45      2    1      4
+    ## 1065     1     0  35      1    4      3
+    ## 1066     0     1  38      2    1      4
+    ## 1067     0     1  23      1    1      3
+    ## 1068     0     1  33      1    1      4
+    ## 1069     0     1  55      2    1      4
+    ## 1070     1     0  53      2    1      1
+    ## 1071     0     1  79      2    1      4
+    ## 1072     0     1  31      2    2      1
+    ## 1073     0     1  37      2    2      4
+    ## 1074     0     1  57      1    4      4
+    ## 1075     1     0  45      1    1      5
+    ## 1076     0     1  38      1    2      4
+    ## 1077     0     1  58      1    2      4
+    ## 1078     0     1  84      1    1      1
+    ## 1079     1     0  76      1    1      1
+    ## 1080     0     1  48      2    1      2
+    ## 1081     0     1  53      2    1      4
+    ## 1082     0     1  40      1    1      4
+    ## 1083     1     0  48      1    1      4
+    ## 1084     0     1  49      2    2      3
+    ## 1085     1     0  56      1    1      5
+    ## 1086     1     0  58      1    3      3
+    ## 1087     1     0  56      2    4      4
+    ## 1088     1     0  76      2    1      4
+    ## 1089     1     0  71      2    1      1
+    ## 1090     0     1  32      2    1      3
+    ## 1091     0     1  49      1    2      5
+    ## 1092     0     1  51      2    1      5
+    ## 1093     1     0  74      2    1      2
+    ## 1094     0     1  48      2    2      3
+    ## 1095     0     1  59      2    4      3
+    ## 1096     0     1  51      1    1      3
+    ## 1097     1     0  49      2    1      3
+    ## 1098     1     0  56      2    1      3
+    ## 1099     0     1  28      1    1      3
+    ## 1100     0     1  69      2    1      3
+    ## 1101     0     1  51      2    4      4
+    ## 1102     0     1  71      1    1      2
+    ## 1103     1     0  81      1    1      4
+    ## 1104     1     0  24      2    1      2
+    ## 1105     1     0  66      1    1      4
+    ## 1106     1     0  40      1    1      5
+    ## 1107     0     1  35      2    1      4
+    ## 1108     1     0  46      1    1      5
+    ## 1109     1     0  37      1    1      3
+    ## 1110     0     1  45      2    1      5
+    ## 1111     0     1  63      1    1      3
+    ## 1112     0     1  37      2    2      4
+    ## 1113     0     1  25      2    1      2
+    ## 1114     0     1  71      1    1      3
+    ## 1115     0     1  36      1    1      4
+    ## 1116     1     0  37      1    1      2
+    ## 1117     0     1  33      2    1      2
+    ## 1118     0     1  30      2    1      3
+    ## 1119     0     1  23      1    2      1
+    ## 1120     1     0  41      1    1      3
+    ## 1121     0     1  72      2    1      2
+    ## 1122     0     1  32      1    1      3
+    ## 1123     1     0  63      2    1      1
+    ## 1124     1     0  26      1    1      2
+    ## 1125     0     1  48      2    2      3
+    ## 1126     0     1  64      1    2      4
+    ## 1127     0     1  34      2    2      4
+    ## 1128     0     1  46      2    2      4
+    ## 1129     1     0  36      2    1      1
+    ## 1130     1     0  50      1    1      3
+    ## 1131     0     1  75      1    2      2
+    ## 1132     0     1  66      1    2      1
+    ## 1133     0     1  68      1    2      2
+    ## 1134     0     1  28      2    1      3
+    ## 1135     0     1  31      2    2      2
+    ## 1136     0     1  46      2    1      5
+    ## 1137     1     0  49      1    1      4
+    ## 1138     1     0  60      2    1      1
+    ## 1139     1     0  70      1    2      3
+    ## 1140     0     1  29      2    5      1
+    ## 1141     0     1  25      2    2      1
+    ## 1142     0     1  30      2    2      2
+    ## 1143     1     0  52      1    1      5
+    ## 1144     0     1  30      1    1      3
+    ## 1145     0     1  46      2    1      4
+    ## 1146     1     0  74      2    1      1
+    ## 1147     0     1  50      1    2      4
+    ## 1148     0     1  37      1    2      3
+    ## 1149     0     1  74      2    1      3
+    ## 1150     1     0  43      1    1      4
+    ## 1151     1     0  33      2    5      4
+    ## 1152     0     1  35      2    1      1
+    ## 1153     0     1  41      1    2      4
+    ## 1154     0     1  64      2    1      2
+    ## 1155     1     0  32      2    1      4
+    ## 1156     0     1  40      2    1      3
+    ## 1157     0     1  28      2    1      3
+    ## 1158     0     1  36      2    2      3
+    ## 1159     0     1  65      2    1      2
+    ## 1160     1     0  53      2    1      4
+    ## 1161     0     1  33      2    2      3
+    ## 1162     1     0  41      1    1      3
+    ## 1163     1     0  79      2    1      1
+    ## 1164     0     1  47      1    1      4
+    ## 1165     1     0  50      1    1      4
+    ## 1166     1     0  37      2    1      3
+    ## 1167     0     1  66      2    1      2
+    ## 1168     0     1  52      1    5      1
+    ## 1169     1     0  52      1    1      3
+    ## 1170     0     1  46      2    1      3
+    ## 1171     0     1  72      2    1      2
+    ## 1172     1     0  31      2    1      4
+    ## 1173     0     1  34      2    5      4
+    ## 1174     0     1  26      2    1      3
+    ## 1175     0     1  29      2    2      2
+    ## 1176     0     1  73      2    1      1
+    ## 1177     1     0  29      2    1      4
+    ## 1178     0     1  29      1    1      3
+    ## 1179     1     0  79      1    1      3
+
+### Model
+
+``` r
+set.seed(1)
+model_1 <- stan_glm(rvote ~ income, family=binomial(link="logit"), data=nes_1992, refresh=0)
+print(model_1)
+```
+
+    ## stan_glm
+    ##  family:       binomial [logit]
+    ##  formula:      rvote ~ income
+    ##  observations: 1179
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) -1.4    0.2  
+    ## income       0.3    0.1  
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+> We fitted the model as \`Pr(y\_i = 1) = logit^-1(-1.4 + 0.3 \* income)
+> (pg 218)
+
+> NOTE: Unlike with linear regression, there is no `sigma` in the
+> output. Logistic regression has no separate variance term: its
+> uncertainty comes from its probabilitic prediction of binary outcomes.
+> (pg 219)
+
+### Coefficient Uncertainties
+
+``` r
+coefficient_simulations <- as.matrix(model_1)
+head(coefficient_simulations)
+```
+
+    ##           parameters
+    ## iterations (Intercept)    income
+    ##       [1,]   -1.442114 0.2874333
+    ##       [2,]   -1.519583 0.3957266
+    ##       [3,]   -1.558138 0.4163486
+    ##       [4,]   -1.274584 0.3025033
+    ##       [5,]   -1.262622 0.2674584
+    ##       [6,]   -1.214588 0.2850395
+
+``` r
+bayesplot::mcmc_areas(as.matrix(model_1)) +
+                      #regex_pars = "^log|^gro") +
+    labs(title = "Coefficient Densities")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_13_mcmc_areas_coefficient_density-1.png)
+
+``` r
+bayesplot::mcmc_intervals(as.matrix(model_1), 
+                          #regex_pars = "^log|^gro",
+                          prob = 0.75, prob_outer = 0.99) +
+    labs(title = "Coefficient Intervals")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_13_logistic_coef_intervals-1.png)
+
+`posterior_epred()`
+-------------------
+
+We can get the probabilities i.e. expected outcome via
+`posterior_epred`:
+
+``` r
+new_data <- data.frame(income=1:5)
+population_simulations_across_income <- posterior_epred(object=model_1, newdata = new_data)
+head(population_simulations_across_income)
+```
+
+    ##           
+    ## iterations         1         2         3         4         5
+    ##       [1,] 0.2396352 0.2958274 0.3589754 0.4274211 0.4987632
+    ##       [2,] 0.2452967 0.3256053 0.4176560 0.5158256 0.6127888
+    ##       [3,] 0.2419920 0.3261961 0.4233364 0.5267885 0.6279904
+    ##       [4,] 0.2744660 0.3385915 0.4092482 0.4838629 0.5592041
+    ##       [5,] 0.2698935 0.3256986 0.3869274 0.4519517 0.5186589
+    ##       [6,] 0.2830163 0.3442280 0.4110880 0.4814011 0.5524586
+
+`This gives the same values as`invlogit(posterior\_linpred(…))`(i.e.`posterior\_epred`& posterior_predict are doing the`invlogit\`
+for us):
+
+``` r
+head(invlogit(posterior_linpred(object=model_1, newdata = new_data)))
+```
+
+    ##           
+    ## iterations         1         2         3         4         5
+    ##       [1,] 0.2396352 0.2958274 0.3589754 0.4274211 0.4987632
+    ##       [2,] 0.2452967 0.3256053 0.4176560 0.5158256 0.6127888
+    ##       [3,] 0.2419920 0.3261961 0.4233364 0.5267885 0.6279904
+    ##       [4,] 0.2744660 0.3385915 0.4092482 0.4838629 0.5592041
+    ##       [5,] 0.2698935 0.3256986 0.3869274 0.4519517 0.5186589
+    ##       [6,] 0.2830163 0.3442280 0.4110880 0.4814011 0.5524586
+
+------------------------------------------------------------------------
+
+We can use this type of prediction (above) to make statements about
+uncertainty about the **population** (pg 224)
+
+``` r
+mean(population_simulations_across_income[, 5])
+```
+
+    ## [1] 0.5572918
+
+``` r
+sd(population_simulations_across_income[, 5])
+```
+
+    ## [1] 0.03043033
+
+> According to our fitted model, the percentage of Bush supporters in
+> the **population** at that time, among people with income `level 5`,
+> was probably in the range of `56%` (the same as computed using
+> `predict()`) +- `%3` (pg 223)
+
+------------------------------------------------------------------------
+
+What is the posterior probability
+`that Bush was more popular among people with income level 5 than among people with income level 4`?
+(Again, a question about the population, not about individuals.)
+
+``` r
+mean(population_simulations_across_income[, 5] > population_simulations_across_income[, 4])
+```
+
+    ## [1] 1
+
+------------------------------------------------------------------------
+
+> 99% posterior distribution for the **difference** in support for Bush,
+> comparing people in the richest to the second-richest category
+
+``` r
+quantile(population_simulations_across_income[,5] - population_simulations_across_income[,4], c(0.005, 0.025, 0.5, 0.975, 0.995))
+```
+
+    ##       0.5%       2.5%        50%      97.5%      99.5% 
+    ## 0.04697897 0.05484061 0.08133501 0.10896399 0.11877455
+
+``` r
+median(population_simulations_across_income[, 5])
+```
+
+    ## [1] 0.5572382
+
+``` r
+median(population_simulations_across_income[, 4])
+```
+
+    ## [1] 0.4759593
+
+``` r
+median(population_simulations_across_income[, 5]) - median(population_simulations_across_income[, 4])
+```
+
+    ## [1] 0.08127891
+
+------------------------------------------------------------------------
+
+``` r
+# the function is similar to what we used above, except using the model directly to get the probability
+# and subtracting 0.5 and then taking the absolute number
+# the result is that the smallest numbers will be the closes to the midpoint of the curve where the probability
+# is 0.5
+# rather than hard-code the equation; this finds the midpoint for any model (have to adjust the `interval` parameter)
+xmin <- optimize(f=function (.x) abs(predict(object=model_1, newdata = data.frame(income=.x), type='response') - 0.5),
+                 interval=c(0, 10), # search `x` values 0 through 10
+                 tol = 0.0001)
+xmin
+```
+
+    ## $minimum
+    ## [1] 4.2949
+    ## 
+    ## $objective
+    ##              1 
+    ## 0.000000518713
+
+``` r
+t(apply(population_simulations_across_income, 2, function(.x) quantile(.x, c(0, 0.025, 0.25, 0.5, 0.75, 0.975, 1)))) %>%
+    as.data.frame() %>%
+    mutate(income=row_number()) %>%
+    #pivot_longer(-income)
+    ggplot(aes(x=income, y=`50%`)) +
+    geom_point(size=4) +
+    geom_errorbar(aes(ymin=`25%`, ymax=`75%`), width=0, size=2.5) +
+    geom_errorbar(aes(ymin=`2.5%`, ymax=`97.5%`), width=0, size=1) +
+    geom_errorbar(aes(ymin=`0%`, ymax=`100%`), width=0.1, size=0.25) +
+
+    geom_hline(yintercept = 0.5, color='red') +
+    geom_vline(xintercept = xmin$minimum, color='red') +
+    geom_line(data=data.frame(x=seq(0, 6, by=0.1)) %>%
+                  mutate(y= map_dbl(x, ~rstanarm::invlogit( coef(model_1)['(Intercept)'] + coef(model_1)['income'] * .))),
+              aes(x=x, y=y), color='purple') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    scale_y_continuous(breaks = pretty_breaks(10), labels = percent_format(accuracy = 1)) +
+    labs(title="Population Uncertainty that Vote is Republican, given Income.",
+         subtitle="Purple line is logit function for model; red lines are 50% point",
+         x="Income Level",
+         y="Prediction of Probability")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_12_nes_1992_predictions-1.png)
+
+------------------------------------------------------------------------
+
+`posterior_predict()`
+---------------------
+
+> To get the uncertainty for a **single voter** corresponding to some
+> **invidual data point**, we use the posterior prediction (pg 224):
+
+Which has values of `0`, `1`, `1`, `0`, etc., corresponding to possible
+values of `vote` among people with `income=1`, `2`, etc..
+
+``` r
+set.seed(1)
+individual_simulations_across_income <- posterior_predict(object=model_1, newdata = new_data)
+head(individual_simulations_across_income)
+```
+
+    ##      1 2 3 4 5
+    ## [1,] 0 0 0 1 0
+    ## [2,] 1 1 1 0 1
+    ## [3,] 0 0 1 1 0
+    ## [4,] 0 1 1 0 0
+    ## [5,] 1 0 1 0 1
+    ## [6,] 0 0 0 1 1
+
+> We can use this type of prediction (above) to make statements about
+> uncertainty about **individual people** (pg 224).
+
+> Taking the average of these simulations of column 5 gives `0.56`,
+> which is equivalent to the point prediction.
+
+``` r
+mean(individual_simulations_across_income[, 5])
+```
+
+    ## [1] 0.561
+
+``` r
+colMeans(individual_simulations_across_income)
+```
+
+    ##       1       2       3       4       5 
+    ## 0.25325 0.32875 0.40275 0.46425 0.56100
+
+------------------------------------------------------------------------
+
+Note that we can the “same” (although not exact) numbers if we use
+`predict()`.
+
+`predict()` by default gives us back the linear prediction for `B*X`. If
+we want the probability, we need to use `type='response'`.
+
+> Alternatively, we could directly compute the predcition using the
+> point esimtatewith `invlogit()`. Because the logistic transformation
+> is nonlinear, the result from performing `invlogit` on the fitted
+> linear predictor is not quite identical to what is obtained from
+> `predict`, but in this case, the difference is tiny … pg 223
+
+``` r
+predict(object=model_1, newdata = new_data)
+```
+
+    ##           1           2           3           4           5 
+    ## -1.07974667 -0.75204296 -0.42433926 -0.09663556  0.23106814
+
+``` r
+predict(object=model_1, newdata = new_data, type='response')
+```
+
+    ##         1         2         3         4         5 
+    ## 0.2544280 0.3206837 0.3955698 0.4758967 0.5572918
+
+``` r
+rstanarm::invlogit(predict(object=model_1, newdata = new_data))
+```
+
+    ##         1         2         3         4         5 
+    ## 0.2535540 0.3203763 0.3954789 0.4758599 0.5575114
+
+------------------------------------------------------------------------
+
+`rowSums` should take each simulation and give the number of people who
+voted republican (1 for each of the 5 income levels). The result is a
+vector of 4000 integers.
+
+If we take the average of that number, we should be calculating how many
+people, on average, vote republican of a random sample of 1 person from
+each income level..
+
+``` r
+mean(rowSums(individual_simulations_across_income))
+```
+
+    ## [1] 2.01
+
+``` r
+hist(rowSums(individual_simulations_across_income))
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter-12-misc-1.png)
+
+Chapter 14
+==========
+
+``` r
+head(wells)
+```
+
+    ## # A tibble: 6 x 7
+    ##   switch arsenic  dist dist100 assoc  educ educ4
+    ##    <dbl>   <dbl> <dbl>   <dbl> <dbl> <dbl> <dbl>
+    ## 1      1    2.36  16.8   0.168     0     0  0   
+    ## 2      1    0.71  47.3   0.473     0     0  0   
+    ## 3      0    2.07  21.0   0.210     0    10  2.5 
+    ## 4      1    1.15  21.5   0.215     0    12  3   
+    ## 5      1    1.1   40.9   0.409     1    14  3.5 
+    ## 6      1    3.9   69.5   0.695     1     9  2.25
+
+------------------------------------------------------------------------
+
+``` r
+set.seed(2)
+model <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=wells, refresh=0)
+print(model, digits = 2)
+```
+
+    ## stan_glm
+    ##  family:       binomial [logit]
+    ##  formula:      switch ~ dist100 * arsenic
+    ##  observations: 3020
+    ##  predictors:   4
+    ## ------
+    ##                 Median MAD_SD
+    ## (Intercept)     -0.15   0.11 
+    ## dist100         -0.58   0.21 
+    ## arsenic          0.56   0.07 
+    ## dist100:arsenic -0.18   0.10 
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+------------------------------------------------------------------------
+
+> Intercept is the estimated probabilty of switching, if the distance to
+> the nearest safe well is `0` and the arsenic level of the current well
+> is `0`. This is impossible and we do not try to interpret. (pg 243)
+
+``` r
+rstanarm::invlogit(coef(model)['(Intercept)'])
+```
+
+    ## (Intercept) 
+    ##   0.4634227
+
+> Instead, we can evaluate the prediction at the average values of
+> `dist100` and `arsenic`
+
+``` r
+rstanarm::invlogit(predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic))))
+```
+
+    ##         1 
+    ## 0.5867475
+
+``` r
+predict(model, newdata = data.frame(dist100=mean(wells$dist100), arsenic=mean(wells$arsenic)),
+        type='response')
+```
+
+    ##         1 
+    ## 0.5867131
+
+> The probability of switching at average values of the data is `59%`
+> (pg. 243)
+
+------------------------------------------------------------------------
+
+Coefficient for `distance`:
+
+The coefficient for `dist100` corresponds to comparing two wells that
+different by 1 in dist100 (i.e. 100 meters) **if the arsenic level is 0
+for both wells**.
+
+We can calculate what is called `Average Partial Effect` which is
+described in Intro Econometrics pg 194; and also used in Business Data
+Analysis in the price elasticity example on pg 49).
+
+We want to calculate what the coefficient of `dist100` will be for the
+average value of `arsenic` (i.e. the Average Partial Effect of `dist100`
+on `switch` at the average arsenic values).
+
+Then we use the `divide by 4` trick to approximate predictive
+differences on the probability scale.
+
+``` r
+(coef(model)['dist100'] + (coef(model)['dist100:arsenic'] * mean(wells$arsenic))) / 4
+```
+
+    ##    dist100 
+    ## -0.2197944
+
+We can check this by plugging in values and using the `predict` function
+to get the point prediction for average the average arsenic value where
+A) `dist100` is at it’s average value and B) `dist100` is increased by 1
+unit (which corresponds to an increase `100` meters.)
+
+``` r
+predict_switch <- function(.dist100, .arsenic) {
+    predict(model,
+            newdata = data.frame(dist100=.dist100, arsenic=.arsenic),
+            type='response')
+}
+
+(average_distance <- mean(wells$dist100))
+```
+
+    ## [1] 0.4833186
+
+``` r
+(average_arsenic <- mean(wells$arsenic))
+```
+
+    ## [1] 1.65693
+
+``` r
+predict_switch(.dist100 = average_distance+1, .arsenic = average_arsenic)
+```
+
+    ##         1 
+    ## 0.3720316
+
+``` r
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
+```
+
+    ##         1 
+    ## 0.5867131
+
+``` r
+predict_switch(.dist100 = average_distance+1, .arsenic = average_arsenic) -
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
+```
+
+    ##          1 
+    ## -0.2146815
+
+Pretty close.
+
+------------------------------------------------------------------------
+
+Coefficient for `arsenic`.
+
+The coefficient for `arsenic` corresponds to comparing two wells that
+different by 1 in in `arsenic` **if the distance to the closest clean
+well is 0 for both wells**.
+
+We can calculate what is called `Average Partial Effect` which is
+described in Intro Econometrics pg 194; and also used in Business Data
+Analysis in the price elasticity example on pg 49).
+
+We want to calculate what the coefficient of `arsenic` will be for the
+average value of `dist100` (i.e. the Average Partial Effect of `arsenic`
+on `switch` at the average dist100 values).
+
+Then we use the `divide by 4` trick to approximate predictive
+differences on the probability scale.
+
+``` r
+(coef(model)['arsenic'] + (coef(model)['dist100:arsenic'] * mean(wells$dist100))) / 4
+```
+
+    ##   arsenic 
+    ## 0.1174673
+
+``` r
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic+1) -
+predict_switch(.dist100 = average_distance, .arsenic = average_arsenic)
+```
+
+    ##         1 
+    ## 0.1075353
+
+Centered Model
+--------------
+
+``` r
+set.seed(2)
+model_centered <- stan_glm(switch ~ c_dist100*c_arsenic, family=binomial(link="logit"),
+                           data = wells %>%
+                               mutate(c_dist100 = dist100 - mean(dist100),
+                                      c_arsenic = arsenic - mean(arsenic)),
+                           refresh=0)
+print(model_centered, digits = 2)
+```
+
+    ## stan_glm
+    ##  family:       binomial [logit]
+    ##  formula:      switch ~ c_dist100 * c_arsenic
+    ##  observations: 3020
+    ##  predictors:   4
+    ## ------
+    ##                     Median MAD_SD
+    ## (Intercept)          0.35   0.04 
+    ## c_dist100           -0.88   0.10 
+    ## c_arsenic            0.47   0.04 
+    ## c_dist100:c_arsenic -0.18   0.10 
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+``` r
+ordered_levels <- as.matrix(model_centered) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_centered),
+                          pars=vars(-'(Intercept)'),
+                          prob=0.50,
+                          prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_wells_model_centered-1.png)
+
+Same values that we manually calculated above
+
+``` r
+rstanarm::invlogit(coef(model_centered)['(Intercept)'])
+```
+
+    ## (Intercept) 
+    ##   0.5868914
+
+``` r
+coef(model_centered) %>%
+    tidy() %>%
+    filter(names %in% c('c_dist100', 'c_arsenic')) %>%
+    mutate(probability = x / 4)
+```
+
+    ## # A tibble: 2 x 3
+    ##   names          x probability
+    ##   <chr>      <dbl>       <dbl>
+    ## 1 c_dist100 -0.879      -0.220
+    ## 2 c_arsenic  0.471       0.118
+
+Interaction didn’t change from by centering.
+
+``` r
+coef(model)['dist100:arsenic']
+```
+
+    ## dist100:arsenic 
+    ##      -0.1784097
+
+``` r
+coef(model_centered)['c_dist100:c_arsenic']
+```
+
+    ## c_dist100:c_arsenic 
+    ##          -0.1763369
+
+------------------------------------------------------------------------
+
+Interactions
+------------
+
+> Note that the interaction term is not quite “statistically
+> significant” in that the estimate is not quite two standard errors
+> away from zero.
+
+We can visualize the interactions.
+
+Note: the book uses
+`invlogit(cbind(1, x/100, 0.5, 0.5*x/100) %*% coef(model))` where `x`
+are values of `dist` and then use `%*%` to multiply the values against
+the corresponding coefficients, and then sum to get the linear
+prediction, and then `invlogit` to get the probability prediction.
+
+While this might be faster, or explain what is actually happening ‘under
+the hood’, at a glance it is hard to tell what is going on, and the code
+isn’t explained.
+
+We can just use `predict()` to get the same thing, which I already
+wrapped in a helper function, `predict_switch`, above.
+
+``` r
+dist_x <- 100
+
+invlogit(cbind(1, dist_x/100, 0.5, 0.5*dist_x/100) %*% coef(model))
+```
+
+    ##          [,1]
+    ## [1,] 0.367887
+
+``` r
+predict_switch(.dist100 = dist_x/100, .arsenic = 0.5)
+```
+
+    ##         1 
+    ## 0.3683681
+
+Also, they are using an arsenic level of `0.5` which is actually below
+(although slightly) the minimum arsenic level in the data, and comparing
+that to an arsenic value of 1, which is less than the median. The range
+only captures around the lowest 35% of arsenic levels. Seems like weird
+and arbitrary references. I’ll use min/medium/max values.
+
+``` r
+quantile(wells$arsenic, c(0, .5, 1))
+```
+
+    ##   0%  50% 100% 
+    ## 0.51 1.30 9.65
+
+``` r
+set.seed(2)
+model_interaction <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=wells, refresh=0)
+model_no_interaction <- stan_glm(switch ~ dist100+arsenic, family=binomial(link="logit"), data=wells, refresh=0)
+
+jitter_binary <- function(a, jitt=.05){
+  a + (1-2*a)*runif(length(a),0,jitt)
+}
+
+predict_switch <- function(.model, .dist100, .arsenic) {
+    predict(.model,
+            newdata = data.frame(dist100=.dist100, arsenic=.arsenic),
+            type='response')
+}
+
+plot_prob_swiching_given_distance <- function(.model) {
+
+    plot(wells$dist, jitter_binary(wells$switch), xlim=c(0, max(wells$dist)))
+    for(arsenic_quantile in c(0, 0.5, 0.95, 1)) {
+        arsenic_value <- quantile(wells$arsenic, arsenic_quantile)
+        curve(predict_switch(.model, .dist100=x/100, .arsenic = arsenic_value), add=TRUE, col='red')
+        
+        text_y <- predict_switch(.model, .dist100=0, .arsenic = arsenic_value)
+        text(.25, text_y, paste("if arsenic = ", arsenic_value), adj=0, cex=.8, col = 'red')
+    }
+    
+}
+plot_prob_swiching_given_distance(model_no_interaction)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_interaction_plots-1.png)
+
+``` r
+plot_prob_swiching_given_distance(model_interaction)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_interaction_plots-2.png)
+
+Average Predictive Difference in Probability (of `switching`)
+-------------------------------------------------------------
+
+See pg 251
+
+``` r
+set.seed(1)
+model_full <- stan_glm(switch ~ dist100 + arsenic + educ4 + dist100:educ4 + arsenic:educ4, family=binomial(link="logit"), data=wells, refresh=0)
+#model_full <- stan_glm(switch ~ dist100*arsenic*educ4, family=binomial(link="logit"), data=wells, refresh=0)
+#model_full <- stan_glm(switch ~ dist100 + arsenic + educ4, family=binomial(link="logit"), data=wells, refresh=0)
+print(model_full, 2)
+```
+
+    ## stan_glm
+    ##  family:       binomial [logit]
+    ##  formula:      switch ~ dist100 + arsenic + educ4 + dist100:educ4 + arsenic:educ4
+    ##  observations: 3020
+    ##  predictors:   6
+    ## ------
+    ##               Median MAD_SD
+    ## (Intercept)    0.09   0.12 
+    ## dist100       -1.32   0.18 
+    ## arsenic        0.40   0.06 
+    ## educ4         -0.10   0.08 
+    ## dist100:educ4  0.33   0.11 
+    ## arsenic:educ4  0.08   0.04 
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+Note: `educ4` has a negative coefficient. But `educ4` in general has a
+positive impact in general. **This highlights the fact that you should
+not only look at the main coefficient when there are interactions.**
+
+This is because this is the value if dist100 and arsenic are both `0`,
+the latter being impossible. We’ll see below that, on average, education
+has a positive impact.
+
+``` r
+ordered_levels <- as.matrix(model_full) %>%
+    as.data.frame() %>%
+    select(-`(Intercept)`) %>%
+    pivot_longer_all() %>%
+    mutate(name = fct_reorder(name, value)) %>%
+    pull(name) %>%
+    levels()
+    
+bayesplot::mcmc_intervals(as.matrix(model_full),
+                          pars=vars(-'(Intercept)'),
+                          prob=0.50,
+                          prob_outer=0.95) +
+    scale_y_discrete(limits = ordered_levels) +
+    geom_vline(xintercept = 0, color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_wells_model_full-1.png)
+
+``` r
+new_data_dist_100_0 <- wells %>% select(arsenic, educ4) %>% mutate(dist100=0)
+new_data_dist_100_1 <- wells %>% select(arsenic, educ4) %>% mutate(dist100=1)
+
+head(new_data_dist_100_0)
+```
+
+    ## # A tibble: 6 x 3
+    ##   arsenic educ4 dist100
+    ##     <dbl> <dbl>   <dbl>
+    ## 1    2.36  0          0
+    ## 2    0.71  0          0
+    ## 3    2.07  2.5        0
+    ## 4    1.15  3          0
+    ## 5    1.1   3.5        0
+    ## 6    3.9   2.25       0
+
+``` r
+head(new_data_dist_100_1)
+```
+
+    ## # A tibble: 6 x 3
+    ##   arsenic educ4 dist100
+    ##     <dbl> <dbl>   <dbl>
+    ## 1    2.36  0          1
+    ## 2    0.71  0          1
+    ## 3    2.07  2.5        1
+    ## 4    1.15  3          1
+    ## 5    1.1   3.5        1
+    ## 6    3.9   2.25       1
+
+``` r
+new_data_dist_100_0$prediction <- predict(model_full, newdata = new_data_dist_100_0, type='response')
+new_data_dist_100_1$prediction <- predict(model_full, newdata = new_data_dist_100_1, type='response')
+delta <- wells %>% select(arsenic, educ4) %>% mutate(delta = new_data_dist_100_1$prediction - new_data_dist_100_0$prediction)
+head(delta)
+```
+
+    ## # A tibble: 6 x 3
+    ##   arsenic educ4   delta
+    ##     <dbl> <dbl>   <dbl>
+    ## 1    2.36  0    -0.309 
+    ## 2    0.71  0    -0.313 
+    ## 3    2.07  2.5  -0.103 
+    ## 4    1.15  3    -0.0782
+    ## 5    1.1   3.5  -0.0379
+    ## 6    3.9   2.25 -0.0691
+
+> The result is `-0.21`, implying that, on average in the data,
+> households that are 100 meters from the nearest safe well are `21%`
+> less likely to switch, compared to households that are right next to
+> the nearest safe well,
+
+``` r
+mean(new_data_dist_100_1$prediction - new_data_dist_100_0$prediction)
+```
+
+    ## [1] -0.2101227
+
+``` r
+mean(delta$delta)
+```
+
+    ## [1] -0.2101227
+
+``` r
+quantile(delta$delta, c(0, 0.25, .5, .75, 1))
+```
+
+    ##          0%         25%         50%         75%        100% 
+    ## -0.31859888 -0.29492384 -0.22059519 -0.15000145  0.02140533
+
+``` r
+hist(delta$delta)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_average_predictive_diff_delta-1.png)
+
+``` r
+new_data_dist_100_0 %>%
+    bind_rows(new_data_dist_100_1) %>%
+    mutate(dist100 = paste(dist100 * 100, 'meters')) %>%
+    ggplot(aes(x=arsenic, y=prediction, color=dist100, group=dist100, size=educ4)) +
+    geom_point(alpha=0.4, shape=1) +
+    geom_smooth(formula = y~x, aes(color=NULL), method='loess', se=FALSE) +
+    coord_cartesian(xlim=c(0, 10)) +
+    scale_x_continuous(breaks=pretty_breaks(10)) +
+    scale_y_continuous(breaks=pretty_breaks(10), labels=percent_format(accuracy = 1)) +
+    labs(title="Predictive Difference in Probability of Switching",
+         subtitle="Comparing households 100 meters away from nearest safe well to those right next to one;\nacross all levels of arsenic/educ4",
+         y="Probability of Switching (prediction)")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_average_predictive_diff_expanded-1.png)
+
+Residuals
+---------
+
+``` r
+residuals_model_full <- residuals(model_full)
+
+wells$switch[1:5] - model_full$fitted.values[1:5]
+```
+
+    ##          1          2          3          4          5 
+    ##  0.3068891  0.5616820 -0.7241479  0.3897428  0.3975863
+
+``` r
+model_full$y[1:5] - model_full$fitted.values[1:5]
+```
+
+    ##          1          2          3          4          5 
+    ##  0.3068891  0.5616820 -0.7241479  0.3897428  0.3975863
+
+``` r
+residuals_model_full[1:5]
+```
+
+    ##          1          2          3          4          5 
+    ##  0.3068891  0.5616820 -0.7241479  0.3897428  0.3975863
+
+``` r
+plot(x=model_full$fitted.values, y=residuals_model_full)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_residuals_plain-1.png)
+
+From
+<a href="https://avehtari.github.io/ROS-Examples/Arsenic/arsenic_logistic_residuals.html" class="uri">https://avehtari.github.io/ROS-Examples/Arsenic/arsenic_logistic_residuals.html</a>
+
+``` r
+binned_resids <- function (x, y, nclass=sqrt(length(x))){
+  breaks.index <- floor(length(x)*(1:(nclass-1))/nclass)
+  breaks <- c (-Inf, sort(x)[breaks.index], Inf)
+  output <- NULL
+  xbreaks <- NULL
+  x.binned <- as.numeric (cut (x, breaks))
+  for (i in 1:nclass){
+    items <- (1:length(x))[x.binned==i]
+    x.range <- range(x[items])
+    xbar <- mean(x[items])
+    ybar <- mean(y[items])
+    n <- length(items)
+    sdev <- sd(y[items])
+    output <- rbind (output, c(xbar, ybar, n, x.range, 2*sdev/sqrt(n)))
+  }
+  colnames (output) <- c ("xbar", "ybar", "n", "x.lo", "x.hi", "2se")
+  return (list (binned=output, xbreaks=xbreaks))
+}
+br8 <- binned_resids(model_full$fitted.values, residuals_model_full, nclass=40)$binned
+head(br8)
+```
+
+    ##           xbar         ybar  n       x.lo      x.hi       2se
+    ## [1,] 0.2445056  0.008827765 75 0.03686552 0.3190301 0.1019738
+    ## [2,] 0.3458293 -0.030039815 76 0.31956633 0.3688081 0.1067823
+    ## [3,] 0.3846874 -0.118020772 75 0.36881467 0.4014825 0.1027998
+    ## [4,] 0.4160739 -0.047652814 76 0.40171060 0.4287198 0.1113863
+    ## [5,] 0.4413860  0.051947347 75 0.42884526 0.4499218 0.1164975
+    ## [6,] 0.4575318  0.068784017 76 0.45017581 0.4640621 0.1153050
+
+NOTE: the downside (if it is much of one) is that a point might appear,
+for example, at `x=0.2445056` (x coordinate for first row, and left-most
+point in graph below); but this is representing all the residuals
+associated with the estimated probability of switching
+(`model_full$fitted.values`) in the range of `0.03686552 to 0.3190301`.
+
+``` r
+plot(range(br8[,'xbar']), range(br8[,'ybar'],br8[,'2se'],-br8[,'2se']),
+     xlab="Estimated  Pr (switching)", ylab="Average residual",
+     type="n", main="Binned residual plot", mgp=c(2,.5,0))
+abline(0,0, col="gray", lwd=.5)
+lines(br8[,'xbar'], br8[,'2se'], col="gray", lwd=.5)
+lines(br8[,'xbar'], -br8[,'2se'], col="gray", lwd=.5)
+points(br8[,'xbar'], br8[,'ybar'], pch=20, cex=.5)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_residuals_binned-1.png)
+
+NOTE: we can use the `binnedplot` function from the `arm` package.
+
+``` r
+arm::binnedplot(x=model_full$fitted.values, y=residuals_model_full)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_residuals_binned_arm-1.png)
+
+``` r
+data.frame(fitted=model_full$fitted.values,
+           actual=model_full$y,
+           residuals=residuals(model_full)) %>%
+    mutate(actual = factor(actual)) %>%
+    ggplot(aes(fitted, color=actual, group=actual)) +
+    geom_boxplot() +
+    coord_flip()
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_residuals_actual_vs_fitted-1.png)
+
+``` r
+library(pROC); library(plotROC)
+plot(roc(model_full$y, fitted(model_full)), print.thres = c(.1, .5), col = "red", print.auc = T)
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_14_roc-1.png)
+
+Note the `specificity` (`0.339`) and `sensitivity` (`0.832`) at the
+`0.5` threshold (which is what I use via `round` below) matches the
+numbers below in the confusion matrix.
+
+``` r
+caret::confusionMatrix(factor(round(model_full$fitted.values)), factor(model_full$y), positive='1')
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction    0    1
+    ##          0  435  292
+    ##          1  848 1445
+    ##                                                
+    ##                Accuracy : 0.6225               
+    ##                  95% CI : (0.605, 0.6398)      
+    ##     No Information Rate : 0.5752               
+    ##     P-Value [Acc > NIR] : 0.00000006657        
+    ##                                                
+    ##                   Kappa : 0.1812               
+    ##                                                
+    ##  Mcnemar's Test P-Value : < 0.00000000000000022
+    ##                                                
+    ##             Sensitivity : 0.8319               
+    ##             Specificity : 0.3390               
+    ##          Pos Pred Value : 0.6302               
+    ##          Neg Pred Value : 0.5983               
+    ##              Prevalence : 0.5752               
+    ##          Detection Rate : 0.4785               
+    ##    Detection Prevalence : 0.7593               
+    ##       Balanced Accuracy : 0.5855               
+    ##                                                
+    ##        'Positive' Class : 1                    
+    ##
