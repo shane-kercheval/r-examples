@@ -2880,9 +2880,6 @@ quantile(wells$arsenic, c(0, .5, 1))
 ```
 
 ```{r chapter_14_interaction_plots, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
-library(rstan)
-library(rstanarm)
-
 set.seed(2)
 model_interaction <- stan_glm(switch ~ dist100*arsenic, family=binomial(link="logit"), data=wells, refresh=0)
 model_no_interaction <- stan_glm(switch ~ dist100+arsenic, family=binomial(link="logit"), data=wells, refresh=0)
@@ -2994,6 +2991,82 @@ new_data_dist_100_0 %>%
 
 ## Residuals
 
+```{r}
+residuals_model_full <- residuals(model_full)
+
+wells$switch[1:5] - model_full$fitted.values[1:5]
+model_full$y[1:5] - model_full$fitted.values[1:5]
+residuals_model_full[1:5]
+```
+
+```{r chapter_14_residuals_plain, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+plot(x=model_full$fitted.values, y=residuals_model_full)
+```
+
+From https://avehtari.github.io/ROS-Examples/Arsenic/arsenic_logistic_residuals.html
+
+```{r}
+binned_resids <- function (x, y, nclass=sqrt(length(x))){
+  breaks.index <- floor(length(x)*(1:(nclass-1))/nclass)
+  breaks <- c (-Inf, sort(x)[breaks.index], Inf)
+  output <- NULL
+  xbreaks <- NULL
+  x.binned <- as.numeric (cut (x, breaks))
+  for (i in 1:nclass){
+    items <- (1:length(x))[x.binned==i]
+    x.range <- range(x[items])
+    xbar <- mean(x[items])
+    ybar <- mean(y[items])
+    n <- length(items)
+    sdev <- sd(y[items])
+    output <- rbind (output, c(xbar, ybar, n, x.range, 2*sdev/sqrt(n)))
+  }
+  colnames (output) <- c ("xbar", "ybar", "n", "x.lo", "x.hi", "2se")
+  return (list (binned=output, xbreaks=xbreaks))
+}
+br8 <- binned_resids(model_full$fitted.values, residuals_model_full, nclass=40)$binned
+head(br8)
+```
+
+NOTE: the downside (if it is much of one) is that a point might appear, for example, at `x=0.2445056` (x coordinate for first row, and left-most point in graph below); but this is representing all the residuals associated with the estimated probability of switching (`model_full$fitted.values`) in the range of `0.03686552 to 0.3190301`.
+
+```{r chapter_14_residuals_binned, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+plot(range(br8[,'xbar']), range(br8[,'ybar'],br8[,'2se'],-br8[,'2se']),
+     xlab="Estimated  Pr (switching)", ylab="Average residual",
+     type="n", main="Binned residual plot", mgp=c(2,.5,0))
+abline(0,0, col="gray", lwd=.5)
+lines(br8[,'xbar'], br8[,'2se'], col="gray", lwd=.5)
+lines(br8[,'xbar'], -br8[,'2se'], col="gray", lwd=.5)
+points(br8[,'xbar'], br8[,'ybar'], pch=20, cex=.5)
+```
+
+NOTE: we can use the `binnedplot` function from the `arm` package.
+
+```{r chapter_14_residuals_binned_arm, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+arm::binnedplot(x=model_full$fitted.values, y=residuals_model_full)
+```
+
+```{r chapter_14_residuals_actual_vs_fitted, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+data.frame(fitted=model_full$fitted.values,
+           actual=model_full$y,
+           residuals=residuals(model_full)) %>%
+    mutate(actual = factor(actual)) %>%
+    ggplot(aes(fitted, color=actual, group=actual)) +
+    geom_boxplot() +
+    coord_flip()
+    
+```
+
+```{r chapter_14_roc, fig.height=5, fig.width=plot_width_height_5, message=FALSE, warning=FALSE}
+library(pROC); library(plotROC)
+plot(roc(model_full$y, fitted(model_full)), print.thres = c(.1, .5), col = "red", print.auc = T)
+```
+
+Note the `specificity` (`0.339`) and `sensitivity` (`0.832`) at the `0.5` threshold (which is what I use via `round` below) matches the numbers below in the confusion matrix.
+
+```{r}
+caret::confusionMatrix(factor(round(model_full$fitted.values)), factor(model_full$y), positive='1')
+```
 
 ```{r include=FALSE}
 rm(model)
@@ -3013,4 +3086,9 @@ rm(ordered_levels)
 rm(new_data_dist_100_0)
 rm(new_data_dist_100_1)
 rm(delta)
+rm(residuals_model_full)
+rm(binned_resids)
+rm(br8)
+rm(plot_prob_swiching_given_distance)
 ```
+
