@@ -29,8 +29,6 @@
         (`MAD SD`)](#median-absolute-deviation-mad-sd)
 -   [Chapter 9 - Prediction and Bayesian
     Inference](#chapter-9---prediction-and-bayesian-inference)
--   [pg. 104 describes how sigma (residual standard deviation) is
-    calculated.](#pg.-104-describes-how-sigma-residual-standard-deviation-is-calculated.)
     -   [Point Prediction](#point-prediction)
     -   [Linear Predictor with
         Uncertainty](#linear-predictor-with-uncertainty)
@@ -98,6 +96,11 @@
     -   [Average Predictive Difference in Probability (of
         `switching`)](#average-predictive-difference-in-probability-of-switching)
     -   [Residuals](#residuals)
+-   [Chapter 15 - Other Generalized linear
+    models](#chapter-15---other-generalized-linear-models)
+    -   [Poisson](#poisson)
+        -   [Distribution](#distribution)
+-   [](#section)
 
 Overview
 ========
@@ -200,8 +203,8 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 5.4e-05 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.54 seconds.
+    ## Chain 1: Gradient evaluation took 7.5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.75 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -218,15 +221,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 0.028547 seconds (Warm-up)
-    ## Chain 1:                0.027741 seconds (Sampling)
-    ## Chain 1:                0.056288 seconds (Total)
+    ## Chain 1:  Elapsed Time: 0.02913 seconds (Warm-up)
+    ## Chain 1:                0.028229 seconds (Sampling)
+    ## Chain 1:                0.057359 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 9e-06 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+    ## Chain 2: Gradient evaluation took 7e-06 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -243,9 +246,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 0.029211 seconds (Warm-up)
-    ## Chain 2:                0.024315 seconds (Sampling)
-    ## Chain 2:                0.053526 seconds (Total)
+    ## Chain 2:  Elapsed Time: 0.031457 seconds (Warm-up)
+    ## Chain 2:                0.027659 seconds (Sampling)
+    ## Chain 2:                0.059116 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 3).
@@ -268,15 +271,15 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 0.026164 seconds (Warm-up)
-    ## Chain 3:                0.0234 seconds (Sampling)
-    ## Chain 3:                0.049564 seconds (Total)
+    ## Chain 3:  Elapsed Time: 0.02927 seconds (Warm-up)
+    ## Chain 3:                0.024783 seconds (Sampling)
+    ## Chain 3:                0.054053 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'continuous' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 3.1e-05 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.31 seconds.
+    ## Chain 4: Gradient evaluation took 8e-06 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -293,9 +296,9 @@ model <- stan_glm(vote ~ growth, data=hibbs)
     ## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 0.028993 seconds (Warm-up)
-    ## Chain 4:                0.023813 seconds (Sampling)
-    ## Chain 4:                0.052806 seconds (Total)
+    ## Chain 4:  Elapsed Time: 0.027617 seconds (Warm-up)
+    ## Chain 4:                0.025452 seconds (Sampling)
+    ## Chain 4:                0.053069 seconds (Total)
     ## Chain 4:
 
 ------------------------------------------------------------------------
@@ -319,23 +322,23 @@ summary(model)
     ## 
     ## Estimates:
     ##               mean   sd   10%   50%   90%
-    ## (Intercept) 46.3    1.8 44.1  46.3  48.5 
-    ## growth       3.0    0.8  2.1   3.0   4.0 
+    ## (Intercept) 46.2    1.8 44.0  46.3  48.5 
+    ## growth       3.1    0.8  2.1   3.0   4.0 
     ## sigma        4.0    0.8  3.1   3.9   5.1 
     ## 
     ## Fit Diagnostics:
     ##            mean   sd   10%   50%   90%
-    ## mean_PPD 52.1    1.4 50.2  52.1  53.9 
+    ## mean_PPD 52.0    1.5 50.2  52.0  53.8 
     ## 
     ## The mean_ppd is the sample average posterior predictive distribution of the outcome variable (for details see help('summary.stanreg')).
     ## 
     ## MCMC diagnostics
     ##               mcse Rhat n_eff
-    ## (Intercept)   0.0  1.0  3478 
-    ## growth        0.0  1.0  3008 
-    ## sigma         0.0  1.0  2184 
-    ## mean_PPD      0.0  1.0  3348 
-    ## log-posterior 0.0  1.0  1362 
+    ## (Intercept)   0.0  1.0  2713 
+    ## growth        0.0  1.0  2819 
+    ## sigma         0.0  1.0  2325 
+    ## mean_PPD      0.0  1.0  3554 
+    ## log-posterior 0.0  1.0  1216 
     ## 
     ## For each parameter, mcse is Monte Carlo standard error, n_eff is a crude measure of effective sample size, and Rhat is the potential scale reduction factor on split chains (at convergence Rhat=1).
 
@@ -359,7 +362,7 @@ print(model)
     ## 
     ## Auxiliary parameter(s):
     ##       Median MAD_SD
-    ## sigma 3.9    0.8   
+    ## sigma 3.9    0.7   
     ## 
     ## ------
     ## * For help interpreting the printed output see ?print.stanreg
@@ -374,7 +377,7 @@ coef(model)
 ```
 
     ## (Intercept)      growth 
-    ##   46.269334    3.042364
+    ##   46.250622    3.043179
 
 ------------------------------------------------------------------------
 
@@ -1448,7 +1451,6 @@ mad(simulations[, 'sigma'])
     ## [1] 0.7097398
 
 pg. 104 describes how sigma (residual standard deviation) is calculated.
-========================================================================
 
 They mention that
 
@@ -5029,4 +5031,200 @@ caret::confusionMatrix(factor(round(model_full$fitted.values)), factor(model_ful
     ##       Balanced Accuracy : 0.5855               
     ##                                                
     ##        'Positive' Class : 1                    
-    ##
+    ## 
+
+Chapter 15 - Other Generalized linear models
+============================================
+
+Poisson
+-------
+
+### Distribution
+
+> A Poisson process is a special type of **counting** process. Given a
+> stream of events that arrive at random times starting at `t=0`, let
+> `Nt` denote the `number of arrivals` that occur by time `t`, that is,
+> the number of events in `[0, t]`. For instance, `Nt` might be the
+> number of text messages received up to time `t`. (stochastic processes
+> pg 223)
+
+> The distribution of the number o farrivals/events in an interval only
+> depends on the length of the interval. (pg 225)
+
+> `E(Nt) = lambda*t`; That is, we expect about `lambda * t`
+> arrivals/events in `t` time unites. Thus, **the `rate` of arrival is
+> `E(Nt) / t = lambda`**. (pg)
+
+Random values with `lambda = 10`
+
+``` r
+num_samples <- 1000
+x_range <- 0:40
+lambda <- 10
+
+set.seed(1)
+poisson_random_values <- rpois(n=num_samples, lambda=lambda)
+poisson_random_values[1:20]
+```
+
+    ##  [1]  8 10  7 11 14 12 11  9 14 11  8  2  8 10  7 12 11 12 12 10
+
+``` r
+poisson_expected_density <- dpois(x=x_range, lambda=lambda)
+poisson_expected_density[1:20]
+```
+
+    ##  [1] 0.00004539993 0.00045399930 0.00226999649 0.00756665496 0.01891663740
+    ##  [6] 0.03783327480 0.06305545800 0.09007922572 0.11259903215 0.12511003572
+    ## [11] 0.12511003572 0.11373639611 0.09478033009 0.07290794622 0.05207710445
+    ## [16] 0.03471806963 0.02169879352 0.01276399619 0.00709110899 0.00373216263
+
+``` r
+data.frame(value = poisson_random_values) %>%
+    ggplot(aes(x=value)) +
+    geom_histogram(binwidth = 1, color='white', fill='dark gray') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    geom_boxplot(data=data.frame(x=x_range, expected_density=poisson_expected_density),
+                 aes(x=x, y=expected_density * num_samples, group=x),
+                 color='red')
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_15_poisson_distribution-1.png)
+
+Note below:
+<a href="https://www.healthknowledge.org.uk/public-health-textbook/research-methods/1b-statistical-methods/statistical-distributions#" class="uri">https://www.healthknowledge.org.uk/public-health-textbook/research-methods/1b-statistical-methods/statistical-distributions#</a>:\~:text=Binomial%20distribution%20describes%20the%20distribution,r%20events%20in%20a%20population
+
+> The `Binomial` distribution describes the distribution of binary data
+> from a **finite** sample. Thus it gives the `probability` of getting
+> `r` events out of `n` trials.
+
+> The `Poisson` distribution describes the distribution of binary data
+> from an **infinite** sample. Thus it gives the `probability` of
+> getting `r` events in a `population`.
+
+``` r
+SEED <- 3579
+n <- 100
+set.seed(SEED)
+x <- runif(n, -2, 2)
+a <- 1
+b <- 2
+linpred <- a + b*x
+set.seed(SEED)
+# we are using the exponential of the linpred as our lambda
+y <- rpois(n=n, lambda=exp(linpred))
+fake <- data.frame(x=x, y=y)
+head(fake)
+```
+
+    ##            x  y
+    ## 1 -1.2467828  0
+    ## 2  0.3264029  6
+    ## 3 -0.9042255  0
+    ## 4  0.7576005 14
+    ## 5  0.3868606  5
+    ## 6 -0.6134389  1
+
+``` r
+x_actual <- seq(-2, 2, by=0.01)
+y_actual <- exp(a + b*x_actual)
+```
+
+``` r
+set.seed(1)
+model_fake <- stan_glm(y ~ x, family=poisson(link="log"), data=fake, refresh=0)
+print(model_fake, 3)
+```
+
+    ## stan_glm
+    ##  family:       poisson [log]
+    ##  formula:      y ~ x
+    ##  observations: 100
+    ##  predictors:   2
+    ## ------
+    ##             Median MAD_SD
+    ## (Intercept) 0.991  0.077 
+    ## x           1.995  0.047 
+    ## 
+    ## ------
+    ## * For help interpreting the printed output see ?print.stanreg
+    ## * For info on the priors used see ?prior_summary.stanreg
+
+``` r
+coef(model_fake)['(Intercept)']
+```
+
+    ## (Intercept) 
+    ##   0.9913977
+
+``` r
+a
+```
+
+    ## [1] 1
+
+``` r
+coef(model_fake)['x']
+```
+
+    ##        x 
+    ## 1.995091
+
+``` r
+b
+```
+
+    ## [1] 2
+
+``` r
+fake_fitted <- data.frame(x=x_actual,
+                          y=predict(model_fake, newdata = data.frame(x=x_actual), type='response'),
+                          type='fitted')
+```
+
+``` r
+fake_model_simulation <- posterior_predict(model_fake, newdata = data.frame(x=x_actual), type='response') %>%
+    t() %>%
+    as.data.frame() %>%
+    mutate(x=x_actual) %>%
+    pivot_longer(-x) %>%
+    group_by(x) %>%
+    summarise(`50%`=median(value),
+              `2.5%`=quantile(value, 0.025),
+              `97.5%`=quantile(value, 0.975)) %>%
+    ungroup() %>%
+    mutate(type='fitted interval')
+
+tail(fake_model_simulation)
+```
+
+    ## # A tibble: 6 x 5
+    ##       x `50%` `2.5%` `97.5%` type           
+    ##   <dbl> <dbl>  <dbl>   <dbl> <chr>          
+    ## 1  1.95   132    109    156  fitted interval
+    ## 2  1.96   135    112    160  fitted interval
+    ## 3  1.97   137    113    162  fitted interval
+    ## 4  1.98   140    116    164. fitted interval
+    ## 5  1.99   143    119    168  fitted interval
+    ## 6  2      146    121    172  fitted interval
+
+``` r
+fake %>%
+    mutate(type='simulated') %>%
+    bind_rows(data.frame(x=x_actual,
+                         y=y_actual,
+                         type='actual')) %>%
+    bind_rows(fake_fitted) %>%
+    bind_rows(fake_model_simulation) %>%
+    ggplot(aes(x=x, y=y, color=type)) +
+    geom_ribbon(data=. %>% filter(type %in% c('fitted interval')),
+                aes(ymin=`2.5%`,
+                    ymax=`97.5%`,
+                    color=NULL),
+                alpha=0.3) +
+    geom_point(data=. %>% filter(type == 'simulated')) +
+    geom_line(data=. %>% filter(type %in% c('actual', 'fitted'))) +
+    labs(title="Poisson Regression (simulated vs actual vs fitted)")
+```
+
+![](Regression-and-Other-Stories_files/figure-markdown_github/chapter_15_poisson_fitted_simulated_actual-1.png)
