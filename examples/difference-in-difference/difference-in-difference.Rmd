@@ -35,6 +35,10 @@ plot_width_height_8 <- calculate_plot_width(8)
 
 > A diff-in-diff analysis applies when you have two groups whose pretreatment differences can be isolated and modeled so that post-treatment differences are the basis for causal estimates of the treatment effect. - Business Data Science pg 141
 
+Author's Original Code: https://github.com/TaddyLab/BDS/blob/master/examples/paidsearch.R
+
+See my questions: https://github.com/TaddyLab/BDS/issues/17
+
 ```{r}
 # business data science pg 141
 sem <- read.csv("data/paidsearch.csv")
@@ -88,6 +92,25 @@ sem %>%
     scale_y_continuous(labels=rt_pretty_axes) +
     geom_smooth() +
     labs(title = "Log Difference of Average Revenue (Treatment - Control)",
+         subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
+         y = "Log Difference (Treatment - Control)",
+         x = 'Date')
+```
+
+(Sum would give us the same pattern/trend on different scale)
+
+```{r message=FALSE, warning=FALSE}
+sem %>%
+    group_by(date) %>%
+    summarise(difference = log(sum(revenue[variant == 'Treatment'])) - log(sum(revenue[variant == 'Control']))) %>%
+    ungroup() %>%
+    ggplot(aes(x=date, y=difference)) +
+    geom_vline(xintercept = ymd('2012-05-22')) +
+    geom_line() +
+    scale_x_date() +
+    scale_y_continuous(labels=rt_pretty_axes) +
+    geom_smooth() +
+    labs(title = "Log Difference of Total Revenue (Treatment - Control)",
          subtitle = "Decrease indicates a drop in the Treatment compared to the Control",
          y = "Log Difference (Treatment - Control)",
          x = 'Date')
@@ -184,12 +207,20 @@ data.frame(index=1:length(.y), y=.y, z=.z) %>%
 
 ## Create dataset that is basis for regression model.
 
+Note: the author uses `mean(log(revenue))` but seems like we would want to use `log(mean(revenue))`.
+
+This is especially true if we were to use `sum` rather than mean since control group is much larger and we would want to take the log of the total (like we did in the graphs).
+
+A model using `log(mean(revenue))` vs `log(sum(revenue))` gives the same interaction coefficient, which is not true for `mean(log(revenue))` vs `sum(log(revenue))`.
+
+I ended up using `log(sum(revenue))`, which again is the same as `log(mean(revenue))` which gives an interaction coefficient of `-0.005775` compared to `mean(log(revenue))` which gives `-0.006587` which matches the author's results.
+
 ```{r}
 # treatment_period of 0 means < May 22, when the ads were on for both variants (consistance difference is expected)
 # treatment_period of 1 means >= May 22, when the ads were shut off for Treatment (potental drop in sales for treatment may be expected)
 sem_per_dma <- sem %>%
     group_by(dma, treatment_period, variant) %>%
-    summarise(y = mean(log(revenue)), n=n()) %>%
+    summarise(log_total_revenue = log(sum(revenue)), n=n()) %>%
     ungroup() %>%
     mutate(variant = factor(variant, levels=c("Control", "Treatment"))) %>%
     as.data.frame()
@@ -199,13 +230,19 @@ head(sem_per_dma)
 ## Create Model
 
 ```{r}
-reg_results <- lm(y ~ treatment_period * variant, data=sem_per_dma)
+reg_results <- lm(log_total_revenue ~ treatment_period * variant, data=sem_per_dma)
 summary(reg_results)
 ```
 
 ```{r}
 get_regression_equation(reg_results, .round_by = 5)
 ```
+
+> This says that the treatment - turning off paid search ads - has a small but not statistically significant negative effect on log revenue (0.66 percentage point drop with a standard error of 0.55% points). (pg 145.)
+
+This is a `log-level` model so pg 39 of Intro to econometrics says that `1 unit` change in x has a `B * 100` percent change in `y`.
+
+So, `-0.006587 * 100` == `-0.6587` i.e. `0.66%` drop.
 
 ```{r}
 (interaction_coeff <- coefficients(reg_results)['treatment_period:variantTreatment'])
@@ -214,47 +251,48 @@ get_regression_equation(reg_results, .round_by = 5)
 
 ## Coefficient interpretation
 
-Intercept coefficient is the average log(revenue) of control before applying treatment 
+Intercept coefficient is the average `log(sum(revenue))` of control before applying treatment.
+
 ```{r}
 sem_per_dma %>%
     filter(variant == 'Control' & treatment_period == 0) %>%
-    pull(y) %>%
+    pull(log_total_revenue) %>%
     mean()
  coefficients(reg_results)['(Intercept)']
 ```
 
-The coefficient for `treatment_period` is the predicted difference before/after for the `control`
+The coefficient for `treatment_period` is the difference in average `log(sum(revenue))` before/after for the `control`
 
 ```{r}
 sem_per_dma %>%
     filter(variant == 'Control') %>%
     group_by(treatment_period) %>%
-    summarise(mean_y = mean(y)) %>%
+    summarise(mean_y = mean(log_total_revenue)) %>%
     ungroup() %>%
     summarise(diff = mean_y[treatment_period == 1] - mean_y[treatment_period == 0]) %>%
     pull(diff)
  coefficients(reg_results)['treatment_period']
 ```
 
-The coefficient for `variantTreatment` is the predicted difference between the control & variant during the treatment_period of 0.
+The coefficient for `variantTreatment` is the difference in average `log(sum(revenue))` between the control & variant during the treatment_period of 0.
 
 ```{r}
 sem_per_dma %>%
     filter(treatment_period == 0) %>%
     group_by(variant) %>%
-    summarise(mean_y = mean(y)) %>%
+    summarise(mean_y = mean(log_total_revenue)) %>%
     ungroup() %>%
     summarise(diff = mean_y[variant == 'Treatment'] - mean_y[variant == 'Control']) %>%
     pull(diff)
  coefficients(reg_results)['variantTreatment']
 ```
 
-The coefficient for `treatment_period:variantTreatment`, is the difference over time in the average difference of (average) revenue in the two groups.
+The coefficient for `treatment_period:variantTreatment`, is the **difference over time** (i.e. period 1 vs period 2) in the **difference of average** `log(sum(revenue))` in the two groups (treatment vs control)... i.e. **difference in difference**.
 
 ```{r}
-sem %>%
+sem_per_dma %>%
     group_by(treatment_period, variant) %>%
-    summarise(y = mean(log(revenue))) %>%
+    summarise(y = mean(log_total_revenue)) %>%
     ungroup() %>%
     summarise(diff = (y[variant == 'Treatment' & treatment_period == 1] -
                       y[variant == 'Control' & treatment_period == 1]) - 
@@ -275,7 +313,7 @@ summary(reg_results)
 > Note that these rows of data do not satisfy the standard independence assumption: each two observations on the same DMA will be correlated. ... you can use clustered starndard error, or you can get a similar result by controlling for the DMA-specific revenue levels in the regression equation. BDS pg 144-145
 
 ```{r}
-reg_results <- lm(y ~ dma + treatment_period * variant, data=sem_per_dma)
+reg_results <- lm(log_total_revenue ~ dma + treatment_period * variant, data=sem_per_dma)
 reg_results %>%
     tidy() %>%
     filter(!str_detect(term, 'dma'))
