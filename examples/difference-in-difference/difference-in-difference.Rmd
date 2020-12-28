@@ -236,19 +236,6 @@ sem_per_dma %>%
  coefficients(reg_results)['treatment_period']
 ```
 
-The coefficient for `treatment_period` is the predicted difference before/after for the `control`
-
-```{r}
-sem_per_dma %>%
-    filter(variant == 'Control') %>%
-    group_by(treatment_period) %>%
-    summarise(mean_y = mean(y)) %>%
-    ungroup() %>%
-    summarise(diff = mean_y[treatment_period == 1] - mean_y[treatment_period == 0]) %>%
-    pull(diff)
- coefficients(reg_results)['treatment_period']
-```
-
 The coefficient for `variantTreatment` is the predicted difference between the control & variant during the treatment_period of 0.
 
 ```{r}
