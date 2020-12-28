@@ -249,7 +249,7 @@ sem_per_dma %>%
  coefficients(reg_results)['variantTreatment']
 ```
 
-The coefficient for `treatment_period:variantTreatment`, is the difference over tim ein the average difference of (average) revenue in the two groups.
+The coefficient for `treatment_period:variantTreatment`, is the difference over time in the average difference of (average) revenue in the two groups.
 
 ```{r}
 sem %>%
