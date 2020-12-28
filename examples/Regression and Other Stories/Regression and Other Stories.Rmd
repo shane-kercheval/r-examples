@@ -949,7 +949,7 @@ median(simulations[, 'sigma'])
 mad(simulations[, 'sigma'])
 ```
 
-# pg. 104 describes how sigma (residual standard deviation) is calculated.
+pg. 104 describes how sigma (residual standard deviation) is calculated.
 
 They mention that 
 
