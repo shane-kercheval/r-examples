@@ -3093,3 +3093,144 @@ rm(br8)
 rm(plot_prob_swiching_given_distance)
 ```
 
+# Chapter 15 - Other Generalized linear models
+
+## Poisson
+
+### Distribution
+
+> A Poisson process is a special type of **counting** process. Given a stream of events that arrive at random times starting at `t=0`, let `Nt` denote the `number of arrivals` that occur by time `t`, that is, the number of events in `[0, t]`. For instance, `Nt` might be the number of text messages received up to time `t`. (stochastic processes pg 223)
+
+> The distribution of the number o farrivals/events in an interval only depends on the length of the interval. (pg 225)
+
+> `E(Nt) = lambda*t`; That is, we expect about `lambda * t` arrivals/events in `t` time unites. Thus, **the `rate` of arrival is `E(Nt) / t = lambda`**. (pg)
+
+Random values with `lambda = 10`
+
+```{r}
+num_samples <- 1000
+x_range <- 0:40
+lambda <- 10
+
+set.seed(1)
+poisson_random_values <- rpois(n=num_samples, lambda=lambda)
+poisson_random_values[1:20]
+```
+
+```{r}
+poisson_expected_density <- dpois(x=x_range, lambda=lambda)
+poisson_expected_density[1:20]
+```
+
+```{r chapter_15_poisson_distribution, fig.height=5, fig.width=plot_width_height_5}
+data.frame(value = poisson_random_values) %>%
+    ggplot(aes(x=value)) +
+    geom_histogram(binwidth = 1, color='white', fill='dark gray') +
+    scale_x_continuous(breaks = pretty_breaks(10)) +
+    geom_boxplot(data=data.frame(x=x_range, expected_density=poisson_expected_density),
+                 aes(x=x, y=expected_density * num_samples, group=x),
+                 color='red')
+```
+
+Note below: https://www.healthknowledge.org.uk/public-health-textbook/research-methods/1b-statistical-methods/statistical-distributions#:~:text=Binomial%20distribution%20describes%20the%20distribution,r%20events%20in%20a%20population 
+
+> The `Binomial` distribution describes the distribution of binary data from a **finite** sample. Thus it gives the `probability` of getting `r` events out of `n` trials.
+
+> The `Poisson` distribution describes the distribution of binary data from an **infinite** sample. Thus it gives the `probability` of getting `r` events in a `population`.
+
+```{r}
+SEED <- 3579
+n <- 100
+set.seed(SEED)
+x <- runif(n, -2, 2)
+a <- 1
+b <- 2
+linpred <- a + b*x
+set.seed(SEED)
+# we are using the exponential of the linpred as our lambda
+y <- rpois(n=n, lambda=exp(linpred))
+fake <- data.frame(x=x, y=y)
+head(fake)
+```
+
+```{r}
+x_actual <- seq(-2, 2, by=0.01)
+y_actual <- exp(a + b*x_actual)
+```
+
+```{r}
+set.seed(1)
+model_fake <- stan_glm(y ~ x, family=poisson(link="log"), data=fake, refresh=0)
+print(model_fake, 3)
+```
+
+```{r}
+coef(model_fake)['(Intercept)']
+a
+```
+
+```{r}
+coef(model_fake)['x']
+b
+```
+
+```{r}
+fake_fitted <- data.frame(x=x_actual,
+                          y=predict(model_fake, newdata = data.frame(x=x_actual), type='response'),
+                          type='fitted')
+```
+
+```{r}
+fake_model_simulation <- posterior_predict(model_fake, newdata = data.frame(x=x_actual), type='response') %>%
+    t() %>%
+    as.data.frame() %>%
+    mutate(x=x_actual) %>%
+    pivot_longer(-x) %>%
+    group_by(x) %>%
+    summarise(`50%`=median(value),
+              `2.5%`=quantile(value, 0.025),
+              `97.5%`=quantile(value, 0.975)) %>%
+    ungroup() %>%
+    mutate(type='fitted interval')
+
+tail(fake_model_simulation)
+```
+
+```{r chapter_15_poisson_fitted_simulated_actual, fig.height=6, fig.width=plot_width_height_6}
+fake %>%
+    mutate(type='simulated') %>%
+    bind_rows(data.frame(x=x_actual,
+                         y=y_actual,
+                         type='actual')) %>%
+    bind_rows(fake_fitted) %>%
+    bind_rows(fake_model_simulation) %>%
+    ggplot(aes(x=x, y=y, color=type)) +
+    geom_ribbon(data=. %>% filter(type %in% c('fitted interval')),
+                aes(ymin=`2.5%`,
+                    ymax=`97.5%`,
+                    color=NULL),
+                alpha=0.3) +
+    geom_point(data=. %>% filter(type == 'simulated')) +
+    geom_line(data=. %>% filter(type %in% c('actual', 'fitted'))) +
+    labs(title="Poisson Regression (simulated vs actual vs fitted)")
+```
+
+```{r include=FALSE}
+rm(poisson_random_values)
+rm(poisson_expected_density)
+rm(x_range)
+rm(lambda)
+rm(x_actual)
+rm(y_actual)
+rm(num_samples)
+rm(SEED)
+rm(n)
+rm(a)
+rm(b)
+rm(x)
+rm(linpred)
+rm(y)
+rm(fake)
+rm(model_fake)
+rm(fake_model_simulation)
+```
