@@ -272,7 +272,7 @@ coefficients(reg_results)['treatment_period:variantTreatment']
 summary(reg_results)
 ```
 
-> Note that these rwos of data do not satisfy the standard independence assumption: each two observations on the same DMA will be correlated. ... you can use clustered starndard error, or you can get a similar result by controlling for the DMA-specific revenue levels in the regression equation. BDS pg 144-145
+> Note that these rows of data do not satisfy the standard independence assumption: each two observations on the same DMA will be correlated. ... you can use clustered starndard error, or you can get a similar result by controlling for the DMA-specific revenue levels in the regression equation. BDS pg 144-145
 
 ```{r}
 reg_results <- lm(y ~ dma + treatment_period * variant, data=sem_per_dma)
