@@ -1,8 +1,32 @@
+-   [Intro](#intro)
 -   [Data](#data)
--   [Average Treatment Effect](#average-treatment-effect)
--   [Weights](#weights)
--   [Imbalance](#imbalance)
+-   [ATE - Ignoring Imbalance](#ate---ignoring-imbalance)
+    -   [Manual ATE](#manual-ate)
+    -   [Regression Model](#regression-model)
+-   [Non-Represenative Data vs
+    Population](#non-represenative-data-vs-population)
+    -   [Manual ATE](#manual-ate-1)
+    -   [Regression Model](#regression-model-1)
+-   [Control vs Treatment Imbalance](#control-vs-treatment-imbalance)
     -   [Model with Interaction](#model-with-interaction)
+
+Intro
+=====
+
+This section describes weighting the results based on an imbalance in
+the data.
+
+In the first example, we have a `weight` column so we know the explicit
+weight each person-id should have. This is what would happen if we knew
+that the **entire dataset** was not representative to the population
+(and if we knew the population distribution.) We calculate the Average
+Treatment Effect (ATE) manually and then by using the `weights`
+parameter in the `lm` function.
+
+In the second example, we know that the **treatment group is
+over-represented relative to `numhh`** (vs the last example where the
+entire dataset was not representative). We can simply include `numhh` in
+the model and control for it.
 
 Data
 ====
@@ -44,8 +68,11 @@ head(P)
     ## 8         8       102094     2        0        0      1           0
     ## 9         9       100009     1        0        0      1           1
 
-Average Treatment Effect
+ATE - Ignoring Imbalance
 ========================
+
+Manual ATE
+----------
 
 ybar is the percent of people with `doc_any_12m == 1` in the
 `selected == 0` (control) and `selected == 1` (treatment) groups.
@@ -102,6 +129,9 @@ ATE + (c(-2, 2) * standard_errors)
 
     ## [1] 0.04428399 0.06974281
 
+Regression Model
+----------------
+
 ``` r
 lm(doc_any_12m ~ selected, data=P) %>% tidy()
 ```
@@ -116,12 +146,15 @@ Note: `Intercept` is the average value of `doc_any_12m` when
 `selected = 0`, which is the same as `ybar['0']` above. `selected`
 coefficient matches `ATE`.
 
-Weights
-=======
+Non-Represenative Data vs Population
+====================================
 
-In the example, the data conteight weights because of the imbalance i
-the data vs the population (e.g. perhaps young people are harder to
-reach for a survey)
+In this example, the data has a `weights` column because of the
+imbalance in the data vs the population (e.g. perhaps young people are
+harder to reach for a survey)
+
+Manual ATE
+----------
 
 instead of `num_sample` we have `num_selected_weighted`
 
@@ -155,6 +188,11 @@ instead of `ybar` we have `ybar_weighted`
     ##          1 
     ## 0.05552873
 
+Regression Model
+----------------
+
+Now we use `weights` parameter.
+
 ``` r
 lm(doc_any_12m ~ selected, weights=weight, data=P) %>% tidy()
 ```
@@ -168,18 +206,18 @@ lm(doc_any_12m ~ selected, weights=weight, data=P) %>% tidy()
 Now, `Intercept` equals `ybar_weighted['0']`, and `selected` coefficient
 equals `ATE_weighted`
 
-Imbalance
-=========
+Control vs Treatment Imbalance
+==============================
 
 A similar scenario, ignoring the population imbalance, is that we have
-an imballance in the data due to how people are selected, from the
-control to the treatment: the family members of the people `selected`
-are also selected. So that families of 2, and 3+ will be overrepresented
-in the `selected` group. We don’t simply want to group by household
-because we want it at the individual level, and each individual in the
-household may or may not visit doc in the 12 month period. (Actually the
-author does do this later on by averaging doc\_any\_12m per household
-id)
+an imbalance in the data between the control and the treatment groups,
+due to how people are selected: the family members of the people
+`selected` are also selected. So that families of 2, and 3+ will be
+overrepresented in the `selected` group. We don’t simply want to group
+by household because we want it at the individual level, and each
+individual in the household may or may not visit doc in the 12 month
+period. (Actually the author does do this later on by averaging
+doc\_any\_12m per household id)
 
 ``` r
 table(P$selected, P$numhh)
@@ -199,7 +237,7 @@ table(P$selected, P$numhh) / as.numeric(table(P$selected))
     ##   0 0.7467071935 0.2527862209 0.0005065856
     ##   1 0.6572235536 0.3383259158 0.0044505306
 
-Now, we can control for `numhh` by including it in the model.
+Now, we can control for `numhh`, simply by including it in the model.
 
 ``` r
 model_simple <- lm(doc_any_12m ~ selected + numhh, data=P)
@@ -283,9 +321,13 @@ new_data
     ## 5        0     2   0.5270799
     ## 6        0    3+   0.4087312
 
-This weighted average of the predictions make sense since the `selected`
-coefficient is the expected difference across each numhh value (since
-there is no interaction terms i.e. same slope)
+The difference between `selected == 1` and `selected == 0` is the same
+for each `numhh`. This makes sense since the `selected` coefficient is
+the expected difference across each numhh value (since there is no
+interaction terms i.e. same slope).
+
+And so the weighted average is the same value as each of the
+differences, which is the same as `selected`.
 
 ``` r
 # diff the selected == 1 from the selected == 0
@@ -327,6 +369,8 @@ imbalance in `numhh`.
 
 Model with Interaction
 ----------------------
+
+But not let’s do a model with interactions.
 
 The author mentions we have to center `numhh`. This is so that the
 `selected` coefficient is relative to the average value `numhh` and

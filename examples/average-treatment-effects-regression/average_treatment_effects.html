@@ -366,14 +366,29 @@ summary {
 
 
 <ul>
+<li><a href="#intro">Intro</a></li>
 <li><a href="#data">Data</a></li>
-<li><a href="#average-treatment-effect">Average Treatment Effect</a></li>
-<li><a href="#weights">Weights</a></li>
-<li><a href="#imbalance">Imbalance</a>
+<li><a href="#ate---ignoring-imbalance">ATE - Ignoring Imbalance</a>
+<ul>
+<li><a href="#manual-ate">Manual ATE</a></li>
+<li><a href="#regression-model">Regression Model</a></li>
+</ul></li>
+<li><a href="#non-represenative-data-vs-population">Non-Represenative Data vs Population</a>
+<ul>
+<li><a href="#manual-ate-1">Manual ATE</a></li>
+<li><a href="#regression-model-1">Regression Model</a></li>
+</ul></li>
+<li><a href="#control-vs-treatment-imbalance">Control vs Treatment Imbalance</a>
 <ul>
 <li><a href="#model-with-interaction">Model with Interaction</a></li>
 </ul></li>
 </ul>
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>This section describes weighting the results based on an imbalance in the data.</p>
+<p>In the first example, we have a <code>weight</code> column so we know the explicit weight each person-id should have. This is what would happen if we knew that the <strong>entire dataset</strong> was not representative to the population (and if we knew the population distribution.) We calculate the Average Treatment Effect (ATE) manually and then by using the <code>weights</code> parameter in the <code>lm</code> function.</p>
+<p>In the second example, we know that the <strong>treatment group is over-represented relative to <code>numhh</code></strong> (vs the last example where the entire dataset was not representative). We can simply include <code>numhh</code> in the model and control for it.</p>
+</div>
 <div id="data" class="section level1">
 <h1>Data</h1>
 <p>Example shown in Business Data Science pg 134</p>
@@ -409,8 +424,10 @@ head(P)</code></pre>
 ## 8         8       102094     2        0        0      1           0
 ## 9         9       100009     1        0        0      1           1</code></pre>
 </div>
-<div id="average-treatment-effect" class="section level1">
-<h1>Average Treatment Effect</h1>
+<div id="ate---ignoring-imbalance" class="section level1">
+<h1>ATE - Ignoring Imbalance</h1>
+<div id="manual-ate" class="section level2">
+<h2>Manual ATE</h2>
 <p>ybar is the percent of people with <code>doc_any_12m == 1</code> in the <code>selected == 0</code> (control) and <code>selected == 1</code> (treatment) groups.</p>
 <p>ATE is the difference of the percent doc_any_12m in the treatment vs control</p>
 <pre class="r"><code>(ybar &lt;- tapply(P$doc_any_12m, P$selected, mean))</code></pre>
@@ -434,6 +451,9 @@ head(P)</code></pre>
 <pre class="r"><code># 95% confidence interval
 ATE + (c(-2, 2) * standard_errors)</code></pre>
 <pre><code>## [1] 0.04428399 0.06974281</code></pre>
+</div>
+<div id="regression-model" class="section level2">
+<h2>Regression Model</h2>
 <pre class="r"><code>lm(doc_any_12m ~ selected, data=P) %&gt;% tidy()</code></pre>
 <pre><code>## # A tibble: 2 x 5
 ##   term        estimate std.error statistic  p.value
@@ -442,9 +462,12 @@ ATE + (c(-2, 2) * standard_errors)</code></pre>
 ## 2 selected      0.0570   0.00637      8.96 3.60e-19</code></pre>
 <p>Note: <code>Intercept</code> is the average value of <code>doc_any_12m</code> when <code>selected = 0</code>, which is the same as <code>ybar['0']</code> above. <code>selected</code> coefficient matches <code>ATE</code>.</p>
 </div>
-<div id="weights" class="section level1">
-<h1>Weights</h1>
-<p>In the example, the data conteight weights because of the imbalance i the data vs the population (e.g. perhaps young people are harder to reach for a survey)</p>
+</div>
+<div id="non-represenative-data-vs-population" class="section level1">
+<h1>Non-Represenative Data vs Population</h1>
+<p>In this example, the data has a <code>weights</code> column because of the imbalance in the data vs the population (e.g. perhaps young people are harder to reach for a survey)</p>
+<div id="manual-ate-1" class="section level2">
+<h2>Manual ATE</h2>
 <p>instead of <code>num_sample</code> we have <code>num_selected_weighted</code></p>
 <p>instead of <code>ybar</code> we have <code>ybar_weighted</code></p>
 <pre class="r"><code>(num_selected_weighted &lt;- tapply(P$weight, P$selected, sum))</code></pre>
@@ -459,6 +482,10 @@ ATE + (c(-2, 2) * standard_errors)</code></pre>
 <pre class="r"><code>(ATE_weighted &lt;- ybar_weighted['1'] - ybar_weighted['0'])</code></pre>
 <pre><code>##          1 
 ## 0.05552873</code></pre>
+</div>
+<div id="regression-model-1" class="section level2">
+<h2>Regression Model</h2>
+<p>Now we use <code>weights</code> parameter.</p>
 <pre class="r"><code>lm(doc_any_12m ~ selected, weights=weight, data=P) %&gt;% tidy()</code></pre>
 <pre><code>## # A tibble: 2 x 5
 ##   term        estimate std.error statistic  p.value
@@ -467,9 +494,10 @@ ATE + (c(-2, 2) * standard_errors)</code></pre>
 ## 2 selected      0.0555   0.00638      8.71 3.28e-18</code></pre>
 <p>Now, <code>Intercept</code> equals <code>ybar_weighted['0']</code>, and <code>selected</code> coefficient equals <code>ATE_weighted</code></p>
 </div>
-<div id="imbalance" class="section level1">
-<h1>Imbalance</h1>
-<p>A similar scenario, ignoring the population imbalance, is that we have an imballance in the data due to how people are selected, from the control to the treatment: the family members of the people <code>selected</code> are also selected. So that families of 2, and 3+ will be overrepresented in the <code>selected</code> group. We don’t simply want to group by household because we want it at the individual level, and each individual in the household may or may not visit doc in the 12 month period. (Actually the author does do this later on by averaging doc_any_12m per household id)</p>
+</div>
+<div id="control-vs-treatment-imbalance" class="section level1">
+<h1>Control vs Treatment Imbalance</h1>
+<p>A similar scenario, ignoring the population imbalance, is that we have an imbalance in the data between the control and the treatment groups, due to how people are selected: the family members of the people <code>selected</code> are also selected. So that families of 2, and 3+ will be overrepresented in the <code>selected</code> group. We don’t simply want to group by household because we want it at the individual level, and each individual in the household may or may not visit doc in the 12 month period. (Actually the author does do this later on by averaging doc_any_12m per household id)</p>
 <pre class="r"><code>table(P$selected, P$numhh)</code></pre>
 <pre><code>##    
 ##        1    2   3+
@@ -480,7 +508,7 @@ ATE + (c(-2, 2) * standard_errors)</code></pre>
 ##                1            2           3+
 ##   0 0.7467071935 0.2527862209 0.0005065856
 ##   1 0.6572235536 0.3383259158 0.0044505306</code></pre>
-<p>Now, we can control for <code>numhh</code> by including it in the model.</p>
+<p>Now, we can control for <code>numhh</code>, simply by including it in the model.</p>
 <pre class="r"><code>model_simple &lt;- lm(doc_any_12m ~ selected + numhh, data=P)
 summary(model_simple)</code></pre>
 <pre><code>## 
@@ -531,7 +559,8 @@ new_data</code></pre>
 ## 4        0     1   0.5925453
 ## 5        0     2   0.5270799
 ## 6        0    3+   0.4087312</code></pre>
-<p>This weighted average of the predictions make sense since the <code>selected</code> coefficient is the expected difference across each numhh value (since there is no interaction terms i.e. same slope)</p>
+<p>The difference between <code>selected == 1</code> and <code>selected == 0</code> is the same for each <code>numhh</code>. This makes sense since the <code>selected</code> coefficient is the expected difference across each numhh value (since there is no interaction terms i.e. same slope).</p>
+<p>And so the weighted average is the same value as each of the differences, which is the same as <code>selected</code>.</p>
 <pre class="r"><code># diff the selected == 1 from the selected == 0
 # the predictions will have the same diff value
 # because (since we aren't interacting the terms) the selected coefficient
@@ -553,6 +582,7 @@ numhh_frequency &lt;- table(P$numhh) / nrow(P)
 <p><code>ATE</code> which is weighted based on the population <code>numhh</code> equals <code>coef(model_simple)['selected']</code>, i.e. we are controlling for the imbalance in <code>numhh</code>.</p>
 <div id="model-with-interaction" class="section level2">
 <h2>Model with Interaction</h2>
+<p>But not let’s do a model with interactions.</p>
 <p>The author mentions we have to center <code>numhh</code>. This is so that the <code>selected</code> coefficient is relative to the average value <code>numhh</code> and interactions. It makes the <code>selected</code> coefficient more interpretable.</p>
 <p><code>scale=FALSE</code> means we will only center the data rather than center/scale</p>
 <pre class="r"><code>X &lt;- scale(model.matrix(~numhh, data=P)[, -1], scale=FALSE)
