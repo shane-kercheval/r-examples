@@ -367,9 +367,12 @@ summary {
 
 <ul>
 <li><a href="#data">Data</a></li>
+<li><a href="#average-treatment-effect">Average Treatment Effect</a></li>
 <li><a href="#weights">Weights</a></li>
-<li><a href="#regression">Regression</a></li>
-<li><a href="#full-interaction">Full Interaction</a></li>
+<li><a href="#imbalance">Imbalance</a>
+<ul>
+<li><a href="#model-with-interaction">Model with Interaction</a></li>
+</ul></li>
 </ul>
 <div id="data" class="section level1">
 <h1>Data</h1>
@@ -380,66 +383,9 @@ descr &lt;- read.dta(&quot;data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_descri
 prgm &lt;- read.dta(&quot;data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_stateprograms_vars.dta&quot;)
 s12 &lt;- read.dta(&quot;data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_survey12m_vars.dta&quot;)
 
-head(descr)</code></pre>
-<pre><code>##   person_id household_id    treatment                             draw_treat
-## 1         1       100001     Selected Draw 7: selected in lottery 08/01/2008
-## 2         2       100002     Selected Draw 6: selected in lottery 07/01/2008
-## 3         3       100003 Not selected                                   &lt;NA&gt;
-## 4         4       100004 Not selected                                   &lt;NA&gt;
-## 5         5       100005     Selected Draw 7: selected in lottery 08/01/2008
-## 6         6       100006     Selected Draw 3: selected in lottery 04/08/2008
-##     draw_lottery                          applied_app approved_app
-## 1 Lottery Draw 7      Submitted an Application to OHP           No
-## 2 Lottery Draw 6 Did NOT submit an application to OHP           No
-## 3 Lottery Draw 2                                 &lt;NA&gt;         &lt;NA&gt;
-## 4 Lottery Draw 8                                 &lt;NA&gt;         &lt;NA&gt;
-## 5 Lottery Draw 7 Did NOT submit an application to OHP           No
-## 6 Lottery Draw 3      Submitted an Application to OHP          Yes
-##   dt_notify_lottery dt_retro_coverage dt_app_decision postn_death
-## 1        2008-08-12        2008-09-08      2008-12-31       Alive
-## 2        2008-07-14        2008-08-08            &lt;NA&gt;       Alive
-## 3        2008-04-07        2008-04-08            &lt;NA&gt;       Alive
-## 4        2008-09-11        2008-10-08            &lt;NA&gt;       Alive
-## 5        2008-08-12        2008-09-08            &lt;NA&gt;       Alive
-## 6        2008-04-16        2008-05-08      2008-06-16       Alive
-##       numhh_list birthyear_list   have_phone_list
-## 1 signed self up           1978 Gave Phone Number
-## 2 signed self up           1984 Gave Phone Number
-## 3 signed self up           1971 Gave Phone Number
-## 4 signed self up           1955 Gave Phone Number
-## 5 signed self up           1969 Gave Phone Number
-## 6 signed self up           1946 Gave Phone Number
-##                                         english_list female_list
-## 1                        Requested English materials     0: Male
-## 2                        Requested English materials   1: Female
-## 3                        Requested English materials   1: Female
-## 4                        Requested English materials   1: Female
-## 5 Requested materials in language other than english   1: Female
-## 6                        Requested English materials     0: Male
-##                                  first_day_list
-## 1 Did NOT sign up for lottery list on first day
-## 2 Did NOT sign up for lottery list on first day
-## 3 Did NOT sign up for lottery list on first day
-## 4 Did NOT sign up for lottery list on first day
-## 5 Did NOT sign up for lottery list on first day
-## 6 Did NOT sign up for lottery list on first day
-##                                  last_day_list   pobox_list      self_list
-## 1 Did NOT sign up for lottery list on last day     1: POBOX Signed self up
-## 2 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-## 3 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-## 4 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-## 5 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-## 6 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-##   week_list                   zip_msa_list
-## 1    Week 2 Zip code of residence in a MSA
-## 2    Week 3 Zip code of residence in a MSA
-## 3    Week 3 Zip code of residence in a MSA
-## 4    Week 1 Zip code of residence in a MSA
-## 5    Week 2 Zip code of residence in a MSA
-## 6    Week 4 Zip code of residence in a MSA</code></pre>
-<pre class="r"><code>#head(prgm)
+#head(descr)
+#head(prgm)
 #head(s12)
-
 
 # nicely organized, one row per person
 stopifnot(all(s12$person_id == descr$person_id))
@@ -462,7 +408,11 @@ head(P)</code></pre>
 ## 6         6       100006     1        0        1      1           1
 ## 8         8       102094     2        0        0      1           0
 ## 9         9       100009     1        0        0      1           1</code></pre>
-<p>Average Treatment Effect</p>
+</div>
+<div id="average-treatment-effect" class="section level1">
+<h1>Average Treatment Effect</h1>
+<p>ybar is the percent of people with <code>doc_any_12m == 1</code> in the <code>selected == 0</code> (control) and <code>selected == 1</code> (treatment) groups.</p>
+<p>ATE is the difference of the percent doc_any_12m in the treatment vs control</p>
 <pre class="r"><code>(ybar &lt;- tapply(P$doc_any_12m, P$selected, mean))</code></pre>
 <pre><code>##         0         1 
 ## 0.5759034 0.6329168</code></pre>
@@ -476,13 +426,27 @@ head(P)</code></pre>
 <pre class="r"><code>(yvar &lt;- tapply(P$doc_any_12m, P$selected, var))</code></pre>
 <pre><code>##         0         1 
 ## 0.2442593 0.2323530</code></pre>
-<pre class="r"><code>(starndard_errors &lt;- sqrt(sum(yvar / num_sample)))</code></pre>
+<pre class="r"><code>(standard_errors &lt;- sqrt(sum(yvar / num_sample)))</code></pre>
 <pre><code>## [1] 0.006364705</code></pre>
-<pre class="r"><code>ATE + (c(-2, 2) * starndard_errors)</code></pre>
+<pre class="r"><code>ATE</code></pre>
+<pre><code>##         1 
+## 0.0570134</code></pre>
+<pre class="r"><code># 95% confidence interval
+ATE + (c(-2, 2) * standard_errors)</code></pre>
 <pre><code>## [1] 0.04428399 0.06974281</code></pre>
+<pre class="r"><code>lm(doc_any_12m ~ selected, data=P) %&gt;% tidy()</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.576    0.00449    128.   0.      
+## 2 selected      0.0570   0.00637      8.96 3.60e-19</code></pre>
+<p>Note: <code>Intercept</code> is the average value of <code>doc_any_12m</code> when <code>selected = 0</code>, which is the same as <code>ybar['0']</code> above. <code>selected</code> coefficient matches <code>ATE</code>.</p>
 </div>
 <div id="weights" class="section level1">
 <h1>Weights</h1>
+<p>In the example, the data conteight weights because of the imbalance i the data vs the population (e.g. perhaps young people are harder to reach for a survey)</p>
+<p>instead of <code>num_sample</code> we have <code>num_selected_weighted</code></p>
+<p>instead of <code>ybar</code> we have <code>ybar_weighted</code></p>
 <pre class="r"><code>(num_selected_weighted &lt;- tapply(P$weight, P$selected, sum))</code></pre>
 <pre><code>##        0        1 
 ## 14414.61 14456.53</code></pre>
@@ -495,10 +459,17 @@ head(P)</code></pre>
 <pre class="r"><code>(ATE_weighted &lt;- ybar_weighted['1'] - ybar_weighted['0'])</code></pre>
 <pre><code>##          1 
 ## 0.05552873</code></pre>
+<pre class="r"><code>lm(doc_any_12m ~ selected, weights=weight, data=P) %&gt;% tidy()</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.574    0.00451    127.   0.      
+## 2 selected      0.0555   0.00638      8.71 3.28e-18</code></pre>
+<p>Now, <code>Intercept</code> equals <code>ybar_weighted['0']</code>, and <code>selected</code> coefficient equals <code>ATE_weighted</code></p>
 </div>
-<div id="regression" class="section level1">
-<h1>Regression</h1>
-<p>We have an imballance in the data, from the control to the treatment: the family members of the people <code>selected</code> are also selected. So that families of 2, and 3+ will be overresented in the <code>selected</code> group. We don’t simply want to group by household because we want it at the individual level, and each individual in the household may or may not visit doc in the 12 month period. (Actually the author does do this later on by averaging doc_any_12m per household id)</p>
+<div id="imbalance" class="section level1">
+<h1>Imbalance</h1>
+<p>A similar scenario, ignoring the population imbalance, is that we have an imballance in the data due to how people are selected, from the control to the treatment: the family members of the people <code>selected</code> are also selected. So that families of 2, and 3+ will be overrepresented in the <code>selected</code> group. We don’t simply want to group by household because we want it at the individual level, and each individual in the household may or may not visit doc in the 12 month period. (Actually the author does do this later on by averaging doc_any_12m per household id)</p>
 <pre class="r"><code>table(P$selected, P$numhh)</code></pre>
 <pre><code>##    
 ##        1    2   3+
@@ -509,8 +480,9 @@ head(P)</code></pre>
 ##                1            2           3+
 ##   0 0.7467071935 0.2527862209 0.0005065856
 ##   1 0.6572235536 0.3383259158 0.0044505306</code></pre>
-<pre class="r"><code>reg_results &lt;- lm(doc_any_12m ~ selected + numhh, data=P)
-summary(reg_results)</code></pre>
+<p>Now, we can control for <code>numhh</code> by including it in the model.</p>
+<pre class="r"><code>model_simple &lt;- lm(doc_any_12m ~ selected + numhh, data=P)
+summary(model_simple)</code></pre>
 <pre><code>## 
 ## Call:
 ## lm(formula = doc_any_12m ~ selected + numhh, data = P)
@@ -531,26 +503,26 @@ summary(reg_results)</code></pre>
 ## Residual standard error: 0.4873 on 23524 degrees of freedom
 ## Multiple R-squared:  0.00736,    Adjusted R-squared:  0.007233 
 ## F-statistic: 58.14 on 3 and 23524 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<pre class="r"><code>get_regression_equation(reg_results, .round_by = 4)</code></pre>
+<pre class="r"><code>get_regression_equation(model_simple, .round_by = 4)</code></pre>
 <pre><code>## [1] &quot;doc_any_12m = 0.5925(Intercept) + 0.0633selected + -0.0655numhh2 + -0.1838numhh3+ + error&quot;</code></pre>
 <pre class="r"><code># the intercept is equivalent to single person household not being selected
 # i.e. doc_any_12m = 0.5925(Intercept) + 0.0633*0 + -0.0655*0 + -0.1838*0
-predict(reg_results, newdata = data.frame(selected=0, numhh='1'))</code></pre>
+predict(model_simple, newdata = data.frame(selected=0, numhh='1'))</code></pre>
 <pre><code>##         1 
 ## 0.5925453</code></pre>
-<pre class="r"><code>coef(reg_results)['(Intercept)']</code></pre>
+<pre class="r"><code>coef(model_simple)['(Intercept)']</code></pre>
 <pre><code>## (Intercept) 
 ##   0.5925453</code></pre>
-<pre class="r"><code>predict(reg_results, newdata = data.frame(selected=1, numhh='1'))</code></pre>
+<pre class="r"><code>predict(model_simple, newdata = data.frame(selected=1, numhh='1'))</code></pre>
 <pre><code>##         1 
 ## 0.6558835</code></pre>
-<pre class="r"><code>coef(reg_results)['(Intercept)'] + coef(reg_results)['selected']</code></pre>
+<pre class="r"><code>coef(model_simple)['(Intercept)'] + coef(model_simple)['selected']</code></pre>
 <pre><code>## (Intercept) 
 ##   0.6558835</code></pre>
 <p>Lets generate predictions for every combination, take the differences in predictions for the treatment minus the control, and then take the weighted average of those predictions. That value should equal the value of the <code>selected</code> coefficient.</p>
 <pre class="r"><code>new_data &lt;- data.frame(selected=c(1, 1, 1, 0, 0, 0),
                        numhh=c('1', '2', '3+', '1', '2', '3+'))
-new_data$predictions &lt;- predict(reg_results, newdata = new_data)
+new_data$predictions &lt;- predict(model_simple, newdata = new_data)
 new_data</code></pre>
 <pre><code>##   selected numhh predictions
 ## 1        1     1   0.6558835
@@ -573,23 +545,23 @@ numhh_frequency &lt;- table(P$numhh) / nrow(P)
 # weighted average
 (ATE &lt;- sum(diffs * numhh_frequency))</code></pre>
 <pre><code>## [1] 0.06333824</code></pre>
-<pre class="r"><code>coef(reg_results)['selected']</code></pre>
+<pre class="r"><code>coef(model_simple)['selected']</code></pre>
 <pre><code>##   selected 
 ## 0.06333824</code></pre>
-<pre class="r"><code>as.numeric(ATE - coef(reg_results)['selected'])</code></pre>
+<pre class="r"><code>as.numeric(ATE - coef(model_simple)['selected'])</code></pre>
 <pre><code>## [1] -0.00000000000000001387779</code></pre>
-</div>
-<div id="full-interaction" class="section level1">
-<h1>Full Interaction</h1>
-<p>The author mentions we have to center <code>numhh</code></p>
+<p><code>ATE</code> which is weighted based on the population <code>numhh</code> equals <code>coef(model_simple)['selected']</code>, i.e. we are controlling for the imbalance in <code>numhh</code>.</p>
+<div id="model-with-interaction" class="section level2">
+<h2>Model with Interaction</h2>
+<p>The author mentions we have to center <code>numhh</code>. This is so that the <code>selected</code> coefficient is relative to the average value <code>numhh</code> and interactions. It makes the <code>selected</code> coefficient more interpretable.</p>
 <p><code>scale=FALSE</code> means we will only center the data rather than center/scale</p>
 <pre class="r"><code>X &lt;- scale(model.matrix(~numhh, data=P)[, -1], scale=FALSE)
 # data centered around 0
 colMeans(X)</code></pre>
 <pre><code>##                        numhh2                       numhh3+ 
 ##  0.00000000000000000104519891 -0.00000000000000000001736346</code></pre>
-<pre class="r"><code>reg_results_full &lt;- lm(doc_any_12m ~ selected * X, data=P)
-summary(reg_results_full)</code></pre>
+<pre class="r"><code>model_interaction &lt;- lm(doc_any_12m ~ selected * X, data=P)
+summary(model_interaction)</code></pre>
 <pre><code>## 
 ## Call:
 ## lm(formula = doc_any_12m ~ selected * X, data = P)
@@ -612,14 +584,39 @@ summary(reg_results_full)</code></pre>
 ## Residual standard error: 0.4872 on 23522 degrees of freedom
 ## Multiple R-squared:  0.007567,   Adjusted R-squared:  0.007356 
 ## F-statistic: 35.87 on 5 and 23522 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<pre class="r"><code>get_regression_equation(reg_results_full, .round_by = 4)</code></pre>
+<pre class="r"><code>get_regression_equation(model_interaction, .round_by = 4)</code></pre>
 <pre><code>## [1] &quot;doc_any_12m = 0.5729(Intercept) + 0.0637selected + -0.0518Xnumhh2 + -0.4225Xnumhh3+ + -0.0253selected:Xnumhh2 + 0.2628selected:Xnumhh3+ + error&quot;</code></pre>
-<pre class="r"><code>coefficients(reg_results_full)['selected']</code></pre>
+<p>The coefficient of <code>selected</code> is very close, but different than the model with no interactions.</p>
+<pre class="r"><code>coefficients(model_simple)['selected']</code></pre>
+<pre><code>##   selected 
+## 0.06333824</code></pre>
+<pre class="r"><code>coefficients(model_interaction)['selected']</code></pre>
 <pre><code>##  selected 
 ## 0.0636798</code></pre>
-<p>But we didn’t scale when we did <code>selected + numhh</code></p>
-<pre class="r"><code>reg_results_full2 &lt;- lm(doc_any_12m ~ selected + X, data=P)
-summary(reg_results_full2)</code></pre>
+<p>But we didn’t center when we did <code>selected + numhh</code>.</p>
+<p>It turns out the models would have been been identical, with the exception of the Intercept. This is because centering doesn’t change the effect of selected or numhh, but now, the coefficient for the Intercept corresponds to the average doc_any_12 value for the average numhh household. (before the Intercept was the average doc_any_12 value for numhh == 1 households). So, in the model without interactions, centering doesn’t change selected because selected is the same (i.e. same slope) at every value of numhh.</p>
+<pre class="r"><code>summary(model_simple)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = doc_any_12m ~ selected + numhh, data = P)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.6559 -0.5926  0.3441  0.4074  0.5913 
+## 
+## Coefficients:
+##              Estimate Std. Error t value             Pr(&gt;|t|)    
+## (Intercept)  0.592545   0.004815 123.071 &lt; 0.0000000000000002 ***
+## selected     0.063338   0.006387   9.916 &lt; 0.0000000000000002 ***
+## numhh2      -0.065465   0.006999  -9.353 &lt; 0.0000000000000002 ***
+## numhh3+     -0.183814   0.064151  -2.865              0.00417 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.4873 on 23524 degrees of freedom
+## Multiple R-squared:  0.00736,    Adjusted R-squared:  0.007233 
+## F-statistic: 58.14 on 3 and 23524 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+<pre class="r"><code>summary(lm(doc_any_12m ~ selected + X, data=P))</code></pre>
 <pre><code>## 
 ## Call:
 ## lm(formula = doc_any_12m ~ selected + X, data = P)
@@ -640,17 +637,9 @@ summary(reg_results_full2)</code></pre>
 ## Residual standard error: 0.4873 on 23524 degrees of freedom
 ## Multiple R-squared:  0.00736,    Adjusted R-squared:  0.007233 
 ## F-statistic: 58.14 on 3 and 23524 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<p>But turns out if we had we would have gotten the same coefficient.</p>
-<p>It’s because the original regression coefficient says that at the <strong>every value of numhh (i.e. same number of people in the household)</strong>, <code>selected</code> increases the <code>doc_any_12m</code> by <code>0.06333824</code></p>
-<pre class="r"><code>coef(reg_results)['selected']</code></pre>
-<pre><code>##   selected 
-## 0.06333824</code></pre>
-<pre class="r"><code>coef(reg_results_full2)['selected']</code></pre>
-<pre><code>##   selected 
-## 0.06333824</code></pre>
-<p>What if we hadn’t scaled <code>numhh</code>?</p>
-<pre class="r"><code>reg_results_full_non_scaled &lt;- lm(doc_any_12m ~ selected * numhh, data=P)
-summary(reg_results_full_non_scaled)</code></pre>
+<p>What if we hadn’t centered <code>numhh</code> in the interaction?</p>
+<pre class="r"><code>model_interaction_non_centered &lt;- lm(doc_any_12m ~ selected * numhh, data=P)
+summary(model_interaction_non_centered)</code></pre>
 <pre><code>## 
 ## Call:
 ## lm(formula = doc_any_12m ~ selected * numhh, data = P)
@@ -673,47 +662,41 @@ summary(reg_results_full_non_scaled)</code></pre>
 ## Residual standard error: 0.4872 on 23522 degrees of freedom
 ## Multiple R-squared:  0.007567,   Adjusted R-squared:  0.007356 
 ## F-statistic: 35.87 on 5 and 23522 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<pre class="r"><code>coef(reg_results_full)['selected']</code></pre>
+<pre class="r"><code>coef(model_interaction)['selected']</code></pre>
 <pre><code>##  selected 
 ## 0.0636798</code></pre>
-<pre class="r"><code>coef(reg_results_full_non_scaled)['selected']</code></pre>
+<pre class="r"><code>coef(model_interaction_non_centered)['selected']</code></pre>
 <pre><code>##   selected 
 ## 0.07050829</code></pre>
-<p>Before, the <code>selected</code> coefficient was the predicted difference in in selected vs not selected across all <code>numhh</code> values. Now, however, we’ve added an interaction term and, as a result, the difference between a selected vs not selected with the same <code>numhh</code> depends on what the <code>numhh</code> is. <strong>So the coefficient for <code>selected</code> is the predicted difference between a selected vs not selected person who both have <code>numhh1</code> (1 person in the household).</strong></p>
+<p>Before, in the original model with no interaction, the <code>selected</code> coefficient was the predicted difference in <code>selected</code> vs <code>not selected</code> across all <code>numhh</code> values (i.e. same slope for each group).</p>
+<p>For the model with the interaction, without centering, difference between a <code>selected</code> vs <code>not selected</code> with the same <code>numhh</code> depends on what the <code>numhh</code> is. <strong>So the coefficient for <code>selected</code> is the average difference between a <code>selected</code> vs <code>not selected</code> person who both have <code>numhh1</code> (1 person in the household), since that is the reference/holdout group.</strong></p>
+<p>For the model with the interaction, with centering, <strong>the coefficient for <code>selected</code> is the average difference between a <code>selected</code> vs <code>not selected</code> person at the average value of <code>numhh</code></strong></p>
 <blockquote>
 <p>The implication is that, once you add interaction effects, the main effects may or may not be particularly interesting, at least as they stand, and you should be careful in how you interpret them… Once interaction terms are added, you are primarily interested in their significance, rather than the significance of the terms used to compute them. <a href="https://www3.nd.edu/~rwilliam/stats2/l53.pdf" class="uri">https://www3.nd.edu/~rwilliam/stats2/l53.pdf</a></p>
 </blockquote>
 <p>But, if we take this non-centered model, and calculate difference between selected and non-selected using weighted average of frequencies of numhh, then we get the coeffient value of the centered data/model</p>
 <pre class="r"><code>new_data &lt;- data.frame(selected=c(1, 1, 1, 0, 0, 0),
                        numhh=c('1', '2', '3+', '1', '2', '3+'))</code></pre>
-<pre class="r"><code>new_data$predictions &lt;- predict(reg_results_full_non_scaled, newdata = new_data)</code></pre>
+<pre class="r"><code>new_data$predictions &lt;- predict(model_interaction_non_centered, newdata = new_data)</code></pre>
 <pre class="r"><code>diffs &lt;- new_data$predictions[1:3] - new_data$predictions[4:6]
 # do this across control and treatment
 numhh_frequency &lt;- table(P$numhh) / nrow(P)
 # weighted average
 (ATE &lt;- sum(diffs * numhh_frequency))</code></pre>
 <pre><code>## [1] 0.0636798</code></pre>
-<pre class="r"><code>coef(reg_results_full)['selected'] </code></pre>
+<pre class="r"><code>coef(model_interaction)['selected'] </code></pre>
 <pre><code>##  selected 
 ## 0.0636798</code></pre>
-<pre class="r"><code>coef(reg_results_full_non_scaled)['selected']</code></pre>
-<pre><code>##   selected 
-## 0.07050829</code></pre>
-<pre class="r"><code>(coef(reg_results_full_non_scaled)['selected'] - ATE) / ATE</code></pre>
-<pre><code>##  selected 
-## 0.1072317</code></pre>
-<pre class="r"><code>(coef(reg_results_full)['selected'] - ATE) / ATE</code></pre>
-<pre><code>##                selected 
-## -0.00000000000005600821</code></pre>
-<p>Now there is a difference, and the <code>ATE</code> of the weighted average non-centered is pretty much identical to the selected coefficient of the full/centered.</p>
-<p>Perhaps <a href="https://www3.nd.edu/~rwilliam/stats2/l53.pdf" class="uri">https://www3.nd.edu/~rwilliam/stats2/l53.pdf</a> can explain</p>
+<p>In summary, if we take the predictions from the non-centered model (with interactions), and weight them according to the <code>numhh</code> frequencies, we get the same coefficient that is in the <code>centered</code> model (with interactions).</p>
+<p><a href="https://www3.nd.edu/~rwilliam/stats2/l53.pdf" class="uri">https://www3.nd.edu/~rwilliam/stats2/l53.pdf</a> can explain more on centering &amp; interactions.</p>
 <p>It does,</p>
 <blockquote>
 <ul>
 <li>The coefficient for male (3.55) is now the average difference between a male with an average gpa and a female with an average gpa. This is probably more meaningful than looking at the difference between the nonexistent man and woman who are flunking everything.</li>
 </ul>
 </blockquote>
-<p>So translating the <code>coef(reg_results_full)['selected']</code> 0.0636798 is the average difference between selected with average numhh vs not selected with average numhh</p>
+<p>So translating the <code>coef(model_interaction)['selected']</code> <code>0.0636798</code> is the average difference between selected with average numhh vs not selected with average numhh</p>
+</div>
 </div>
 
 

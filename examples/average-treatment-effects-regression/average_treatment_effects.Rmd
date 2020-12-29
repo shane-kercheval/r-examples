@@ -63,7 +63,7 @@ P <- P[complete.cases(P),]
 head(P)
 ```
 
-# Average Treatment Effect:
+# Average Treatment Effect
 
 ybar is the percent of people with `doc_any_12m == 1` in the `selected == 0` (control) and `selected == 1` (treatment) groups.
 

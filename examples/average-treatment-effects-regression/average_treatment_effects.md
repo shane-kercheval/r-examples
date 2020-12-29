@@ -1,7 +1,8 @@
 -   [Data](#data)
+-   [Average Treatment Effect](#average-treatment-effect)
 -   [Weights](#weights)
--   [Regression](#regression)
--   [Full Interaction](#full-interaction)
+-   [Imbalance](#imbalance)
+    -   [Model with Interaction](#model-with-interaction)
 
 Data
 ====
@@ -15,70 +16,9 @@ descr <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_descriptive_va
 prgm <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_stateprograms_vars.dta")
 s12 <- read.dta("data/OHIE_Public_Use_Files/OHIE_Data/oregonhie_survey12m_vars.dta")
 
-head(descr)
-```
-
-    ##   person_id household_id    treatment                             draw_treat
-    ## 1         1       100001     Selected Draw 7: selected in lottery 08/01/2008
-    ## 2         2       100002     Selected Draw 6: selected in lottery 07/01/2008
-    ## 3         3       100003 Not selected                                   <NA>
-    ## 4         4       100004 Not selected                                   <NA>
-    ## 5         5       100005     Selected Draw 7: selected in lottery 08/01/2008
-    ## 6         6       100006     Selected Draw 3: selected in lottery 04/08/2008
-    ##     draw_lottery                          applied_app approved_app
-    ## 1 Lottery Draw 7      Submitted an Application to OHP           No
-    ## 2 Lottery Draw 6 Did NOT submit an application to OHP           No
-    ## 3 Lottery Draw 2                                 <NA>         <NA>
-    ## 4 Lottery Draw 8                                 <NA>         <NA>
-    ## 5 Lottery Draw 7 Did NOT submit an application to OHP           No
-    ## 6 Lottery Draw 3      Submitted an Application to OHP          Yes
-    ##   dt_notify_lottery dt_retro_coverage dt_app_decision postn_death
-    ## 1        2008-08-12        2008-09-08      2008-12-31       Alive
-    ## 2        2008-07-14        2008-08-08            <NA>       Alive
-    ## 3        2008-04-07        2008-04-08            <NA>       Alive
-    ## 4        2008-09-11        2008-10-08            <NA>       Alive
-    ## 5        2008-08-12        2008-09-08            <NA>       Alive
-    ## 6        2008-04-16        2008-05-08      2008-06-16       Alive
-    ##       numhh_list birthyear_list   have_phone_list
-    ## 1 signed self up           1978 Gave Phone Number
-    ## 2 signed self up           1984 Gave Phone Number
-    ## 3 signed self up           1971 Gave Phone Number
-    ## 4 signed self up           1955 Gave Phone Number
-    ## 5 signed self up           1969 Gave Phone Number
-    ## 6 signed self up           1946 Gave Phone Number
-    ##                                         english_list female_list
-    ## 1                        Requested English materials     0: Male
-    ## 2                        Requested English materials   1: Female
-    ## 3                        Requested English materials   1: Female
-    ## 4                        Requested English materials   1: Female
-    ## 5 Requested materials in language other than english   1: Female
-    ## 6                        Requested English materials     0: Male
-    ##                                  first_day_list
-    ## 1 Did NOT sign up for lottery list on first day
-    ## 2 Did NOT sign up for lottery list on first day
-    ## 3 Did NOT sign up for lottery list on first day
-    ## 4 Did NOT sign up for lottery list on first day
-    ## 5 Did NOT sign up for lottery list on first day
-    ## 6 Did NOT sign up for lottery list on first day
-    ##                                  last_day_list   pobox_list      self_list
-    ## 1 Did NOT sign up for lottery list on last day     1: POBOX Signed self up
-    ## 2 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-    ## 3 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-    ## 4 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-    ## 5 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-    ## 6 Did NOT sign up for lottery list on last day 0: Not POBOX Signed self up
-    ##   week_list                   zip_msa_list
-    ## 1    Week 2 Zip code of residence in a MSA
-    ## 2    Week 3 Zip code of residence in a MSA
-    ## 3    Week 3 Zip code of residence in a MSA
-    ## 4    Week 1 Zip code of residence in a MSA
-    ## 5    Week 2 Zip code of residence in a MSA
-    ## 6    Week 4 Zip code of residence in a MSA
-
-``` r
+#head(descr)
 #head(prgm)
 #head(s12)
-
 
 # nicely organized, one row per person
 stopifnot(all(s12$person_id == descr$person_id))
@@ -105,6 +45,13 @@ head(P)
     ## 9         9       100009     1        0        0      1           1
 
 Average Treatment Effect
+========================
+
+ybar is the percent of people with `doc_any_12m == 1` in the
+`selected == 0` (control) and `selected == 1` (treatment) groups.
+
+ATE is the difference of the percent doc\_any\_12m in the treatment vs
+control
 
 ``` r
 (ybar <- tapply(P$doc_any_12m, P$selected, mean))
@@ -136,19 +83,49 @@ Average Treatment Effect
     ## 0.2442593 0.2323530
 
 ``` r
-(starndard_errors <- sqrt(sum(yvar / num_sample)))
+(standard_errors <- sqrt(sum(yvar / num_sample)))
 ```
 
     ## [1] 0.006364705
 
 ``` r
-ATE + (c(-2, 2) * starndard_errors)
+ATE
+```
+
+    ##         1 
+    ## 0.0570134
+
+``` r
+# 95% confidence interval
+ATE + (c(-2, 2) * standard_errors)
 ```
 
     ## [1] 0.04428399 0.06974281
 
+``` r
+lm(doc_any_12m ~ selected, data=P) %>% tidy()
+```
+
+    ## # A tibble: 2 x 5
+    ##   term        estimate std.error statistic  p.value
+    ##   <chr>          <dbl>     <dbl>     <dbl>    <dbl>
+    ## 1 (Intercept)   0.576    0.00449    128.   0.      
+    ## 2 selected      0.0570   0.00637      8.96 3.60e-19
+
+Note: `Intercept` is the average value of `doc_any_12m` when
+`selected = 0`, which is the same as `ybar['0']` above. `selected`
+coefficient matches `ATE`.
+
 Weights
 =======
+
+In the example, the data conteight weights because of the imbalance i
+the data vs the population (e.g. perhaps young people are harder to
+reach for a survey)
+
+instead of `num_sample` we have `num_selected_weighted`
+
+instead of `ybar` we have `ybar_weighted`
 
 ``` r
 (num_selected_weighted <- tapply(P$weight, P$selected, sum))
@@ -178,16 +155,31 @@ Weights
     ##          1 
     ## 0.05552873
 
-Regression
-==========
+``` r
+lm(doc_any_12m ~ selected, weights=weight, data=P) %>% tidy()
+```
 
-We have an imballance in the data, from the control to the treatment:
-the family members of the people `selected` are also selected. So that
-families of 2, and 3+ will be overresented in the `selected` group. We
-don’t simply want to group by household because we want it at the
-individual level, and each individual in the household may or may not
-visit doc in the 12 month period. (Actually the author does do this
-later on by averaging doc\_any\_12m per household id)
+    ## # A tibble: 2 x 5
+    ##   term        estimate std.error statistic  p.value
+    ##   <chr>          <dbl>     <dbl>     <dbl>    <dbl>
+    ## 1 (Intercept)   0.574    0.00451    127.   0.      
+    ## 2 selected      0.0555   0.00638      8.71 3.28e-18
+
+Now, `Intercept` equals `ybar_weighted['0']`, and `selected` coefficient
+equals `ATE_weighted`
+
+Imbalance
+=========
+
+A similar scenario, ignoring the population imbalance, is that we have
+an imballance in the data due to how people are selected, from the
+control to the treatment: the family members of the people `selected`
+are also selected. So that families of 2, and 3+ will be overrepresented
+in the `selected` group. We don’t simply want to group by household
+because we want it at the individual level, and each individual in the
+household may or may not visit doc in the 12 month period. (Actually the
+author does do this later on by averaging doc\_any\_12m per household
+id)
 
 ``` r
 table(P$selected, P$numhh)
@@ -207,9 +199,11 @@ table(P$selected, P$numhh) / as.numeric(table(P$selected))
     ##   0 0.7467071935 0.2527862209 0.0005065856
     ##   1 0.6572235536 0.3383259158 0.0044505306
 
+Now, we can control for `numhh` by including it in the model.
+
 ``` r
-reg_results <- lm(doc_any_12m ~ selected + numhh, data=P)
-summary(reg_results)
+model_simple <- lm(doc_any_12m ~ selected + numhh, data=P)
+summary(model_simple)
 ```
 
     ## 
@@ -234,7 +228,7 @@ summary(reg_results)
     ## F-statistic: 58.14 on 3 and 23524 DF,  p-value: < 0.00000000000000022
 
 ``` r
-get_regression_equation(reg_results, .round_by = 4)
+get_regression_equation(model_simple, .round_by = 4)
 ```
 
     ## [1] "doc_any_12m = 0.5925(Intercept) + 0.0633selected + -0.0655numhh2 + -0.1838numhh3+ + error"
@@ -242,28 +236,28 @@ get_regression_equation(reg_results, .round_by = 4)
 ``` r
 # the intercept is equivalent to single person household not being selected
 # i.e. doc_any_12m = 0.5925(Intercept) + 0.0633*0 + -0.0655*0 + -0.1838*0
-predict(reg_results, newdata = data.frame(selected=0, numhh='1'))
+predict(model_simple, newdata = data.frame(selected=0, numhh='1'))
 ```
 
     ##         1 
     ## 0.5925453
 
 ``` r
-coef(reg_results)['(Intercept)']
+coef(model_simple)['(Intercept)']
 ```
 
     ## (Intercept) 
     ##   0.5925453
 
 ``` r
-predict(reg_results, newdata = data.frame(selected=1, numhh='1'))
+predict(model_simple, newdata = data.frame(selected=1, numhh='1'))
 ```
 
     ##         1 
     ## 0.6558835
 
 ``` r
-coef(reg_results)['(Intercept)'] + coef(reg_results)['selected']
+coef(model_simple)['(Intercept)'] + coef(model_simple)['selected']
 ```
 
     ## (Intercept) 
@@ -277,7 +271,7 @@ of the `selected` coefficient.
 ``` r
 new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
                        numhh=c('1', '2', '3+', '1', '2', '3+'))
-new_data$predictions <- predict(reg_results, newdata = new_data)
+new_data$predictions <- predict(model_simple, newdata = new_data)
 new_data
 ```
 
@@ -315,22 +309,28 @@ numhh_frequency <- table(P$numhh) / nrow(P)
     ## [1] 0.06333824
 
 ``` r
-coef(reg_results)['selected']
+coef(model_simple)['selected']
 ```
 
     ##   selected 
     ## 0.06333824
 
 ``` r
-as.numeric(ATE - coef(reg_results)['selected'])
+as.numeric(ATE - coef(model_simple)['selected'])
 ```
 
     ## [1] -0.00000000000000001387779
 
-Full Interaction
-================
+`ATE` which is weighted based on the population `numhh` equals
+`coef(model_simple)['selected']`, i.e. we are controlling for the
+imbalance in `numhh`.
 
-The author mentions we have to center `numhh`
+Model with Interaction
+----------------------
+
+The author mentions we have to center `numhh`. This is so that the
+`selected` coefficient is relative to the average value `numhh` and
+interactions. It makes the `selected` coefficient more interpretable.
 
 `scale=FALSE` means we will only center the data rather than
 center/scale
@@ -345,8 +345,8 @@ colMeans(X)
     ##  0.00000000000000000104519891 -0.00000000000000000001736346
 
 ``` r
-reg_results_full <- lm(doc_any_12m ~ selected * X, data=P)
-summary(reg_results_full)
+model_interaction <- lm(doc_any_12m ~ selected * X, data=P)
+summary(model_interaction)
 ```
 
     ## 
@@ -373,23 +373,66 @@ summary(reg_results_full)
     ## F-statistic: 35.87 on 5 and 23522 DF,  p-value: < 0.00000000000000022
 
 ``` r
-get_regression_equation(reg_results_full, .round_by = 4)
+get_regression_equation(model_interaction, .round_by = 4)
 ```
 
     ## [1] "doc_any_12m = 0.5729(Intercept) + 0.0637selected + -0.0518Xnumhh2 + -0.4225Xnumhh3+ + -0.0253selected:Xnumhh2 + 0.2628selected:Xnumhh3+ + error"
 
+The coefficient of `selected` is very close, but different than the
+model with no interactions.
+
 ``` r
-coefficients(reg_results_full)['selected']
+coefficients(model_simple)['selected']
+```
+
+    ##   selected 
+    ## 0.06333824
+
+``` r
+coefficients(model_interaction)['selected']
 ```
 
     ##  selected 
     ## 0.0636798
 
-But we didn’t scale when we did `selected + numhh`
+But we didn’t center when we did `selected + numhh`.
+
+It turns out the models would have been been identical, with the
+exception of the Intercept. This is because centering doesn’t change the
+effect of selected or numhh, but now, the coefficient for the Intercept
+corresponds to the average doc\_any\_12 value for the average numhh
+household. (before the Intercept was the average doc\_any\_12 value for
+numhh == 1 households). So, in the model without interactions, centering
+doesn’t change selected because selected is the same (i.e. same slope)
+at every value of numhh.
 
 ``` r
-reg_results_full2 <- lm(doc_any_12m ~ selected + X, data=P)
-summary(reg_results_full2)
+summary(model_simple)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = doc_any_12m ~ selected + numhh, data = P)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.6559 -0.5926  0.3441  0.4074  0.5913 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value             Pr(>|t|)    
+    ## (Intercept)  0.592545   0.004815 123.071 < 0.0000000000000002 ***
+    ## selected     0.063338   0.006387   9.916 < 0.0000000000000002 ***
+    ## numhh2      -0.065465   0.006999  -9.353 < 0.0000000000000002 ***
+    ## numhh3+     -0.183814   0.064151  -2.865              0.00417 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.4873 on 23524 degrees of freedom
+    ## Multiple R-squared:  0.00736,    Adjusted R-squared:  0.007233 
+    ## F-statistic: 58.14 on 3 and 23524 DF,  p-value: < 0.00000000000000022
+
+``` r
+summary(lm(doc_any_12m ~ selected + X, data=P))
 ```
 
     ## 
@@ -413,31 +456,11 @@ summary(reg_results_full2)
     ## Multiple R-squared:  0.00736,    Adjusted R-squared:  0.007233 
     ## F-statistic: 58.14 on 3 and 23524 DF,  p-value: < 0.00000000000000022
 
-But turns out if we had we would have gotten the same coefficient.
-
-It’s because the original regression coefficient says that at the
-**every value of numhh (i.e. same number of people in the household)**,
-`selected` increases the `doc_any_12m` by `0.06333824`
+What if we hadn’t centered `numhh` in the interaction?
 
 ``` r
-coef(reg_results)['selected']
-```
-
-    ##   selected 
-    ## 0.06333824
-
-``` r
-coef(reg_results_full2)['selected']
-```
-
-    ##   selected 
-    ## 0.06333824
-
-What if we hadn’t scaled `numhh`?
-
-``` r
-reg_results_full_non_scaled <- lm(doc_any_12m ~ selected * numhh, data=P)
-summary(reg_results_full_non_scaled)
+model_interaction_non_centered <- lm(doc_any_12m ~ selected * numhh, data=P)
+summary(model_interaction_non_centered)
 ```
 
     ## 
@@ -464,26 +487,33 @@ summary(reg_results_full_non_scaled)
     ## F-statistic: 35.87 on 5 and 23522 DF,  p-value: < 0.00000000000000022
 
 ``` r
-coef(reg_results_full)['selected']
+coef(model_interaction)['selected']
 ```
 
     ##  selected 
     ## 0.0636798
 
 ``` r
-coef(reg_results_full_non_scaled)['selected']
+coef(model_interaction_non_centered)['selected']
 ```
 
     ##   selected 
     ## 0.07050829
 
-Before, the `selected` coefficient was the predicted difference in in
-selected vs not selected across all `numhh` values. Now, however, we’ve
-added an interaction term and, as a result, the difference between a
-selected vs not selected with the same `numhh` depends on what the
-`numhh` is. **So the coefficient for `selected` is the predicted
-difference between a selected vs not selected person who both have
-`numhh1` (1 person in the household).**
+Before, in the original model with no interaction, the `selected`
+coefficient was the predicted difference in `selected` vs `not selected`
+across all `numhh` values (i.e. same slope for each group).
+
+For the model with the interaction, without centering, difference
+between a `selected` vs `not selected` with the same `numhh` depends on
+what the `numhh` is. **So the coefficient for `selected` is the average
+difference between a `selected` vs `not selected` person who both have
+`numhh1` (1 person in the household), since that is the
+reference/holdout group.**
+
+For the model with the interaction, with centering, **the coefficient
+for `selected` is the average difference between a `selected` vs
+`not selected` person at the average value of `numhh`**
 
 > The implication is that, once you add interaction effects, the main
 > effects may or may not be particularly interesting, at least as they
@@ -503,7 +533,7 @@ new_data <- data.frame(selected=c(1, 1, 1, 0, 0, 0),
 ```
 
 ``` r
-new_data$predictions <- predict(reg_results_full_non_scaled, newdata = new_data)
+new_data$predictions <- predict(model_interaction_non_centered, newdata = new_data)
 ```
 
 ``` r
@@ -517,40 +547,19 @@ numhh_frequency <- table(P$numhh) / nrow(P)
     ## [1] 0.0636798
 
 ``` r
-coef(reg_results_full)['selected'] 
+coef(model_interaction)['selected'] 
 ```
 
     ##  selected 
     ## 0.0636798
 
-``` r
-coef(reg_results_full_non_scaled)['selected']
-```
+In summary, if we take the predictions from the non-centered model (with
+interactions), and weight them according to the `numhh` frequencies, we
+get the same coefficient that is in the `centered` model (with
+interactions).
 
-    ##   selected 
-    ## 0.07050829
-
-``` r
-(coef(reg_results_full_non_scaled)['selected'] - ATE) / ATE
-```
-
-    ##  selected 
-    ## 0.1072317
-
-``` r
-(coef(reg_results_full)['selected'] - ATE) / ATE
-```
-
-    ##                selected 
-    ## -0.00000000000005600821
-
-Now there is a difference, and the `ATE` of the weighted average
-non-centered is pretty much identical to the selected coefficient of the
-full/centered.
-
-Perhaps
 <a href="https://www3.nd.edu/~rwilliam/stats2/l53.pdf" class="uri">https://www3.nd.edu/~rwilliam/stats2/l53.pdf</a>
-can explain
+can explain more on centering & interactions.
 
 It does,
 
@@ -560,6 +569,6 @@ It does,
 >     difference between the nonexistent man and woman who are flunking
 >     everything.
 
-So translating the `coef(reg_results_full)['selected']` 0.0636798 is the
-average difference between selected with average numhh vs not selected
-with average numhh
+So translating the `coef(model_interaction)['selected']` `0.0636798` is
+the average difference between selected with average numhh vs not
+selected with average numhh
