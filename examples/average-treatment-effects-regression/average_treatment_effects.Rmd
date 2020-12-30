@@ -38,7 +38,11 @@ This section describes weighting the results based on an imbalance in the data.
 
 In the first example, we have a `weight` column so we know the explicit weight each person-id should have. This is what would happen if we knew that the **entire dataset** was not representative to the population (and if we knew the population distribution.) We calculate the Average Treatment Effect (ATE) manually and then by using the `weights` parameter in the `lm` function.
 
+In this example, **we don't have a specific column to include in the model and control for**.
+
 In the second example, we know that the **treatment group is over-represented relative to `numhh`** (vs the last example where the entire dataset was not representative). We can simply include `numhh` in the model and control for it.
+
+In this example, **we do have a specific column to include in the model and control for**.
 
 # Data
 
