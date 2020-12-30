@@ -3234,3 +3234,215 @@ rm(fake)
 rm(model_fake)
 rm(fake_model_simulation)
 ```
+
+# Chapter 17 - Poststratification and Missing-Data Imputation
+
+## Poststratification - Election Polls
+
+### Simulated Data
+
+```{r}
+n_pid <- c(254, 282, 242)
+n <- sum(n_pid)
+pid_names <- c("Republican", "Democrat", "Independent")
+pid <- rep(pid_names, n_pid)
+n_vote <- as.list(rep(NA, 3))
+n_vote[[1]] <- round(c(0.77, 0.08)*n_pid[1])
+n_vote[[2]] <- round(c(0.05, 0.89)*n_pid[2])
+n_vote[[3]] <- round(c(0.36, 0.38)*n_pid[3])
+vote <- NULL
+y_bar_cells <- rep(NA, 3)
+for (j in 1:3){
+    n_vote[[j]]<- c(n_vote[[j]], n_pid[j] - sum(n_vote[[j]]))
+    vote <- c(vote, rep(c(1, 0, NA), n_vote[[j]]))
+    y_bar_cells[j] <- mean(vote[pid==pid_names[j]], na.rm=TRUE)
+    round(y_bar_cells[j], 3)
+}
+poll <- data.frame(vote, pid)
+# write.csv(poll, root("Poststrat/data","poll.csv"), row.names=FALSE)
+# poll <- read.csv(root("Poststrat/data","poll.csv"))
+set.seed(2)
+poll[sample(x=1:nrow(poll), size=10),]
+```
+
+```{r include=FALSE}
+rm(n_pid)
+rm(n)
+rm(pid_names)
+rm(pid)
+rm(n_vote)
+rm(vote)
+rm(j)
+```
+
+
+Note, some votes can be `NA`. There are no comments or descriptions in the code, but from what I can tell, this is their way of creating the imbalance between the population and the survey.
+
+If we look at the entire dataset, we see the expected population proportions of `~36%` Democrate, `~31%` Independent, `~33%` Republican.
+
+The percent of trump votes for each group matches 
+
+```{r}
+population_summary <- poll %>%
+    group_by(pid) %>%
+    summarise(num_trump_votes = sum(vote, na.rm = TRUE),
+              percent_trump_votes = mean(vote, na.rm = TRUE),
+              #group_size = n(),
+              group_percent = n() / nrow(.)) %>%
+    ungroup()
+population_summary
+```
+
+If we look at the data without `NAs`, we get the sample of data that represents the survey. 
+
+> Of these respondents, Party ID `33%` Republican, `40%` Democrat, `27%` independent.
+
+Note that the percent of trump votes for each party identification group remains the same across population (above) and survey (below).
+
+> More precisel, we make the assumption that the probability of a survey reponsdent supporting Trump (...) conditional on party identification, is the same as the corresponding probability among the poopulation of voters. (pg 314)
+
+Note: that the regression model will automatically remove `NA` values and so will use the dataset below. I don't think this is mentioned by authors, which creates additional confusion in following their code.
+
+```{r}
+survey_summary <- poll %>%
+    filter(!is.na(vote)) %>%
+    group_by(pid) %>%
+    summarise(num_trump_votes = sum(vote, na.rm = TRUE),
+              percent_trump_votes = mean(vote, na.rm = TRUE),
+              #roup_size = n(),
+              group_percent = n() / nrow(.)) %>%
+    ungroup()
+survey_summary
+```
+
+# Simple Poststrat
+
+Current Percent of Trump Votes in survey:
+
+```{r}
+sum(survey_summary$num_trump_votes) / nrow(poll %>% filter(!is.na(vote)))
+```
+
+We get the same thing by weighted average of percent_trump_votes
+
+```{r}
+sum(survey_summary$percent_trump_votes * survey_summary$group_percent)
+```
+
+We can do a simple post-stratifcation by using the true group_percent rather than the survey group percent
+
+```{r}
+sum(survey_summary$percent_trump_votes * c(.36, 0.31, 0.33))
+```
+
+Or, authors code
+
+```{r}
+poststrat_data <- data.frame(pid=c("Republican", "Democrat", "Independent"),
+                             N=c(0.33, 0.36, 0.31))
+
+sum(poststrat_data$N * y_bar_cells)
+```
+
+# Linear model
+
+```{r}
+round(mean(poll$vote, na.rm=TRUE), 3)
+```
+
+```{r}
+# note, stan_glm will automatically filter out NAs
+set.seed(1)
+fit_1 <- stan_glm(vote ~ pid, data = poll, refresh = 0)
+print(fit_1, digits=3)
+```
+
+```{r}
+poststrat_data
+```
+
+apparently we can have a column `N` in our `newdata` and `posterior_epred` knows what to do with it.
+
+```{r}
+epred_1 <- posterior_epred(fit_1, newdata=poststrat_data)
+head(epred_1)
+```
+
+```{r}
+colMeans(epred_1)
+```
+
+
+```{r}
+poststrat_est_1 <- epred_1 %*% poststrat_data$N
+head(poststrat_est_1)
+```
+
+```{r}
+c(mean(poststrat_est_1), mad(poststrat_est_1))
+```
+
+compared to manual calculation:
+
+```{r}
+sum(survey_summary$percent_trump_votes * c(.36, 0.31, 0.33))
+```
+
+# Weights
+
+```{r}
+survey_summary
+```
+
+```{r}
+population_summary
+```
+
+
+```{r}
+pid_weights <- population_summary$group_percent / survey_summary$group_percent
+names(pid_weights) <-  survey_summary$pid
+pid_weights
+```
+
+---
+
+I thought i could use `weights`, but this gives the same answer, because we are already controlling for the thing we are basing the weights off of.. .doesn't make any sense to use weights here..
+
+```{r}
+poll_weights <- poll %>%
+    filter(!is.na(vote)) %>%
+    mutate(weight = pid_weights[pid])
+
+poll_weights %>% distinct()
+```
+
+```{r}
+# note, stan_glm will automatically filter out NAs
+set.seed(1)
+fit_weights <- stan_glm(vote ~ pid, data = poll_weights, weights = weight, refresh = 0)
+print(fit_weights, digits=3)
+```
+
+Same exact model as `fit_1`
+
+```{r}
+epred_weights <- posterior_epred(fit_weights, newdata=survey_summary %>% select(pid))
+head(epred_weights)
+
+colMeans(epred_weights)
+```
+
+```{r include=FALSE}
+rm(population_summary)
+rm(survey_summary)
+rm(poststrat_data)
+rm(fit_1)
+rm(epred_1)
+rm(fit_weights)
+rm(epred_weights)
+rm(pid_weights)
+rm(poll_weights)
+rm(poststrat_est_1)
+rm(y_bar_cells)
+```
