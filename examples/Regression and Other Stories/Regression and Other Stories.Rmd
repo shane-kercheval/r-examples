@@ -3239,6 +3239,8 @@ rm(fake_model_simulation)
 
 ## Poststratification - Election Polls
 
+> Example from https://avehtari.github.io/ROS-Examples/Poststrat/poststrat.html
+
 ### Simulated Data
 
 ```{r}
