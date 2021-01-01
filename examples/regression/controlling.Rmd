@@ -1,0 +1,198 @@
+---
+title: "Regression and Other Stories"
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+# library(stringr)
+# library(ggrepel)
+# library(forecast)
+#library(scales)
+#library(lubridate)
+
+library(knitr)
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_5 <- calculate_plot_width(5)
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+```
+
+# Simulate Data
+
+First Simulate the "Population"; defined to be whatever we want
+
+```{r}
+population_size <- 10000
+percent_male <- 0.5
+
+set.seed(1)
+sex <- rbinom(n=population_size, size=1, prob = 0.5)
+age <- runif(n=population_size, min=18, max=65)
+
+sex_wage_gap <- 0.10  # males make 5% more than females, on average
+age_wage_gap <- 1000  # each year adds an additional $1000 to wage, on average
+
+simualted_male_wage_factor <- rnorm(n=population_size, mean=1+sex_wage_gap, sd=0.02)
+simualted_female_wage_factor <- rnorm(n=population_size, mean=1, sd=0.015)
+
+sex_wage_factor <- ifelse(sex == 1, simualted_male_wage_factor, simualted_female_wage_factor)
+age_wage_factor <- rnorm(n=population_size, mean=age_wage_gap, sd=age_wage_gap)
+
+wage <- (age * age_wage_gap * sex_wage_factor) + age_wage_factor
+
+pop_data <- data.frame(wage, sex, age) %>%
+    mutate(sex = ifelse(sex == 1, 'male', 'female'))
+head(pop_data)
+```
+
+```{r}
+pop_data %>%
+    group_by(sex) %>%
+    summarise(n=n(),
+              average_age=mean(age),
+              average_wage=mean(wage))
+```
+
+```{r}
+average_wage_males <- mean(pop_data %>% filter(sex == 'male') %>% pull(wage))
+average_wage_females <- mean(pop_data %>% filter(sex == 'female') %>% pull(wage))
+
+average_wage_males
+average_wage_females
+
+(average_wage_males - average_wage_females) / average_wage_females
+```
+
+```{r}
+pop_data %>%
+    ggplot(aes(x=age, y=wage, color=sex)) +
+    geom_point(alpha=0.05) +
+    geom_smooth()
+```
+
+```{r}
+# make model intercept for 18-year old rather than 0-year old
+pop_model <- pop_data %>% 
+    mutate(age = age - 18) %>%
+    lm(wage ~ age*sex, data=.)
+summary(pop_model)
+```
+
+- `Intercept`: because we did `age = age - 18`, the `Intercept` is the average pay of an 18 year old female (rather than 0-year old female), confirm below (`pop_predictions[2]`)
+- `age`: because of interactions, age is how much additional money, on average, each additional year gives a `female`; `age + age:sexmale` is how much additional money, on average, each additional year gives a `male`
+- `sexmale`: is how much more a male makes than a female **at age 18** (again, because of the interaction, and because we did age-18). verify number (`pop_predictions[1] - pop_predictions[2]`) below
+- `age:sexmale`: each addional year gives a male 100 more over a female. Notice in the graph above the pay gap widens as people get older.
+
+```{r}
+new_data <- tribble(~sex, ~age,
+                    'male',   18,
+                    'female', 18,
+                    'male',   19,
+                    'female', 19,
+                    'male',   40,
+                    'female', 40,
+                    'male',   65,
+                    'female', 65) %>%
+    mutate(age = age - 18)
+
+pop_predictions <- predict(pop_model, newdata = new_data)
+pop_predictions
+```
+
+```{r}
+pop_predictions[1] - pop_predictions[2]
+pop_predictions[3] - pop_predictions[4]
+pop_predictions[5] - pop_predictions[6]
+pop_predictions[7] - pop_predictions[8]
+```
+
+Survey data; under-sample older males
+
+```{r}
+male_survey_data <- pop_data %>% filter(sex == 'male') %>% arrange(age)
+male_75th_quantile <- round(nrow(male_survey_data) * 0.75)
+male_survey_data <- male_survey_data[sample(x=1:male_75th_quantile, size=250),]
+
+female_survey_data <- pop_data %>% filter(sex == 'female') %>% arrange(age)
+female_25th_quantile <- round(nrow(female_survey_data) * 0.25)
+female_survey_data <- female_survey_data[sample(x=female_25th_quantile:nrow(female_survey_data), size=250),]
+
+survey_data <- bind_rows(male_survey_data, female_survey_data)
+```
+
+Now, `females` make more on average, but they are also older on average
+
+```{r}
+survey_data %>%
+    group_by(sex) %>%
+    summarise(n=n(),
+              average_age=mean(age),
+              average_wage=mean(wage))
+```
+
+`males` make 16% lower than `females` on average
+
+```{r}
+survey_average_wage_males <- mean(survey_data %>% filter(sex == 'male') %>% pull(wage))
+survey_average_wage_females <- mean(survey_data %>% filter(sex == 'female') %>% pull(wage))
+
+survey_average_wage_males
+survey_average_wage_females
+
+(survey_average_wage_males - survey_average_wage_females) / survey_average_wage_females
+```
+
+But we can see that makes still make more at the same age level.
+
+```{r}
+survey_data %>%
+    ggplot(aes(x=age, y=wage, color=sex)) +
+    geom_point(alpha=0.15) +
+    geom_smooth()
+```
+
+```{r}
+survey_model <- survey_data %>%
+    mutate(age = age - 18) %>%
+    lm(wage ~ age*sex, data=.)
+summary(survey_model)
+```
+
+```{r}
+coef(survey_model)
+coef(pop_model)
+```
+
+```{r}
+survey_predictions <- predict(survey_model, newdata = new_data)
+survey_predictions
+```
+
+18-year males are predicted to make ~ `1900
+
+```{r}
+survey_predictions[1] - survey_predictions[2]
+survey_predictions[3] - survey_predictions[4]
+survey_predictions[5] - survey_predictions[6]
+survey_predictions[7] - survey_predictions[8]
+```
+
+```{r}
+pop_predictions[1] - pop_predictions[2]
+pop_predictions[3] - pop_predictions[4]
+pop_predictions[5] - pop_predictions[6]
+pop_predictions[7] - pop_predictions[8]
+```
+
+We can see that, although the estimates are not quite as good and the model as more extreme predictions (i.e. less of a difference at age 18 and more of a difference at age 65, but pretty close at age 40), the model does control for the fact that we are under-sampling older males and younger females and the raw data shows females making more, and the model predicts that males will make more on average, across all ages.
+
+**We could further extend this example by building a model that only includes the data where there is overlap in data i.e. age. This is related to the sections in `Regression and Other Stories` that describe `imbalance` and `lack of complete overlap.**
