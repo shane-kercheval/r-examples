@@ -16,6 +16,7 @@ output:
 # library(forecast)
 #library(scales)
 #library(lubridate)
+library(tidyverse)
 
 library(knitr)
 
@@ -195,4 +196,4 @@ pop_predictions[7] - pop_predictions[8]
 
 We can see that, although the estimates are not quite as good and the model as more extreme predictions (i.e. less of a difference at age 18 and more of a difference at age 65, but pretty close at age 40), the model does control for the fact that we are under-sampling older males and younger females and the raw data shows females making more, and the model predicts that males will make more on average, across all ages.
 
-**We could further extend this example by building a model that only includes the data where there is overlap in data i.e. age. This is related to the sections in `Regression and Other Stories` that describe `imbalance` and `lack of complete overlap.**
+**We could further extend this example by building a model that only includes the data where there is overlap in data i.e. age; or, we could simply refrain from making predictions where there is lack of overlap in data. This is related to the sections in `Regression and Other Stories` that describe `imbalance` and `lack of complete overlap.**
