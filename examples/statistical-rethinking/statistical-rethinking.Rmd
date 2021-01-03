@@ -11,9 +11,9 @@ output:
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 #devtools::install_github('shane-kercheval/rtools')
 #library(rtools)
-# library(stringr)
-# library(ggrepel)
-# library(forecast)
+#library(stringr)
+#library(ggrepel)
+#library(forecast)
 #library(scales)
 #library(lubridate)
 
@@ -47,7 +47,6 @@ This document includes examples and exercises from `Statistical Rethinking, Seco
 - [Tidier](https://bookdown.org/content/4857/small-worlds-and-large-worlds.html#building-a-model)
 - [Python](https://github.com/pymc-devs/resources/tree/master/Rethinking_2)
 
-
 # Packages
 
 ## statistical packages
@@ -56,7 +55,6 @@ This document includes examples and exercises from `Statistical Rethinking, Seco
 # install.packages(c('coda', 'mvtnorm', 'devtools', 'dagitty'))
 # library(devtools)
 # devtools::install_github('rmcelreath/rethinking')
-
 library(rethinking)
 library(rstan)
 library(rstanarm)
@@ -85,29 +83,29 @@ options(dplyr.summarise.inform=F)
 ```
 
 ```{r downloading_data, eval=FALSE, include=FALSE}
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/ElectionsEconomy/data/hibbs.dat',
-              destfile = 'data/hibbs.dat', quiet = TRUE)
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
-              destfile = 'data/congress.csv', quiet = TRUE)
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
-              destfile = 'data/nes.csv', quiet = TRUE)
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
-              destfile = 'data/kidiq.csv', quiet = TRUE)
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
-              destfile = 'data/earnings.csv', quiet = TRUE)
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
-              destfile = 'data/mesquite.dat')
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Student/data/student-merged.csv',
-              destfile = 'data/student-merged.csv')
-
-download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Arsenic/data/wells.csv',
-              destfile = 'data/wells.csv')
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/ElectionsEconomy/data/hibbs.dat',
+#               destfile = 'data/hibbs.dat', quiet = TRUE)
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
+#               destfile = 'data/congress.csv', quiet = TRUE)
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
+#               destfile = 'data/nes.csv', quiet = TRUE)
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
+#               destfile = 'data/kidiq.csv', quiet = TRUE)
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
+#               destfile = 'data/earnings.csv', quiet = TRUE)
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
+#               destfile = 'data/mesquite.dat')
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Student/data/student-merged.csv',
+#               destfile = 'data/student-merged.csv')
+# 
+# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Arsenic/data/wells.csv',
+#               destfile = 'data/wells.csv')
 ```
 
 ```{r include=FALSE}
