@@ -1,0 +1,128 @@
+---
+title: "Statistical Rethinking"
+author: "Shane Kercheval"
+output:
+  md_document:
+    variant: markdown_github
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+#devtools::install_github('shane-kercheval/rtools')
+#library(rtools)
+# library(stringr)
+# library(ggrepel)
+# library(forecast)
+#library(scales)
+#library(lubridate)
+
+library(knitr)
+
+calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+plot_width_height_5 <- calculate_plot_width(5)
+plot_width_height_6 <- calculate_plot_width(6)
+plot_width_height_7 <- calculate_plot_width(7)
+plot_width_height_8 <- calculate_plot_width(8)
+
+pivot_longer_all <- function(.x, names_to='name', values_to='value') {
+    .x %>%
+        mutate(temp____index = row_number()) %>%
+        pivot_longer(-temp____index, names_to=names_to, values_to=values_to) %>%
+        select(-temp____index)
+}
+```
+
+# Overview
+
+This document includes examples and exercises from `Statistical Rethinking, Second Edition` by Richard McElreath.
+
+# Resources
+
+- [Book website](http://xcelab.net/rm/statistical-rethinking/)
+- [Course Slides and Videos](https://github.com/rmcelreath/stat_rethinking_2020#calendar--topical-outline)
+- [Code](http://xcelab.net/rmpubs/sr2/code.txt)
+- [Homework Solutions](https://github.com/rmcelreath/stat_rethinking_2020/tree/main/homework)
+- [Stan & Tidyverse](https://vincentarelbundock.github.io/rethinking2/)
+- [Tidier](https://bookdown.org/content/4857/small-worlds-and-large-worlds.html#building-a-model)
+- [Python](https://github.com/pymc-devs/resources/tree/master/Rethinking_2)
+
+
+# Packages
+
+## statistical packages
+
+```{r message=FALSE, warning=FALSE}
+# install.packages(c('coda', 'mvtnorm', 'devtools', 'dagitty'))
+# library(devtools)
+# devtools::install_github('rmcelreath/rethinking')
+
+library(rethinking)
+library(rstan)
+library(rstanarm)
+library(bayesplot)
+library(loo)
+```
+
+## base packages
+
+```{r message=FALSE, warning=FALSE}
+library(broom)
+library(broom.mixed)
+
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(ggridges)
+```
+
+## Settings
+
+```{r}
+theme_set(theme_light())
+options(scipen=999) # non-scientific notation
+options(dplyr.summarise.inform=F)
+```
+
+```{r downloading_data, eval=FALSE, include=FALSE}
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/ElectionsEconomy/data/hibbs.dat',
+              destfile = 'data/hibbs.dat', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
+              destfile = 'data/congress.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
+              destfile = 'data/nes.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
+              destfile = 'data/kidiq.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
+              destfile = 'data/earnings.csv', quiet = TRUE)
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
+              destfile = 'data/mesquite.dat')
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Student/data/student-merged.csv',
+              destfile = 'data/student-merged.csv')
+
+download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Arsenic/data/wells.csv',
+              destfile = 'data/wells.csv')
+```
+
+```{r include=FALSE}
+# congress <- read_csv("data/congress.csv")
+# earnings <- read_csv("data/earnings.csv")
+# hibbs <- read.table('data/hibbs.dat', header = TRUE)
+# kid_iq <- kidiq
+# mesquite <- read.table('data/mesquite.dat', header = TRUE)
+# metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
+# nes_data <- read.csv("data/nes.csv", sep = ' ')
+# students <- read_csv("data/student-merged.csv") %>%
+#     rename(math_score = G3mat) %>% # "third period math grade given student's school" https://avehtari.github.io/ROS-Examples/Student/student.html
+#     select(-starts_with("G", ignore.case = FALSE)) %>%
+#     filter(math_score > 0)
+# wells <- read_csv("data/wells.csv")
+```
+
+# Chapter 1 - 
