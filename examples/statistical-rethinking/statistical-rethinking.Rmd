@@ -123,4 +123,161 @@ options(dplyr.summarise.inform=F)
 # wells <- read_csv("data/wells.csv")
 ```
 
-# Chapter 1 - 
+# Chapter 2 - 
+
+dbinom gives the probability of getting `x` "successes" given a sample size of `size` and a certain probability.
+
+So `dbinom(x=5, size=10, prob=0.5)`
+
+```{r}
+dbinom(x=5, size=10, prob=0.5)
+```
+
+so if we say the probability of a "successful event" is 50% (e.g. flipping a coin and landing on heads) and that we are going to flip the coin 10 times (i.e. sample size of 10) the probability we will get exactly 5 heads (i.e. successes) is 24.6%. 
+
+```{r}
+plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
+```
+
+```{r}
+sum(dbinom(x=0:10, size=10, prob=0.5))
+```
+
+So if we have `dbinom(x=6, size=9, prob = X)` over a range of probabilities, as we do below, the area under the curve will not sum to 1. This is not a probability distribution it is a distribution of plausibilities. 
+
+```{r}
+most_plausible <- optimize(function (.x) -dbinom(x=6, size=9, prob = .x),
+                           c(0, 1),
+                           tol = 0.0001)
+most_plausible
+```
+
+```{r}
+dbinom(x=6, size=9, prob = most_plausible$minimum)
+sum(dbinom(0:2, 2, 0.5))
+```
+
+
+```{r}
+curve( dbinom(x=5, size=7, prob=x), 0, 1, lty=3, col='gray', xlab = '', ylab='')
+curve( dbinom(x=5, size=8, prob=x), 0, 1, add=T, lty=2, xlab = '', ylab='')
+curve( dbinom(x=6, size=9, prob=x), 0, 1, add=T, col='blue', xlab = '', ylab='')
+abline(v=most_plausible$minimum, col="red", lty=2, lwd=3)
+title(xlab="Probability of Water", ylab="dbinom(x=6, size=9, prob=x) (plausibility)")
+```
+
+We can standardize the probability (based on the fact that curve plots 101 points) by calculating dbinom for a given x, size, and prob, and summing the dbinom for the same x & size over 101 points points between 0 and 1.
+
+Now the values will add up to 1
+
+```{r}
+dbinom_density_to_probability <- function(.x, .size, .prob, .length.out=101) {
+    dbinom(x=.x, size=.size, prob=.prob) / sum(dbinom(x=.x, size=.size, prob=seq(0, 1, length.out = .length.out)))
+}
+sum(dbinom_density_to_probability(.x=6, .size=9, .prob = seq(0, 1, length.out = 101)))
+```
+
+We see that more information now makes the density higher. The graph is now consistent with the bottom right fiture on page 30.
+
+```{r}
+curve( dbinom_density_to_probability(.x=6, .size=9, .prob = x), 0, 1, col='blue', xlab = '', ylab='')
+curve( dbinom_density_to_probability(.x=5, .size=8, .prob = x), 0, 1, add=T, lty=2, xlab = '', ylab='')
+curve( dbinom_density_to_probability(.x=2, .size=3, .prob = x), 0, 1, add=T, lty=3, col='gray', xlab = '', ylab='')
+abline(v=most_plausible$minimum, col="red", lty=2, lwd=3)
+title(xlab="Probability of Water", ylab="dbinom(x=6, size=9, prob=x) (posterior probablity)")
+```
+
+```{r}
+## R code 2.3
+# define grid
+p_grid <- seq( from=0 , to=1 , length.out=20 )
+
+# define prior
+prior <- rep( 1 , 20 )
+
+# compute likelihood at each value in grid
+likelihood <- dbinom( 6 , size=9 , prob=p_grid )
+
+sum(likelihood)  # doesn't sum to 1, not a probability distribution
+```
+
+```{r}
+# compute product of likelihood and prior
+unstd.posterior <- likelihood * prior
+
+# standardize the posterior, so it sums to 1
+posterior <- unstd.posterior / sum(unstd.posterior)
+```
+
+```{r}
+sum(unstd.posterior)
+sum(posterior)
+```
+
+```{r}
+## R code 2.4
+plot( p_grid , posterior , type="b" ,
+    xlab="probability of water" , ylab="posterior probability" )
+mtext( "20 points" )
+```
+
+```{r}
+prior <- ifelse( p_grid < 0.5 , 0 , 1 )
+#prior <- exp( -5*abs( p_grid - 0.5 ) )
+```
+
+```{r}
+## R code 2.3
+# define grid
+p_grid <- seq( from=0 , to=1 , length.out=20 )
+
+
+# compute likelihood at each value in grid
+likelihood <- dbinom( 6 , size=9 , prob=p_grid )
+
+
+# compute product of likelihood and prior
+unstd.posterior <- likelihood * prior
+
+# standardize the posterior, so it sums to 1
+posterior <- unstd.posterior / sum(unstd.posterior)
+
+plot( p_grid , posterior , type="b" ,
+    xlab="probability of water" , ylab="posterior probability" )
+mtext( "20 points" )
+```
+
+
+
+
+
+```{r}
+dunif(seq(0, 1, 0.01), 0, 1)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+prop.test(x=6, n=9)
+```
+
+```{r}
+y <- c(1, 1, 1, 1, 1, 1, 0, 0, 0)
+summary(lm(y~1))
+```
+
+
+```{r}
+print(rstanarm::stan_glm(y~1, refresh = 0), 3)
+```
+
+
+
+
+
