@@ -41,8 +41,10 @@ This document includes examples and exercises from `Statistical Rethinking, Seco
 
 - [Book website](http://xcelab.net/rm/statistical-rethinking/)
 - [Course Slides and Videos](https://github.com/rmcelreath/stat_rethinking_2020#calendar--topical-outline)
+    - [2019](https://github.com/rmcelreath/statrethinking_winter2019)
 - [Code](http://xcelab.net/rmpubs/sr2/code.txt)
 - [Homework Solutions](https://github.com/rmcelreath/stat_rethinking_2020/tree/main/homework)
+    - [2019](https://github.com/rmcelreath/statrethinking_winter2019/tree/master/homework)
 - [Stan & Tidyverse](https://vincentarelbundock.github.io/rethinking2/)
 - [brms & Tidier](https://bookdown.org/content/4857)
     - [brms](https://github.com/paul-buerkner/brms)
@@ -407,6 +409,8 @@ rm(q0)
 rm(q1)
 rm(i)
 ```
+
+# Chapter 3
 
 
 
