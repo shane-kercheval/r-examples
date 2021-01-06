@@ -44,7 +44,8 @@ This document includes examples and exercises from `Statistical Rethinking, Seco
 - [Code](http://xcelab.net/rmpubs/sr2/code.txt)
 - [Homework Solutions](https://github.com/rmcelreath/stat_rethinking_2020/tree/main/homework)
 - [Stan & Tidyverse](https://vincentarelbundock.github.io/rethinking2/)
-- [Tidier](https://bookdown.org/content/4857/small-worlds-and-large-worlds.html#building-a-model)
+- [brms & Tidier](https://bookdown.org/content/4857)
+    - [brms](https://github.com/paul-buerkner/brms)
 - [Python](https://github.com/pymc-devs/resources/tree/master/Rethinking_2)
 
 # Packages
@@ -58,6 +59,8 @@ This document includes examples and exercises from `Statistical Rethinking, Seco
 library(rethinking)
 library(rstan)
 library(rstanarm)
+#install.packages('brms')
+library(brms)
 library(bayesplot)
 library(loo)
 ```
@@ -82,55 +85,16 @@ options(scipen=999) # non-scientific notation
 options(dplyr.summarise.inform=F)
 ```
 
-```{r downloading_data, eval=FALSE, include=FALSE}
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/ElectionsEconomy/data/hibbs.dat',
-#               destfile = 'data/hibbs.dat', quiet = TRUE)
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Congress/data/congress.csv',
-#               destfile = 'data/congress.csv', quiet = TRUE)
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/NES/data/nes.txt',
-#               destfile = 'data/nes.csv', quiet = TRUE)
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/KidIQ/data/kidiq.csv',
-#               destfile = 'data/kidiq.csv', quiet = TRUE)
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Earnings/data/earnings.csv',
-#               destfile = 'data/earnings.csv', quiet = TRUE)
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Mesquite/data/mesquite.dat',
-#               destfile = 'data/mesquite.dat')
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Student/data/student-merged.csv',
-#               destfile = 'data/student-merged.csv')
-# 
-# download.file(url='https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Arsenic/data/wells.csv',
-#               destfile = 'data/wells.csv')
-```
+# Chapter 2
 
-```{r include=FALSE}
-# congress <- read_csv("data/congress.csv")
-# earnings <- read_csv("data/earnings.csv")
-# hibbs <- read.table('data/hibbs.dat', header = TRUE)
-# kid_iq <- kidiq
-# mesquite <- read.table('data/mesquite.dat', header = TRUE)
-# metabolic_rate <- read_csv("data/Primate Body Mass and Basal Metabolic Rate.csv")
-# nes_data <- read.csv("data/nes.csv", sep = ' ')
-# students <- read_csv("data/student-merged.csv") %>%
-#     rename(math_score = G3mat) %>% # "third period math grade given student's school" https://avehtari.github.io/ROS-Examples/Student/student.html
-#     select(-starts_with("G", ignore.case = FALSE)) %>%
-#     filter(math_score > 0)
-# wells <- read_csv("data/wells.csv")
-```
-
-# Chapter 2 - 
+## Bayesian Updating
 
 dbinom gives the probability of getting `x` "successes" given a sample size of `size` and a certain probability.
 
 So `dbinom(x=5, size=10, prob=0.5)`
 
 ```{r}
-dbinom(x=5, size=10, prob=0.5)
+dbinom(x=6, size=9, prob=0.5)
 ```
 
 so if we say the probability of a "successful event" is 50% (e.g. flipping a coin and landing on heads) and that we are going to flip the coin 10 times (i.e. sample size of 10) the probability we will get exactly 5 heads (i.e. successes) is 24.6%. 
@@ -143,7 +107,13 @@ plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
 sum(dbinom(x=0:10, size=10, prob=0.5))
 ```
 
-So if we have `dbinom(x=6, size=9, prob = X)` over a range of probabilities, as we do below, the area under the curve will not sum to 1. This is not a probability distribution it is a distribution of plausibilities. 
+But we don't want the probability distrubtion of seeing heads (i.e. assuming a constance 50% prob of flipping heads), which is what the graph above shows. 
+
+We want the **relative** probability/plausibility of seeing six heads out of 9 flips, assuming all sorts of probablities of flipping heads.
+
+Or to tie into the example, we want the **relative** probability/plausibility of seeing six W's heads out of globe tosses, at each possible value of `p`, the proportion of water, which takes on possible values of `0`-`1` (i.e. no water to all water.).
+
+So if we have `dbinom(x=6, size=9, prob = X)` over a range of probabilities, as we do below, the area under the curve will not sum to 1. This is not a probability distribution it is a distribution of relative plausibilities. 
 
 ```{r}
 most_plausible <- optimize(function (.x) -dbinom(x=6, size=9, prob = .x),
@@ -157,16 +127,17 @@ dbinom(x=6, size=9, prob = most_plausible$minimum)
 sum(dbinom(0:2, 2, 0.5))
 ```
 
-
 ```{r}
-curve( dbinom(x=5, size=7, prob=x), 0, 1, lty=3, col='gray', xlab = '', ylab='')
+curve( dbinom(x=2, size=3, prob=x), 0, 1, lty=3, col='gray', xlab = '', ylab='')
 curve( dbinom(x=5, size=8, prob=x), 0, 1, add=T, lty=2, xlab = '', ylab='')
 curve( dbinom(x=6, size=9, prob=x), 0, 1, add=T, col='blue', xlab = '', ylab='')
 abline(v=most_plausible$minimum, col="red", lty=2, lwd=3)
 title(xlab="Probability of Water", ylab="dbinom(x=6, size=9, prob=x) (plausibility)")
 ```
 
-We can standardize the probability (based on the fact that curve plots 101 points) by calculating dbinom for a given x, size, and prob, and summing the dbinom for the same x & size over 101 points points between 0 and 1.
+We can standardize the relative plausibilities (based on the fact that curve plots 101 points) by calculating dbinom for a given x, size, and prob, and summing the dbinom for the same x & size over 101 points points between 0 and 1.
+
+The `sum(dbinom(x=.x, size=.size, prob=seq(0, 1, length.out = .length.out)` part is the `P(W, L)` i.e. `average probability of the data` the thing the standardizes the posterior.
 
 Now the values will add up to 1
 
@@ -180,31 +151,92 @@ sum(dbinom_density_to_probability(.x=6, .size=9, .prob = seq(0, 1, length.out = 
 We see that more information now makes the density higher. The graph is now consistent with the bottom right fiture on page 30.
 
 ```{r}
-curve( dbinom_density_to_probability(.x=6, .size=9, .prob = x), 0, 1, col='blue', xlab = '', ylab='')
+curve( dbinom_density_to_probability(.x=6, .size=9, .prob = x), 0, 1, lwd=2, col='blue', xlab = '', ylab='')
 curve( dbinom_density_to_probability(.x=5, .size=8, .prob = x), 0, 1, add=T, lty=2, xlab = '', ylab='')
-curve( dbinom_density_to_probability(.x=2, .size=3, .prob = x), 0, 1, add=T, lty=3, col='gray', xlab = '', ylab='')
+curve( dbinom_density_to_probability(.x=2, .size=3, .prob = x), 0, 1, add=T, lty=2, col='gray', xlab = '', ylab='')
 abline(v=most_plausible$minimum, col="red", lty=2, lwd=3)
 title(xlab="Probability of Water", ylab="dbinom(x=6, size=9, prob=x) (posterior probablity)")
 ```
+
+```{r include=FALSE}
+rm(most_plausible)
+rm(dbinom_density_to_probability)
+```
+
+from https://bookdown.org/content/4857/small-worlds-and-large-worlds.html#building-a-model
+
+```{r}
+d <- tibble(toss = c("w", "l", "w", "w", "w", "l", "w", "l", "w")) %>%
+    mutate(n_trials  = 1:9,
+           n_success = cumsum(toss == "w"))
+d
+```
+
+```{r}
+sequence_length <- 50
+d <- d %>% 
+  expand(nesting(n_trials, toss, n_success), 
+         p_water = seq(from = 0, to = 1, length.out = sequence_length)) %>% 
+  group_by(p_water) %>% 
+ # you can learn more about lagging here: https://www.rdocumentation.org/packages/stats/versions/3.5.1/topics/lag or here: https://dplyr.tidyverse.org/reference/lead-lag.html
+  mutate(lagged_n_trials  = lag(n_trials, k = 1),
+         lagged_n_success = lag(n_success, k = 1)) %>% 
+  ungroup() %>% 
+  mutate(prior      = ifelse(n_trials == 1, .5,
+                             dbinom(x    = lagged_n_success, 
+                                    size = lagged_n_trials, 
+                                    prob = p_water)),
+         likelihood = dbinom(x    = n_success, 
+                             size = n_trials, 
+                             prob = p_water),
+         strip      = str_c("n = ", n_trials)) %>% 
+  # the next three lines allow us to normalize the prior and the likelihood, 
+  # putting them both in a probability metric 
+  group_by(n_trials) %>% 
+  mutate(prior      = prior / sum(prior),
+         likelihood = likelihood / sum(likelihood))
+
+head(d)
+```
+
+```{r}
+  # plot!
+d %>%
+  ggplot(aes(x = p_water)) +
+  geom_line(aes(y = prior), 
+            linetype = 2) +
+  geom_line(aes(y = likelihood)) +
+  scale_x_continuous("proportion water", breaks = c(0, .5, 1)) +
+  scale_y_continuous("plausibility", breaks = NULL) +
+  theme(panel.grid = element_blank()) +
+  facet_wrap(~strip, scales = "free_y")
+```
+
+```{r include=FALSE}
+rm(d)
+```
+
+## Grid Approximation
 
 ```{r}
 ## R code 2.3
 # define grid
 p_grid <- seq( from=0 , to=1 , length.out=20 )
-
 # define prior
 prior <- rep( 1 , 20 )
-
 # compute likelihood at each value in grid
 likelihood <- dbinom( 6 , size=9 , prob=p_grid )
+```
 
+```{r}
+prior
+likelihood
 sum(likelihood)  # doesn't sum to 1, not a probability distribution
 ```
 
 ```{r}
 # compute product of likelihood and prior
 unstd.posterior <- likelihood * prior
-
 # standardize the posterior, so it sums to 1
 posterior <- unstd.posterior / sum(unstd.posterior)
 ```
@@ -215,14 +247,39 @@ sum(posterior)
 ```
 
 ```{r}
+posterior
+```
+
+```{r}
 ## R code 2.4
 plot( p_grid , posterior , type="b" ,
     xlab="probability of water" , ylab="posterior probability" )
 mtext( "20 points" )
 ```
 
+
+Or, https://bookdown.org/content/4857/small-worlds-and-large-worlds.html#building-a-model
+
 ```{r}
-prior <- ifelse( p_grid < 0.5 , 0 , 1 )
+d <- tibble(p_grid = seq(from = 0, to = 1, length.out = 20),      # define grid
+            prior  = 1) %>%                                       # define prior
+    mutate(likelihood = dbinom(6, size = 9, prob = p_grid)) %>%   # compute likelihood at each value in grid
+    mutate(unstd_posterior = likelihood * prior) %>%              # compute product of likelihood and prior
+    mutate(posterior = unstd_posterior / sum(unstd_posterior))    # standardize the posterior, so it sums to 1
+d
+```
+
+```{r}
+d %>% 
+  ggplot(aes(x = p_grid, y = posterior)) +
+  geom_point() +
+  geom_line()
+```
+
+Now same thing with a different prior.
+
+```{r}
+prior <- ifelse( p_grid < 0.5 , 0 , 1 )  # makes anything less than 0.5 have 0 plausibility.
 #prior <- exp( -5*abs( p_grid - 0.5 ) )
 ```
 
@@ -230,41 +287,68 @@ prior <- ifelse( p_grid < 0.5 , 0 , 1 )
 ## R code 2.3
 # define grid
 p_grid <- seq( from=0 , to=1 , length.out=20 )
-
-
 # compute likelihood at each value in grid
 likelihood <- dbinom( 6 , size=9 , prob=p_grid )
-
-
 # compute product of likelihood and prior
 unstd.posterior <- likelihood * prior
-
 # standardize the posterior, so it sums to 1
 posterior <- unstd.posterior / sum(unstd.posterior)
-
 plot( p_grid , posterior , type="b" ,
     xlab="probability of water" , ylab="posterior probability" )
 mtext( "20 points" )
 ```
 
-
-
-
-
-```{r}
-dunif(seq(0, 1, 0.01), 0, 1)
+```{r include=FALSE}
+rm(p_grid)
+rm(prior)
+rm(likelihood)
+rm(unstd.posterior)
+rm(posterior)
+rm(sequence_length)
+rm(d)
 ```
 
+## Quadratic Approximation (`quap`)
 
-
-
-
-
-
-
+Same thing from above condensed. Note that we pass the same functions to `quap`
 
 ```{r}
-prop.test(x=6, n=9)
+p_grid <- seq(0, 1, 0.01)
+prior <- dunif(p_grid, 0,1)
+likelihood <- dbinom(6, 9, p_grid)
+posterior <- prior * likelihood / sum(prior * likelihood)
+sum(posterior)
+```
+
+```{r}
+plot(seq(0, 1, 0.01), dbinom(6, 9 , seq(0, 1, 0.01)) * dunif(seq(0,1,0.01), 0,1) / sum(dbinom(6, 9 , seq(0, 1, 0.01)) * dunif(seq(0,1,0.01), 0,1)))
+```
+
+```{r}
+globe.qa <- quap(
+    alist(
+        # X ~ B(n, p), that is, X is a binomially distributed random variable, n being the total number of experiments and p the probability of each experiment yielding a successful result
+        W ~ dbinom( W+L , p) ,  # binomial likelihood
+        p ~ dunif(0,1)     # uniform prior
+    ) ,
+    data=list(W=6,L=3) 
+)
+
+# display summary of quadratic approximation
+precis( globe.qa , digits = 4)
+```
+
+```{r}
+globe.qa <- quap(
+    alist(
+        W ~ dbinom( W+L , p) ,  # binomial likelihood
+        p ~ dunif(0,1)     # uniform prior
+    ) ,
+    data=list(W=12,L=6) 
+)
+
+# display summary of quadratic approximation
+precis( globe.qa , digits = 4)
 ```
 
 ```{r}
@@ -272,12 +356,57 @@ y <- c(1, 1, 1, 1, 1, 1, 0, 0, 0)
 summary(lm(y~1))
 ```
 
-
 ```{r}
+set.seed(1)
 print(rstanarm::stan_glm(y~1, refresh = 0), 3)
 ```
 
+```{r}
+prop.test(x=6, n=9, conf.level = 0.89)
+```
 
+```{r include=FALSE}
+rm(p_grid)
+rm(prior)
+rm(likelihood)
+rm(posterior)
+rm(globe.qa)
+rm(y)
+```
+
+## MCMC
+
+```{r}
+## R code 2.8
+n_samples <- 1000
+p <- rep( NA , n_samples )
+p[1] <- 0.5
+W <- 6
+L <- 3
+for ( i in 2:n_samples ) {
+    p_new <- rnorm( 1 , p[i-1] , 0.1 )
+    if ( p_new < 0 ) p_new <- abs( p_new )
+    if ( p_new > 1 ) p_new <- 2 - p_new
+    q0 <- dbinom( W , W+L , p[i-1] )
+    q1 <- dbinom( W , W+L , p_new )
+    p[i] <- ifelse( runif(1) < q1/q0 , p_new , p[i-1] )
+}
+
+## R code 2.9
+dens( p , xlim=c(0,1) )
+curve( dbeta( x , W+1 , L+1 ) , lty=2 , add=TRUE )
+```
+
+```{r include=FALSE}
+rm(n_samples)
+rm(p)
+rm(W)
+rm(L)
+rm(p_new)
+rm(q0)
+rm(q1)
+rm(i)
+```
 
 
 
