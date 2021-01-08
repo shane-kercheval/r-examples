@@ -37,6 +37,8 @@ pivot_longer_all <- function(.x, names_to='name', values_to='value') {
 
 This document includes examples and exercises from `Statistical Rethinking, Second Edition` by Richard McElreath.
 
+This is a sandbox to experiment with the concepts. Most of the code is from the book (http://xcelab.net/rmpubs/sr2/code.txt) and the links below that provide additional references.
+
 # Resources
 
 - [Book website](http://xcelab.net/rm/statistical-rethinking/)
@@ -414,6 +416,8 @@ rm(i)
 
 ## Homework
 
+https://github.com/rmcelreath/stat_rethinking_2020/blob/main/homework/week01/week01_solutions.pdf
+
 1. Suppose the globe tossing data (Chapter 2) had turned out to be 4 water in 15 tosses. Construct the posterior distribution, using grid approximation. Use the same flat prior as in the book.
 
 ```{r}
@@ -489,7 +493,6 @@ really informative—nothing special happens at the boundary—when these
 intervals are very different, the best thing is not to report intervals at all. Just
 draw the posterior distribution, so your colleagues can see what is going on.
 
-
 ```{r include=FALSE}
 rm(p_grid)
 rm(prior)
@@ -502,9 +505,12 @@ rm(samples)
 
 ```{r}
 ## R code 3.1
-Pr_Positive_Vampire <- 0.95
-Pr_Positive_Mortal <- 0.01
-Pr_Vampire <- 0.001
+Pr_Positive_Vampire <- 0.95 # true positive
+Pr_Positive_Mortal <- 0.01  # false positive
+Pr_Vampire <- 0.001  # prevalance 
+
+# (probability of true positive * relative occurance true positive) + (probability false positive * relative occurance of false positive)
+# i.e. average data
 Pr_Positive <- Pr_Positive_Vampire * Pr_Vampire +
                Pr_Positive_Mortal * ( 1 - Pr_Vampire )
 ( Pr_Vampire_Positive <- Pr_Positive_Vampire*Pr_Vampire / Pr_Positive )
