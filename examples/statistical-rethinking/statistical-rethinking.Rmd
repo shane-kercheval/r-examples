@@ -410,7 +410,119 @@ rm(q1)
 rm(i)
 ```
 
+---
+
+## Homework
+
+1. Suppose the globe tossing data (Chapter 2) had turned out to be 4 water in 15 tosses. Construct the posterior distribution, using grid approximation. Use the same flat prior as in the book.
+
+```{r}
+# remember p_grid is the possible values of the proprortion of water
+p_grid <- seq( from=0 , to=1 , length.out=1000 )
+prior <- rep( 1 , 1000 )
+prob_data <- dbinom( 4 , size=15 , prob=p_grid )
+posterior <- prob_data * prior
+posterior <- posterior / sum(posterior)
+plot(p_grid, posterior)
+```
+
+```{r}
+sum(posterior)
+```
+
+> When you plot the result, the posterior will have much more mass over values below 0.5, since that is what the sample indicates. The posterior mean is
+about 0.30.
+
+```{r}
+set.seed(1)
+# p_grid is the possible values of the proprortion of water
+# posterior is the probability of that proportion being correct
+# we are going to sample from the possible values, relative to the probablity of each value
+samples <- sample( p_grid , prob=posterior , size=1e4, replace=TRUE )
+mean(samples)
+sd(samples)
+```
+
+---
+
+2. Start over in 1, but now use a prior that is zero below p = 0.5 and a constant above p = 0.5. This corresponds to prior information that a majority
+of the Earth’s surface is water. What difference does the better prior make?
+
+```{r}
+p_grid <- seq( from=0 , to=1 , length.out=1000 )
+prior <- c( rep( 0 , 500 ) , rep( 1 , 500 ) )
+prob_data <- dbinom( 4 , size=15 , prob=p_grid )
+posterior <- prob_data * prior
+posterior <- posterior / sum(posterior)
+plot(p_grid, posterior)
+```
+
+```{r}
+set.seed(1)
+# bootstrap
+samples <- sample( p_grid , prob=posterior , size=1e4, replace=TRUE )
+mean(samples)
+sd(samples)
+```
+
+---
+
+3. For the posterior distribution from 2, compute 89% percentile and HPDI intervals. Compare the widths of these intervals. Which is wider? Why? If you had only the information in the interval, what might you misunderstand about the shape of the posterior distribution?
+
+```{r}
+quantile(samples, c(0.055, 0.945))
+```
+
+```{r}
+set.seed(100)
+PI( samples )
+HPDI( samples )
+```
+
+> The percentile interval (the top one) is wider. The lower bound is above
+0.5 (a little bit) and the upper bound is 0.63. The HPDI (bottom interval)
+is narrower. The lower bound is right at 0.50, but the upper bound is 0.60
+instead of 0.63. You should expect the HPDI to be narrower and the include
+the point with highest posterior probability. This is just like the example
+on page 57 in the book. But since the boundaries of these intervals aren’t
+really informative—nothing special happens at the boundary—when these
+intervals are very different, the best thing is not to report intervals at all. Just
+draw the posterior distribution, so your colleagues can see what is going on.
+
+
+```{r include=FALSE}
+rm(p_grid)
+rm(prior)
+rm(prob_data)
+rm(posterior)
+rm(samples)
+```
+
 # Chapter 3
 
+```{r}
+globe.qa <- quap(
+    alist(
+        # X ~ B(n, p), that is, X is a binomially distributed random variable, n being the total number of experiments and p the probability of each experiment yielding a successful result
+        W ~ dbinom( W+L , p) ,  # binomial likelihood
+        p ~ dunif(0,1)     # uniform prior
+    ) ,
+    data=list(W=4,L=11)
+)
 
+# display summary of quadratic approximation
+precis( globe.qa , digits = 4)
+```
+
+```{r}
+p_grid <- seq( from=0 , to=1 , length.out=1000 )
+prior <- rep( 1 , 1000 )
+prob_data <- dbinom( 4 , size=15 , prob=p_grid )
+posterior <- prob_data * prior
+posterior <- posterior / sum(posterior)
+set.seed(100)
+samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
+mean(samples)
+sd(samples)
+```
 
