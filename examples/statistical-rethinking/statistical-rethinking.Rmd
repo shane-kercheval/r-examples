@@ -511,10 +511,12 @@ Pr_Vampire <- 0.001  # prevalance
 
 # (probability of true positive * relative occurance true positive) + (probability false positive * relative occurance of false positive)
 # i.e. average probability of data
-Pr_Positive <- Pr_Positive_Vampire * Pr_Vampire +
-               Pr_Positive_Mortal * ( 1 - Pr_Vampire )
+Pr_Positive <- Pr_Positive_Vampire * Pr_Vampire +  # (probability of true positive * relative occurance true positive)
+               Pr_Positive_Mortal * ( 1 - Pr_Vampire )  # (probability false positive * relative occurance of false positive)
 ( Pr_Vampire_Positive <- Pr_Positive_Vampire*Pr_Vampire / Pr_Positive )
 ```
+
+---
 
 ```{r}
 ## R code 3.2
@@ -525,18 +527,10 @@ posterior <- prob_data * prob_p
 posterior <- posterior / sum(posterior)
 ```
 
-
 ```{r}
 ## R code 3.3
 samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
 ```
-
-
-```{r}
-## R code 3.4
-plot( samples )
-```
-
 
 ```{r}
 ## R code 3.5
@@ -545,17 +539,21 @@ dens( samples )
 
 
 ```{r}
+dens( sample( p_grid , prob=posterior , size=1e3 , replace=TRUE ) )
+dens( sample( p_grid , prob=posterior , size=1e4 , replace=TRUE ) )
+dens( sample( p_grid , prob=posterior , size=1e5 , replace=TRUE ) )
+```
+
+```{r}
 ## R code 3.6
 # add up posterior probability where p < 0.5
 sum( posterior[ p_grid < 0.5 ] )
 ```
 
-
 ```{r}
 ## R code 3.7
 sum( samples < 0.5 ) / 1e4
 ```
-
 
 ```{r}
 ## R code 3.8
@@ -577,6 +575,7 @@ quantile( samples , c( 0.1 , 0.9 ) )
 
 ```{r}
 ## R code 3.11
+set.seed(1)
 p_grid <- seq( from=0 , to=1 , length.out=1000 )
 prior <- rep(1,1000)
 likelihood <- dbinom( 3 , size=3 , prob=p_grid )
@@ -585,6 +584,9 @@ posterior <- posterior / sum(posterior)
 samples <- sample( p_grid , size=1e4 , replace=TRUE , prob=posterior )
 ```
 
+```{r}
+plot(p_grid, posterior)
+```
 
 ```{r}
 ## R code 3.12
@@ -603,12 +605,10 @@ HPDI( samples , prob=0.5 )
 p_grid[ which.max(posterior) ]
 ```
 
-
 ```{r}
 ## R code 3.15
 chainmode( samples , adj=0.01 )
 ```
-
 
 ```{r}
 ## R code 3.16
@@ -616,24 +616,79 @@ mean( samples )
 median( samples )
 ```
 
+---
+
+Loss Functions, here is our posterior.
+
+```{r}
+plot(p_grid, posterior)
+```
+
+Absolute loss, pg 60
 
 ```{r}
 ## R code 3.17
 sum( posterior*abs( 0.5 - p_grid ) )
 ```
 
+```{r}
+sum( posterior*abs( 0.8 - p_grid ) )
+```
+
+`posterior*abs( d - p_grid )` takes a particular guess at the "TRUE" value of p (the proportion of water in this example), and calculates the distance from our guess `d` to each of the possible points `p` which is defined by `p_grid`.
+
+Now that we have the relative distance away from our guess for each possible value of p, we multiply that by posterior which gives higher numbers for more plausible values.
+
+So the further a particular guess is from a particular point, the higher the distance and the more it will be penalized relative to the plausibility of that p.
+
+Let's say our best guess is `0.5`. We'll calculate a single value in the calculation above, let's use `p=1` which corresponds with the mode of the graph. 
+
+We are a distance of 0.5, and that posterior is going to penalize us the most since it has the highest plausiability.
+
+```{r}
+abs(0.5 - p_grid[1000]) 
+posterior[1000]
+posterior[1000] * abs(0.5 - p_grid[1000])
+```
+
+Now if our guess was `0.8` we wouldn't get penalized as much at that same point, because we are closer.
+
+```{r}
+abs(0.8 - p_grid[1000]) 
+posterior[1000]
+posterior[1000] * abs(0.8 - p_grid[1000])
+```
+
+Or a guess of `1.0`
+
+Now we aren't penalized at all because we aren't any distance away.
+
+```{r}
+abs(1 - p_grid[1000]) 
+posterior[1000]
+posterior[1000] * abs(1 - p_grid[1000])
+```
+
+But this function does not optimize for the mode, because you are still calculating all the penalties across the entire space of plausible values (p_grid), for each guess.
+
+So while a guess of 0.8 gives you a higher penalty at that specific value of 1, it turns out that summing across all the penalties will produce a lower overall penalty (for 0.8) than if you were to guess 1.0
+
+Instead, we'll make a guess at each possible value of p (probability of water), which is defined by p_grid. At each value, we'll calculate our loss.
 
 ```{r}
 ## R code 3.18
 loss <- sapply( p_grid , function(d) sum( posterior*abs( d - p_grid ) ) )
 ```
 
-
 ```{r}
 ## R code 3.19
 p_grid[ which.min(loss) ]
 ```
 
+```{r}
+plot(p_grid, loss)
+abline(v = p_grid[ which.min(loss) ], col="red", lwd=3, lty=2)
+```
 
 ```{r}
 ## R code 3.20
@@ -670,14 +725,12 @@ simplehist( dummy_w , xlab="dummy water count" )
 ```{r}
 ## R code 3.25
 w <- rbinom( 1e4 , size=9 , prob=0.6 )
+w[1:20]
 ```
-
 
 ```{r}
-## R code 3.26
-w <- rbinom( 1e4 , size=9 , prob=samples )
+hist(w)
 ```
-
 
 ```{r}
 ## R code 3.27
@@ -687,7 +740,27 @@ likelihood <- dbinom( 6 , size=9 , prob=p_grid )
 posterior <- likelihood * prior
 posterior <- posterior / sum(posterior)
 set.seed(100)
-samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
+samples <- sample( p_grid , prob=posterior , size=1e5 , replace=TRUE )
+```
+
+```{r}
+## R code 3.26
+w <- rbinom( 1e5 , size=9 , prob=samples )
+length(w)
+samples[1:20]
+w[1:20]
+```
+
+So, we calculated the posterior probability based on our sample of observing 6 waters in 9 tosses.
+
+We then sampled our posterior distribution, which gives us a list of possible proportions of water with relative frequency corresponding to posterior probability.
+
+We then feed this into `rbinom` which produces random generation of how many times you'd expect to see water in 9 tosses, and uses the sampled proportions from our posterior distribution.
+
+So we are propagating the uncertainty of the posterior into `rbinom` which is why the histogram below is more spread out (less certain) than the histogram above.
+
+```{r}
+hist(w)
 ```
 
 
@@ -716,3 +789,16 @@ data(homeworkch3)
 sum(birth1) + sum(birth2)
 ```
 
+
+```{r include=FALSE}
+rm(Pr_Positive_Vampire)
+rm(Pr_Positive_Mortal)
+rm(Pr_Vampire)
+rm(Pr_Positive)
+rm(Pr_Vampire_Positive)
+rm(p_grid)
+rm(prior)
+rm(prob_data)
+rm(posterior)
+rm(samples)
+```
