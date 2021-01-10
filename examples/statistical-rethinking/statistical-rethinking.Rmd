@@ -815,6 +815,7 @@ prod( 1 + runif(12,0,0.1) )
 ```{r}
 ## R code 4.3
 growth <- replicate( 10000 , prod( 1 + runif(12,0,0.1) ) )
+growth[1:20]
 dens( growth , norm.comp=TRUE )
 ```
 
@@ -826,8 +827,22 @@ small <- replicate( 10000 , prod( 1 + runif(12,0,0.01) ) )
 
 ```{r}
 ## R code 4.5
-log.big <- replicate( 10000 , log(prod(1 + runif(12,0,0.5))) )
+log.big <- replicate( 10000 , prod(1 + runif(12,0,0.5)) )
+dens( log.big , norm.comp=TRUE )
 ```
+
+```{r}
+log.big.log <- replicate( 10000 , log(prod(1 + runif(12,0,0.5))) )
+dens( log.big.log , norm.comp=TRUE )
+```
+
+> Adding logs is equivalent to multiplying the original numbers.
+
+```{r}
+exp(log(4) + log(13))
+4*13
+```
+
 
 ```{r}
 ## R code 4.6
@@ -863,6 +878,12 @@ d$height
 ## R code 4.11
 d2 <- d[ d$age >= 18 , ]
 ```
+
+```{r}
+hist(d2$height)
+dens(d2$height)
+```
+
 
 ```{r}
 ## R code 4.12
