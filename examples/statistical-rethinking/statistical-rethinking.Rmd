@@ -29,7 +29,7 @@ pivot_longer_all <- function(.x, names_to='name', values_to='value') {
     .x %>%
         mutate(temp____index = row_number()) %>%
         pivot_longer(-temp____index, names_to=names_to, values_to=values_to) %>%
-        select(-temp____index)
+        dplyr::select(-temp____index)
 }
 ```
 
@@ -914,12 +914,29 @@ dens( prior_h )
 ## R code 4.16
 mu.list <- seq( from=150, to=160 , length.out=100 )
 sigma.list <- seq( from=7 , to=9 , length.out=100 )
-post <- expand.grid( mu=mu.list , sigma=sigma.list )
-post$LL <- sapply( 1:nrow(post) , function(i) sum(
-    dnorm( d2$height , post$mu[i] , post$sigma[i] , log=TRUE ) ) )
+post <- expand.grid( mu=mu.list , sigma=sigma.list )  # all possible combinations of mean and sigma that we are considering
+# for each possible combination of mean/sigma sum the log densities of all the heights
+post$LL <- sapply( 1:nrow(post) , function(i) sum(dnorm( d2$height , post$mu[i] , post$sigma[i] , log=TRUE ) ) )
+
+# Log Likelihood + Log Prior + Log Sigma
+# then we do exp(Log Likelihood + Log Prior + Log Sigma)
+# which is the same as
+# Likelihood * Prior * Sigma)
 post$prod <- post$LL + dnorm( post$mu , 178 , 20 , TRUE ) +
     dunif( post$sigma , 0 , 50 , TRUE )
 post$prob <- exp( post$prod - max(post$prod) )
+```
+
+```{r}
+sum(post$prob)
+```
+
+```{r}
+dnorm(x = c(-1, 0, 1))
+```
+
+```{r}
+plot( post$mu , post$sigma )
 ```
 
 ```{r}
@@ -934,8 +951,7 @@ image_xyz( post$mu , post$sigma , post$prob )
 
 ```{r}
 ## R code 4.19
-sample.rows <- sample( 1:nrow(post) , size=1e4 , replace=TRUE ,
-    prob=post$prob )
+sample.rows <- sample( 1:nrow(post) , size=1e4 , replace=TRUE , prob=post$prob )
 sample.mu <- post$mu[ sample.rows ]
 sample.sigma <- post$sigma[ sample.rows ]
 ```
@@ -1002,6 +1018,7 @@ flist <- alist(
     mu ~ dnorm( 178 , 20 ) ,
     sigma ~ dunif( 0 , 50 )
 )
+flist
 ```
 
 ```{r}
@@ -1012,6 +1029,16 @@ m4.1 <- quap( flist , data=d2 )
 ```{r}
 ## R code 4.29
 precis( m4.1 )
+```
+
+```{r}
+mean(d2$height)
+sd(d2$height)
+```
+
+```{r}
+print(suppressWarnings(stan_glm(d2$height ~ 1, refresh=0)))
+print(suppressWarnings(stan_glm(d2$height ~ 1, prior_intercept = normal(178, 20), refresh=0)))
 ```
 
 ```{r}
@@ -1057,10 +1084,21 @@ head(post)
 precis(post)
 ```
 
+
+```{r}
+stan_glm_simulations <- as.matrix(stan_glm(d2$height ~ 1, refresh=0)) %>% as.data.frame()
+stan_glm_simulations %>% head()
+```
+
+```{r}
+precis(stan_glm_simulations)
+```
+
+
+
 ```{r}
 ## R code 4.36
-library(MASS)
-post <- mvrnorm( n=1e4 , mu=coef(m4.1) , Sigma=vcov(m4.1) )
+post <- MASS::mvrnorm( n=1e4 , mu=coef(m4.1) , Sigma=vcov(m4.1) )
 ```
 
 ```{r}
@@ -1106,6 +1144,19 @@ b <- rlnorm( N , 0 , 1 )
 ```
 
 ```{r}
+## R code 4.39
+plot( NULL , xlim=range(d2$weight) , ylim=c(-100,400) ,
+    xlab="weight" , ylab="height" )
+abline( h=0 , lty=2 )
+abline( h=272 , lty=1 , lwd=0.5 )
+mtext( "b ~ dnorm(0,10)" )
+xbar <- mean(d2$weight)
+for ( i in 1:N ) curve( a[i] + b[i]*(x - xbar) ,
+    from=min(d2$weight) , to=max(d2$weight) , add=TRUE ,
+    col=col.alpha("black",0.2) )
+```
+
+```{r}
 ## R code 4.42
 # load data again, since it's a long way back
 library(rethinking)
@@ -1119,6 +1170,15 @@ m4.3 <- quap(
     alist(
         height ~ dnorm( mu , sigma ) ,
         mu <- a + b*( weight - xbar ) ,
+        a ~ dnorm( 178 , 20 ) ,
+        b ~ dlnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 50 )
+    ) , data=d2 )
+
+m4.3_not_centered <- quap(
+    alist(
+        height ~ dnorm( mu , sigma ) ,
+        mu <- a + b*weight  ,
         a ~ dnorm( 178 , 20 ) ,
         b ~ dlnorm( 0 , 1 ) ,
         sigma ~ dunif( 0 , 50 )
@@ -1140,6 +1200,15 @@ m4.3b <- quap(
 ```{r}
 ## R code 4.44
 precis( m4.3 )
+```
+
+```{r}
+stan_model <- d2 %>%
+    mutate(weight_centered = weight - mean(weight)) %>%
+    stan_glm(height ~ weight_centered, data=., refresh=0)
+
+stan_model %>%
+    print(2)
 ```
 
 ```{r}
@@ -1235,8 +1304,43 @@ plot( height ~ weight , d2 , type="n" )
 
 # loop over samples and plot each mu value
 for ( i in 1:100 )
-    points( weight.seq , mu[i,] , pch=16 , col=col.alpha(rangi2,0.1) )
+    points( weight.seq , mu[i,] , pch=16 , col=col.alpha(rangi2,0.2) )
 ```
+
+```{r}
+posterior_linpred(stan_model, newdata = data.frame(weight_centered=50 - mean(d2$weight))) %>%
+    quantile(c(.055, 0.945))
+```
+
+```{r}
+PI(mu_at_50, prob = 0.89)
+```
+
+
+```{r}
+set.seed(1)
+posterior_line <- posterior_linpred(stan_model, newdata = data.frame(weight_centered=seq(30 - round(mean(d2$weight)),
+                                                                                         60 - round(mean(d2$weight)),
+                                                                                         1)))
+dim(posterior_line)
+```
+
+```{r}
+t(posterior_line) %>%
+    as.data.frame() %>%
+    mutate(weight = seq(30, 60, 1)) %>%
+    pivot_longer(-weight) %>%
+    ggplot(aes(x=weight, y=value)) +
+    geom_point(alpha=0.2)
+```
+
+
+4K simulations corresponding to each fitted data point
+
+```{r}
+posterior_line %>%
+```
+
 
 ```{r}
 ## R code 4.56
