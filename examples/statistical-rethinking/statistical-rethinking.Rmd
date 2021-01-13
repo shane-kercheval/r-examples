@@ -918,6 +918,10 @@ post <- expand.grid( mu=mu.list , sigma=sigma.list )  # all possible combination
 # for each possible combination of mean/sigma sum the log densities of all the heights
 post$LL <- sapply( 1:nrow(post) , function(i) sum(dnorm( d2$height , post$mu[i] , post$sigma[i] , log=TRUE ) ) )
 
+ 
+#dnorm( d2$height , post$mu[1] , post$sigma[1] , log=TRUE )
+#sum(dnorm( d2$height , post$mu[1] , post$sigma[1] , log=TRUE ) )
+
 # Log Likelihood + Log Prior + Log Sigma
 # then we do exp(Log Likelihood + Log Prior + Log Sigma)
 # which is the same as
@@ -1333,13 +1337,7 @@ t(posterior_line) %>%
     ggplot(aes(x=weight, y=value)) +
     geom_point(alpha=0.2)
 ```
-
-
 4K simulations corresponding to each fitted data point
-
-```{r}
-posterior_line %>%
-```
 
 
 ```{r}
@@ -1372,10 +1370,52 @@ mu.mean <- apply( mu , 2 , mean )
 mu.CI <- apply( mu , 2 , PI , prob=0.89 )
 ```
 
+
+
+
+
 ```{r}
 ## R code 4.59
-sim.height <- sim( m4.3 , data=list(weight=weight.seq) )
-str(sim.height)
+sim.height <- sim( m4.3 , data=data.frame(weight=50) )
+dim(sim.height)
+```
+
+```{r}
+PI(sim.height, prob=0.89)
+```
+
+```{r}
+posterior_predict(stan_model, newdata = data.frame(weight_centered=50 - mean(d2$weight))) %>%
+    quantile(c(.055, 0.945))
+```
+
+```{r}
+set.seed(1)
+posterior_predictions <- posterior_predict(stan_model,
+                                           newdata = data.frame(weight_centered=seq(30 - round(mean(d2$weight)),
+                                                                                    60 - round(mean(d2$weight)),
+                                                                                    1)))
+dim(posterior_predictions)
+```
+
+```{r}
+simulations <- t(posterior_predictions) %>%
+    as.data.frame() %>%
+    mutate(weight = seq(30, 60, 1)) %>%
+    pivot_longer(-weight)
+
+prediction_intervals <- simulations %>%
+    group_by(weight) %>%
+    summarise(`5.5%` = quantile(value, 0.055),
+              `94.5%` = quantile(value, 0.945)) %>%
+    ungroup()
+
+simulations %>%
+    ggplot(aes(x=weight, y=value)) +
+    geom_ribbon(data = prediction_intervals,
+                aes(x=weight, ymin=`5.5%`, ymax=`94.5%`, y=NULL), alpha=0.4) +
+    geom_point(alpha=0.2) +
+    geom_point(data = d2, aes(x=weight, y=height), color='red')
 ```
 
 ```{r}
@@ -1444,6 +1484,17 @@ precis( m4.5 )
 ```
 
 ```{r}
+set.seed(1)
+d %>%
+    mutate(weight =(weight - mean(weight)) / sd(weight),
+           weight_2 = weight^2) %>%
+    stan_glm(height ~ weight + weight_2 , 
+             prior=list(weight=normal(0, 1), weight_2=normal(0,1)) data = ., refresh=0) %>%
+    tidy()
+```
+
+
+```{r}
 ## R code 4.67
 weight.seq <- seq( from=-2.2 , to=2 , length.out=30 )
 pred_dat <- list( weight_s=weight.seq , weight_s2=weight.seq^2 )
@@ -1509,8 +1560,16 @@ knot_list <- quantile( d2$year , probs=seq(0,1,length.out=num_knots) )
 library(splines)
 B <- bs(d2$year,
     knots=knot_list[-c(1,num_knots)] ,
-    degree=3 , intercept=TRUE )
+    degree=15 , intercept=TRUE )
+dim(B)
 ```
+
+```{r}
+head(B)
+#B %>% View()
+```
+
+
 
 ```{r}
 ## R code 4.75
