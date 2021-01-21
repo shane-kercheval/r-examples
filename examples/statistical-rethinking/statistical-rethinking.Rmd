@@ -1628,7 +1628,6 @@ m4.7alt <- quap(
 library(rethinking)
 data(WaffleDivorce)
 d <- WaffleDivorce
-```
 
 # standardize variables
 d$D <- standardize( d$Divorce )
@@ -1640,7 +1639,11 @@ d$A <- standardize( d$MedianAgeMarriage )
 ```{r}
 ## R code 5.2
 sd( d$MedianAgeMarriage )
+sd( d$Divorce )
+```
 
+
+```{r}
 ## R code 5.3
 m5.1 <- quap(
     alist(
@@ -1654,10 +1657,45 @@ m5.1 <- quap(
 ## R code 5.4
 set.seed(10)
 prior <- extract.prior( m5.1 )
+prior$a[1:20]
+prior$bA[1:20]
+prior$sigma[1:20]
+```
+
+```{r}
+plot( NULL , xlim=c(-2,2) , ylim=c(-2,2) )
+for ( i in 1:50 ) 
+    abline(a = prior$a[i],
+           b = prior$bA[i],
+           col=col.alpha("black",0.4))
+
+```
+
+```{r}
 mu <- link( m5.1 , post=prior , data=list( A=c(-2,2) ) )
 plot( NULL , xlim=c(-2,2) , ylim=c(-2,2) )
 for ( i in 1:50 ) lines( c(-2,2) , mu[i,] , col=col.alpha("black",0.4) )
+```
 
+Extract priors simulations over priors whereas extract.samples gives simulations of fitted coefficients i.e. fitted regression line (which is what link does in graph after next)
+
+```{r}
+set.seed(10)
+#extract.samples( m5.1 )
+post <- extract.samples( m5.1 , n=1e4 )
+head(post)
+```
+
+```{r}
+plot( NULL , xlim=c(-2,2) , ylim=c(-2,2) )
+for ( i in 1:200 ) 
+    abline(a = post$a[i],
+           b = post$bA[i],
+           col=col.alpha("black",0.4))
+
+```
+
+```{r}
 ## R code 5.5
 # compute percentile interval of mean
 A_seq <- seq( from=-3 , to=3.2 , length.out=30 )
@@ -1669,7 +1707,10 @@ mu.PI <- apply( mu , 2 , PI )
 plot( D ~ A , data=d , col=rangi2 )
 lines( A_seq , mu.mean , lwd=2 )
 shade( mu.PI , A_seq )
+```
 
+
+```{r}
 ## R code 5.6
 m5.2 <- quap(
     alist(
@@ -1679,21 +1720,61 @@ m5.2 <- quap(
         bM ~ dnorm( 0 , 0.5 ) ,
         sigma ~ dexp( 1 )
     ) , data = d )
+```
 
+```{r}
+precis(m5.1)
+```
+
+```{r}
+precis(m5.2)
+```
+
+
+```{r}
 ## R code 5.7
 library(dagitty)
 dag5.1 <- dagitty( "dag{ A -> D; A -> M; M -> D }" )
+
+drawdag( dag5.1 )
 coordinates(dag5.1) <- list( x=c(A=0,D=1,M=2) , y=c(A=0,D=1,M=0) )
 drawdag( dag5.1 )
+```
 
+```{r}
 ## R code 5.8
 DMA_dag2 <- dagitty('dag{ D <- A -> M }')
+drawdag( DMA_dag2 )
 impliedConditionalIndependencies( DMA_dag2 )
+```
 
+```{r}
 ## R code 5.9
 DMA_dag1 <- dagitty('dag{ D <- A -> M -> D }')
+drawdag( DMA_dag1 )
 impliedConditionalIndependencies( DMA_dag1 )
+```
 
+```{r}
+temp_dag <- dagitty('dag{ A -> G -> B }')
+drawdag( temp_dag )
+impliedConditionalIndependencies( temp_dag )
+```
+
+```{r}
+plot(d$A, d$M)
+```
+
+```{r}
+plot(d$A, d$D)
+```
+
+```{r}
+plot(d$M, d$Divorce)
+```
+
+
+```{r}
 ## R code 5.10
 m5.3 <- quap(
     alist(
@@ -1705,16 +1786,40 @@ m5.3 <- quap(
         sigma ~ dexp( 1 )
     ) , data = d )
 precis( m5.3 )
+```
 
+```{r}
 ## R code 5.11
 plot( coeftab(m5.1,m5.2,m5.3), par=c("bA","bM") )
+```
 
+```{r}
 ## R code 5.12
 N <- 50 # number of simulated States
 age <- rnorm( N )        # sim A
 mar <- rnorm( N , -age )  # sim A -> M
 div <- rnorm( N , age )  # sim A -> D
+```
 
+```{r}
+plot(age, div)
+```
+
+
+```{r}
+m5.3.2 <- quap(
+    alist(
+        div ~ dnorm( mu , sigma ) ,
+        mu <- a + bM*mar + bA*age ,
+        a ~ dnorm( 0 , 0.2 ) ,
+        bM ~ dnorm( 0 , 0.5 ) ,
+        bA ~ dnorm( 0 , 0.5 ) ,
+        sigma ~ dexp( 1 )
+    ) , data = data.frame(age, mar, div) )
+precis( m5.3.2 )
+```
+
+```{r}
 ## R code 5.13
 m5.4 <- quap(
     alist(
@@ -1724,12 +1829,16 @@ m5.4 <- quap(
         bAM ~ dnorm( 0 , 0.5 ) ,
         sigma ~ dexp( 1 )
     ) , data = d )
+```
 
+```{r}
 ## R code 5.14
 mu <- link(m5.4)
 mu_mean <- apply( mu , 2 , mean )
 mu_resid <- d$M - mu_mean
+```
 
+```{r}
 ## R code 5.15
 # call link without specifying new data
 # so it uses original data
@@ -1743,7 +1852,9 @@ mu_PI <- apply( mu , 2 , PI )
 # again no new data, so uses original data
 D_sim <- sim( m5.3 , n=1e4 )
 D_PI <- apply( D_sim , 2 , PI )
+```
 
+```{r}
 ## R code 5.16
 plot( mu_mean ~ d$D , col=rangi2 , ylim=range(mu_PI) ,
     xlab="Observed divorce" , ylab="Predicted divorce" )
@@ -1752,14 +1863,18 @@ for ( i in 1:nrow(d) ) lines( rep(d$D[i],2) , mu_PI[,i] , col=rangi2 )
 
 ## R code 5.17
 identify( x=d$D , y=mu_mean , labels=d$Loc )
+```
 
+```{r}
 ## R code 5.18
 N <- 100                         # number of cases
 x_real <- rnorm( N )             # x_real as Gaussian with mean 0 and stddev 1
 x_spur <- rnorm( N , x_real )    # x_spur as Gaussian with mean=x_real
 y <- rnorm( N , x_real )         # y as Gaussian with mean=x_real
 d <- data.frame(y,x_real,x_spur) # bind all together in data frame
+```
 
+```{r}
 ## R code 5.19
 data(WaffleDivorce)
 d <- list()
