@@ -1834,6 +1834,7 @@ m5.4 <- quap(
 ```{r}
 ## R code 5.14
 mu <- link(m5.4)
+dim(mu)
 mu_mean <- apply( mu , 2 , mean )
 mu_resid <- d$M - mu_mean
 ```
@@ -1878,49 +1879,60 @@ d <- data.frame(y,x_real,x_spur) # bind all together in data frame
 ## R code 5.19
 data(WaffleDivorce)
 d <- list()
-d$A <- standardize( WaffleDivorce$MedianAgeMarriage )
-d$D <- standardize( WaffleDivorce$Divorce )
-d$M <- standardize( WaffleDivorce$Marriage )
+d$age <- standardize( WaffleDivorce$MedianAgeMarriage )
+d$divorce <- standardize( WaffleDivorce$Divorce )
+d$marriage <- standardize( WaffleDivorce$Marriage )
 
 m5.3_A <- quap(
     alist(
       ## A -> D <- M
-        D ~ dnorm( mu , sigma ) ,
-        mu <- a + bM*M + bA*A ,
-        a ~ dnorm( 0 , 0.2 ) ,
-        bM ~ dnorm( 0 , 0.5 ) ,
-        bA ~ dnorm( 0 , 0.5 ) ,
-        sigma ~ dexp( 1 ),
+        divorce ~ dnorm( mu_1 , sigma_1 ) ,
+        mu_1 <- intercept_1 + marriage_1*marriage + age_1*age ,
+        intercept_1 ~ dnorm( 0 , 0.2 ) ,
+        marriage_1 ~ dnorm( 0 , 0.5 ) ,
+        age_1 ~ dnorm( 0 , 0.5 ) ,
+        sigma_1 ~ dexp( 1 ),
       ## A -> M
-        M ~ dnorm( mu_M , sigma_M ),
-        mu_M <- aM + bAM*A,
-        aM ~ dnorm( 0 , 0.2 ),
-        bAM ~ dnorm( 0 , 0.5 ),
-        sigma_M ~ dexp( 1 )
+        marriage ~ dnorm( mu_2 , sigma_2 ),
+        mu_2 <- intercept_2 + age_2*age,
+        intercept_2 ~ dnorm( 0 , 0.2 ),
+        age_2 ~ dnorm( 0 , 0.5 ),
+        sigma_2 ~ dexp( 1 )
     ) , data = d )
+precis(m5.3_A)
+```
 
+```{r}
 ## R code 5.20
 A_seq <- seq( from=-2 , to=2 , length.out=30 )
+```
 
+```{r}
 ## R code 5.21
 # prep data
 sim_dat <- data.frame( A=A_seq )
 
 # simulate M and then D, using A_seq
-s <- sim( m5.3_A , data=sim_dat , vars=c("M","D") )
+s <- sim( m5.3_A , data=sim_dat , vars=c("marriage","divorce") )
+```
 
+```{r}
 ## R code 5.22
 plot( sim_dat$A , colMeans(s$D) , ylim=c(-2,2) , type="l" ,
     xlab="manipulated A" , ylab="counterfactual D"  )
 shade( apply(s$D,2,PI) , sim_dat$A )
 mtext( "Total counterfactual effect of A on D" )
+```
 
+```{r}
 ## R code 5.23
 # new data frame, standardized to mean 26.1 and std dev 1.24
 sim2_dat <- data.frame( A=(c(20,30)-26.1)/1.24 )
 s2 <- sim( m5.3_A , data=sim2_dat , vars=c("M","D") )
 mean( s2$D[,2] - s2$D[,1] )
+```
 
+```{r}
 ## R code 5.24
 sim_dat <- data.frame( M=seq(from=-2,to=2,length.out=30) , A=0 )
 s <- sim( m5.3_A , data=sim_dat , vars="D" )
@@ -1929,19 +1941,31 @@ plot( sim_dat$M , colMeans(s) , ylim=c(-2,2) , type="l" ,
     xlab="manipulated M" , ylab="counterfactual D"  )
 shade( apply(s,2,PI) , sim_dat$M )
 mtext( "Total counterfactual effect of M on D" )
+```
 
+```{r}
 ## R code 5.25
 A_seq <- seq( from=-2 , to=2 , length.out=30 )
+```
 
+```{r}
 ## R code 5.26
 post <- extract.samples( m5.3_A )
 M_sim <- with( post , sapply( 1:30 ,
-    function(i) rnorm( 1e3 , aM + bAM*A_seq[i] , sigma_M ) ) )
+    function(i) rnorm( 1e3 , intercept_2 + age_2*A_seq[i] , sigma_2 ) ) )
 
+dim(M_sim)
+```
+
+```{r}
 ## R code 5.27
 D_sim <- with( post , sapply( 1:30 ,
-    function(i) rnorm( 1e3 , a + bA*A_seq[i] + bM*M_sim[,i] , sigma ) ) )
+    function(i) rnorm( 1e3 , intercept_1 + age_1*A_seq[i] + marriage_1*M_sim[,i] , sigma_1 ) ) )
 
+dim(D_sim)
+```
+
+```{r}
 ## R code 5.28
 library(rethinking)
 data(milk)
@@ -1952,7 +1976,24 @@ str(d)
 d$K <- standardize( d$kcal.per.g )
 d$N <- standardize( d$neocortex.perc )
 d$M <- standardize( log(d$mass) )
+```
 
+```{r}
+d %>%
+    filter(complete.cases(.)) %>%
+    select(K, N, M) %>%
+    pivot_longer(-K) %>%
+    ggplot(aes(x=value, y=K, group=name, color=name)) +
+    geom_point() +
+    geom_smooth(method='lm')
+```
+
+```{r}
+plot(d$M, d$N)
+```
+
+
+```{r}
 ## R code 5.30
 m5.5_draft <- quap(
     alist(
@@ -1965,7 +2006,10 @@ m5.5_draft <- quap(
 
 ## R code 5.31
 d$neocortex.perc
+```
 
+
+```{r}
 ## R code 5.32
 dcc <- d[ complete.cases(d$K,d$N,d$M) , ]
 
@@ -1978,7 +2022,11 @@ m5.5_draft <- quap(
         bN ~ dnorm( 0 , 1 ) ,
         sigma ~ dexp( 1 )
     ) , data=dcc )
+precis(m5.5_draft)
+```
 
+
+```{r}
 ## R code 5.34
 prior <- extract.prior( m5.5_draft )
 xseq <- c(-2,2)
