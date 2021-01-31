@@ -10,7 +10,7 @@ output:
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 #devtools::install_github('shane-kercheval/rtools')
-library(rtools)
+# library(rtools)
 # library(stringr)
 # library(ggrepel)
 # library(forecast)
