@@ -3589,15 +3589,38 @@ data(chimpanzees)
 d <- chimpanzees
 ```
 
+`condition` should really be named `has_partner` or something but it is the `treatment` that we care about, even though we go on to create `treatment` which is a combination of `prosoc_left` and `condition` (partner)
+
+not sure why we don't use `chose_prosoc` instead, seems a lot easier
+
+```{r}
+d
+```
+
+```{r}
+d %>% count(actor, prosoc_left)
+```
+
+
 ```{r}
 ## R code 11.2
 d$treatment <- 1 + d$prosoc_left + 2*d$condition
+d
 ```
+
+
 
 ```{r}
 ## R code 11.3
 xtabs( ~ treatment + prosoc_left + condition , d )
+d %>% count(prosoc_left, treatment)
 ```
+
+```{r}
+d %>% count(actor, prosoc_left, treatment)
+```
+
+Model that simply estimates `p` using no predictors (`pulled_left` outcome)
 
 ```{r}
 ## R code 11.4
@@ -3607,6 +3630,18 @@ m11.1 <- quap(
         logit(p) <- a ,
         a ~ dnorm( 0 , 10 )
     ) , data=d )
+precis(m11.1)
+```
+
+`inv_logit` of the coefficient gives same value as percent that pulled left in data `mean(d$pulled_left)`
+
+```{r}
+median(extract.samples(m11.1)$a)
+inv_logit(median(extract.samples(m11.1)$a))
+```
+
+```{r}
+mean(d$pulled_left)
 ```
 
 ```{r}
@@ -3615,11 +3650,40 @@ set.seed(1999)
 prior <- extract.prior( m11.1 , n=1e4 )
 ```
 
+This is the prior of the logit space, not hte probability space (pg. 328)
+
+```{r}
+dens( prior$a , adj=0.1 )
+```
+
+Prior in the probability space: 
+
 ```{r}
 ## R code 11.6
 p <- inv_logit( prior$a )
 dens( p , adj=0.1 )
 ```
+
+
+```{r}
+print(stan_glm(chose_prosoc ~ condition + actor , family='binomial', data=d, refresh=0), 3)
+
+## R code 11.7
+m11.b <- quap(
+    alist(
+        chose_prosoc ~ dbinom( 1 , p ) ,
+        logit(p) <- a + b[condition] ,
+        a ~ dnorm( 0 , 1.5 ),
+        b[condition] ~ dnorm( 0 , 10 )
+    ) , data=d )
+precis(m11.b, depth=2)
+
+inv_logit(median(extract.samples(m11.b)$a))
+inv_logit(median(extract.samples(m11.b)$b[,1]))
+inv_logit(median(extract.samples(m11.b)$b[,2]))
+```
+
+
 
 ```{r}
 ## R code 11.7
@@ -3664,6 +3728,94 @@ dat_list <- list(
     treatment = as.integer(d$treatment) )
 ```
 
+
+```{r}
+d_one_hot <- d %>%
+    select(pulled_left) %>%
+    cbind(model.matrix( ~ 0 + actor + treatment,
+             data=d %>%
+                 mutate(actor = factor(actor),
+                        treatment = factor(treatment))) %>%
+    as.data.frame())
+```
+
+```{r}
+summary(glm(pulled_left ~ .,  family = binomial, data = d_one_hot))
+```
+
+
+```{r}
+stan_model <- stan_glm(pulled_left ~ ., family = binomial(link = "logit"),
+         data=d_one_hot,
+         refresh=0)
+print(stan_model)
+```
+
+
+Why not just model it as 
+```{r}
+## R code 11.10
+# trimmed data list
+dat_list_b <- list(
+    chose_prosocial = as.numeric(d$chose_prosoc),
+    actor = as.numeric(d$actor),
+    has_partner = as.numeric(d$condition) )
+## R code 11.11
+m11.4b <- ulam(
+    alist(
+        chose_prosocial ~ dbinom( 1 , p ) ,
+        logit(p) <- a[actor] + b[has_partner] ,
+        a[actor] ~ dnorm( 0 , 1.5 ),
+        b[has_partner] ~ dnorm( 0 , 0.5 )
+    ) , data=dat_list_b , chains=4 , log_lik=TRUE )
+precis( m11.4b , depth=2 )
+```
+
+```{r}
+dat_list_b <- data.frame(
+    chose_prosocial = factor(d$chose_prosoc),
+    actor = factor(d$actor),
+    has_partner = factor(d$condition) )
+
+
+summary(glm(chose_prosocial ~ ., family = 'binomial', data=dat_list_b))
+
+stan_model <- stan_glm(chose_prosocial ~ ., family = binomial(link = "logit"),
+         data=dat_list_b,
+         refresh=0)
+print(stan_model, 3)
+```
+
+```{r}
+dat_list_b %>% count(has_partner, chose_prosocial)
+```
+
+```{r}
+inv_logit(0.097)
+```
+
+
+```{r}
+(146 / 158)
+(140 / 158)
+
+((146 / 158) - (140 / 158)) / (140 / 158)
+```
+
+
+```{r}
+partner_coefficient <- as.matrix(stan_model)[, 'has_partner1']
+
+quantile(partner_coefficient, 0.025)
+quantile(partner_coefficient, 0.5)
+quantile(partner_coefficient, 0.975)
+
+sum(partner_coefficient > 0) / length(partner_coefficient)
+
+
+hist(partner_coefficient)
+```
+
 ```{r}
 ## R code 11.11
 m11.4 <- ulam(
@@ -3672,9 +3824,15 @@ m11.4 <- ulam(
         logit(p) <- a[actor] + b[treatment] ,
         a[actor] ~ dnorm( 0 , 1.5 ),
         b[treatment] ~ dnorm( 0 , 0.5 )
-    ) , data=dat_list , chains=4 , log_lik=TRUE )
+    ) , data=dat_list , chains=4 ,log_lik=TRUE )
+    #) , data=dat_list , chains=4 ,log_lik=TRUE )
 precis( m11.4 , depth=2 )
 ```
+
+```{r}
+traceplot(m11.4)
+```
+
 
 ```{r}
 ## R code 11.12
@@ -3687,6 +3845,14 @@ plot( precis( as.data.frame(p_left) ) , xlim=c(0,1) )
 ## R code 11.13
 labs <- c("R/N","L/N","R/P","L/P")
 plot( precis( m11.4 , depth=2 , pars="b" ) , labels=labs )
+```
+
+```{r}
+## R code 11.14
+diffs <- list(
+    db13 = inv_logit(post$b[,1]) - inv_logit(post$b[,3]),
+    db24 = inv_logit(post$b[,2]) - inv_logit(post$b[,4]) )
+plot( precis(diffs) )
 ```
 
 ```{r}
