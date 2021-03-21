@@ -2,7 +2,7 @@
     -   [General](#general)
         -   [`clean_names()`](#clean_names)
         -   [`extract()`](#extract)
-        -   [regex\_left\_join](#regex_left_join)
+        -   [regex_left_join](#regex_left_join)
     -   [Aggregation](#aggregation)
         -   [`group_by() & which.max()`](#group_by-which.max)
         -   [`group_by()` & `top_n()`](#group_by-top_n)
@@ -12,10 +12,11 @@
 -   [dplyr/tidyverse](#dplyrtidyverse)
     -   [`join` `suffix`](#join-suffix)
     -   [`semi-join`](#semi-join)
+    -   [`separate_rows`](#separate_rows)
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
         -   [.data](#data)
-        -   [eval\_tidy](#eval_tidy)
+        -   [eval_tidy](#eval_tidy)
         -   [other examples](#other-examples)
 -   [ggplot](#ggplot)
     -   [`reorder_within()`](#reorder_within)
@@ -45,13 +46,11 @@
     -   [Logistic Regression](#logistic-regression)
     -   [Nested Regression](#nested-regression)
 
-Data Cleaning
-=============
+# Data Cleaning
 
 ------------------------------------------------------------------------
 
-General
--------
+## General
 
 ### `clean_names()`
 
@@ -95,10 +94,10 @@ Turn `1` column into `x` columns based on regex
 
 ------------------------------------------------------------------------
 
-### regex\_left\_join
+### regex_left_join
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=1715" class="uri">https://youtu.be/KiqpX-gNIS4?t=1715</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=1715>)
 
 Join data.frames based on matching regex.
 
@@ -177,8 +176,7 @@ cetaceans %>%
 
 ------------------------------------------------------------------------
 
-Aggregation
------------
+## Aggregation
 
 ### `group_by() & which.max()`
 
@@ -328,11 +326,9 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 ------------------------------------------------------------------------
 
-dplyr/tidyverse
-===============
+# dplyr/tidyverse
 
-`join` `suffix`
----------------
+## `join` `suffix`
 
 ``` r
 band_members %>%
@@ -347,8 +343,9 @@ band_members %>%
     ## 2 John  Beatles Beatles
     ## 3 Paul  Beatles Beatles
 
-`semi-join`
------------
+------------------------------------------------------------------------
+
+## `semi-join`
 
 ``` r
 band_members
@@ -397,13 +394,46 @@ band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band
 
 ------------------------------------------------------------------------
 
-Indirection
------------
+## `separate_rows`
+
+``` r
+df <- tibble(
+  x = 1:3,
+  y = c("a", "d,e,f", "g,h"),
+  z = c("1", "2,3,4", "5,6")
+)
+df
+```
+
+    ## # A tibble: 3 x 3
+    ##       x y     z    
+    ##   <int> <chr> <chr>
+    ## 1     1 a     1    
+    ## 2     2 d,e,f 2,3,4
+    ## 3     3 g,h   5,6
+
+``` r
+separate_rows(df, y, z, convert = TRUE)
+```
+
+    ## # A tibble: 6 x 3
+    ##       x y         z
+    ##   <int> <chr> <int>
+    ## 1     1 a         1
+    ## 2     2 d         2
+    ## 3     2 e         3
+    ## 4     2 f         4
+    ## 5     3 g         5
+    ## 6     3 h         6
+
+------------------------------------------------------------------------
+
+## Indirection
 
 Create a dplyr-like function that uses the column names of the dataframe
 rather than strings or the object directly.
 
-<a href="https://dplyr.tidyverse.org/articles/programming.html" class="uri">https://dplyr.tidyverse.org/articles/programming.html</a>
+<https://dplyr.tidyverse.org/articles/programming.html>
 
 ### dplyr-like function
 
@@ -574,7 +604,7 @@ mtcars %>%
     ## 10     4  32.4     2
     ## # … with 22 more rows
 
-### eval\_tidy
+### eval_tidy
 
 ``` r
 with_data <- function(data, .x) {
@@ -587,7 +617,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f88c7fccea8
+    ## env:  0x7f932b2d0be8
 
     ## [1] 61.875
 
@@ -689,18 +719,16 @@ mtcars %>%
     ## 5     4     0     1  21.5
     ## 6     4     1     1  21.4
 
-ggplot
-======
+# ggplot
 
 ### `reorder_within()`
 
 Reorder sub-categories within category e.g. for faceting.
 
 For example, the order of `setosa`, `versicolor`, `virginica` is allowed
-to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
+to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
 
-other examples:
-<a href="https://juliasilge.com/blog/reorder-within/" class="uri">https://juliasilge.com/blog/reorder-within/</a>
+other examples: <https://juliasilge.com/blog/reorder-within/>
 
 ``` r
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
@@ -761,7 +789,7 @@ d %>%
 ### spinogram
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=1244" class="uri">https://youtu.be/KiqpX-gNIS4?t=1244</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=1244>)
 
 We will use `geom_area` but need to fill in the missing data with
 `complete`
@@ -802,7 +830,7 @@ cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>
 ```
 
 What did `complete()` do? Lets look at the rows that were added
-(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
+(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
 
 `complete` filled in the missing combinations with a default value of
 `n` = `1`
@@ -847,7 +875,7 @@ cateaceans_acquisition_by_decade_complete %>%
 ### Joy Plot
 
 Example from David Robinson’s screencast
-(<a href="https://youtu.be/lY0YLDZhT88?t=665" class="uri">https://youtu.be/lY0YLDZhT88?t=665</a>)
+(<https://youtu.be/lY0YLDZhT88?t=665>)
 
 ``` r
 ikea %>% select(category, name, price_usd) %>% head()
@@ -879,7 +907,7 @@ ikea %>%
 
     ## Picking joint bandwidth of 0.165
 
-![](examples_files/figure-markdown_github/unnamed-chunk-34-1.png)
+![](examples_files/figure-markdown_github/ggridges_1-1.png)
 
 ``` r
 ikea %>%
@@ -896,19 +924,17 @@ ikea %>%
 
     ## Picking joint bandwidth of 0.174
 
-![](examples_files/figure-markdown_github/unnamed-chunk-35-1.png)
+![](examples_files/figure-markdown_github/ggridges_2-1.png)
 
 > “If we were building a predictive model, we’d probably include both
-> category and other\_colors”
+> category and other_colors”
 
-Advanced
-========
+# Advanced
 
-Confidence Intervals w/ t-tests
--------------------------------
+## Confidence Intervals w/ t-tests
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/em4FXPf4H-Y?t=1783" class="uri">https://youtu.be/em4FXPf4H-Y?t=1783</a>)
+(<https://youtu.be/em4FXPf4H-Y?t=1783>)
 
 ``` r
 head(restaurant_inspections_by_dba, 10)
@@ -985,11 +1011,10 @@ cuisine_conf_ints %>%
 
 ![](examples_files/figure-markdown_github/t_test_confidence_intervals-1.png)
 
-Survival Analysis
------------------
+## Survival Analysis
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=2424" class="uri">https://youtu.be/KiqpX-gNIS4?t=2424</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=2424>)
 
 Context is dolphins. Are some dolphins living longer than they used to?
 This is hard because some dolphins in are dataset are still alive.
@@ -1123,8 +1148,7 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
     ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211
     ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474
 
-Pairwise Correlation
---------------------
+## Pairwise Correlation
 
 In this case, we are finding correlations of `lifeExp` among `countries`
 across/by `year`. So, which countries tend to have similar
@@ -1203,13 +1227,12 @@ life_expectency_pairwise_cor[1:5, 1:5]
     ## 4 Canada        0.997   0.994  0.998 NA    
     ## 5 Chile         0.991   0.990  0.992  0.994
 
-`ebbr` package: Empirical Bayes on the Binomial in R
-----------------------------------------------------
+## `ebbr` package: Empirical Bayes on the Binomial in R
 
 > Methods for empirical Bayes shrinkage and estimation on data with many
 > observations of success/total counts.
 
-<a href="https://github.com/dgrtwo/ebbr" class="uri">https://github.com/dgrtwo/ebbr</a>
+<https://github.com/dgrtwo/ebbr>
 
 Examples from
 `Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
@@ -1358,8 +1381,8 @@ head(augment(prior, data = career))
 > We often want to run these two steps in sequence: estimating a model,
 > then using it as a prior for each observation. The ebbr package
 > provides a shortcut, combining them into one step with
-> add\_ebb\_estimate(). (Robinson, David. Introduction to Empirical
-> Bayes: Examples from Baseball Statistics . Kindle Edition.)
+> add_ebb_estimate(). (Robinson, David. Introduction to Empirical Bayes:
+> Examples from Baseball Statistics . Kindle Edition.)
 
 ``` r
 eb_career <- career %>%
@@ -1377,7 +1400,7 @@ all(eb_career$batting_average == eb_career$.raw)
 > in Chapter 3. I like how it captures what empirical Bayes estimation
 > is doing: moving all batting averages towards the prior mean (the
 > dashed red line), but moving them less if there is a lot of
-> information about that player (high at\_bats). (Robinson, David.
+> information about that player (high at_bats). (Robinson, David.
 > Introduction to Empirical Bayes: Examples from Baseball Statistics .
 > Kindle Edition.)
 
@@ -1386,7 +1409,7 @@ estimated batting average are identical.
 
 The dashed red line represents the “prior mean” which is similar, but
 doesn’t seem to be exactly, the average of the batting averages (of
-people with &gt;= 500 at-bats).
+people with \>= 500 at-bats).
 
 So for example, look at the dots/people to the left of the graph. These
 are people that had very few at-bats (dark color), had a very low
@@ -1483,13 +1506,13 @@ should be pushing people towards who have very few at bats, rather than
 the dotted red line above.
 
 > We solved this by fitting a prior that depended on AB, through the
-> process of beta-binomial regression. The add\_ebb\_estimate() function
+> process of beta-binomial regression. The add_ebb_estimate() function
 > from ebbr offers this option, by setting method = “gamlss” and
-> providing a formula to mu\_predictors.3 (Robinson, David. Introduction
+> providing a formula to mu_predictors.3 (Robinson, David. Introduction
 > to Empirical Bayes: Examples from Baseball Statistics . Kindle
 > Edition.)
 
-Obviously, now we do not want to filter our prior based on &gt;=500
+Obviously, now we do not want to filter our prior based on \>=500
 at-bats because we are using at-bats directly in our estimation.
 
 ``` r
@@ -1554,7 +1577,7 @@ batting-avearge.
 An important note is that this will not work for rookies, it is only
 meant to assess the players’ entire career.
 
-<a href="http://varianceexplained.org/r/beta_binomial_baseball/" class="uri">http://varianceexplained.org/r/beta_binomial_baseball/</a>
+<http://varianceexplained.org/r/beta_binomial_baseball/>
 
 Question in comments
 
@@ -1566,17 +1589,16 @@ Question in comments
 Answer by Dave
 
 > Your question raises a very important issue- I bring it up in the
-> following post in this series
-> (<a href="http://varianceexplained.or" class="uri">http://varianceexplained.or</a>….
-> In short you’re 100% right that this doesn’t work for predicting
-> future performance of rookies without more adjustments. “One important
-> aspect of this prediction is that it won’t be useful when we’ve just
-> hired a “rookie” player, and we’re wondering what his batting average
-> will be. This observed variable ABAB is based on a player’s entire
-> career, such that a low number is evidence that a player didn’t have
-> much of a chance to bat. (If we wanted to make a prediction, we’d have
-> to consider the distribution of possible ABAB’s the player could end
-> up with and integrate over that, which is beyond the scope of this
+> following post in this series (<http://varianceexplained.or>…. In
+> short you’re 100% right that this doesn’t work for predicting future
+> performance of rookies without more adjustments. “One important aspect
+> of this prediction is that it won’t be useful when we’ve just hired a
+> “rookie” player, and we’re wondering what his batting average will be.
+> This observed variable ABAB is based on a player’s entire career, such
+> that a low number is evidence that a player didn’t have much of a
+> chance to bat. (If we wanted to make a prediction, we’d have to
+> consider the distribution of possible ABAB’s the player could end up
+> with and integrate over that, which is beyond the scope of this
 > post)."
 
 ``` r
@@ -1739,8 +1761,7 @@ compare_piazza %>%
 > confident are better than Piazza. (Robinson, David. Introduction to
 > Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-Tidy Text
----------
+## Tidy Text
 
 ``` r
 head(mr_boston)
@@ -1756,11 +1777,10 @@ head(mr_boston)
     ## 5 Fort Lauder… Cocktail Class…      2                 1 Light Rum        1 1/2 …
     ## 6 Fort Lauder… Cocktail Class…      2                 2 Sweet Vermouth   1/2 oz
 
-Pairwise Correlations (again)
------------------------------
+## Pairwise Correlations (again)
 
 Example from David Robinson screencase
-(<a href="https://youtu.be/EC0SVkFB2OU?t=1234" class="uri">https://youtu.be/EC0SVkFB2OU?t=1234</a>)
+(<https://youtu.be/EC0SVkFB2OU?t=1234>)
 
 ``` r
 library(widyr)
@@ -1800,8 +1820,7 @@ ingredient_pairs %>%
 
 ![](examples_files/figure-markdown_github/pairwise_correlations_cocktails-1.png)
 
-Network Graph
--------------
+## Network Graph
 
 ``` r
 mr_boston_parsed <- mr_boston %>%
@@ -1843,7 +1862,7 @@ head(ingredients_summarized)
 `avg_position` is the step number that the ingredient, on average, shows
 up when mixing the drink.
 
-<a href="https://youtu.be/EC0SVkFB2OU?t=1269" class="uri">https://youtu.be/EC0SVkFB2OU?t=1269</a>
+<https://youtu.be/EC0SVkFB2OU?t=1269>
 
 ``` r
 library(ggraph)
@@ -1903,10 +1922,9 @@ top_cors %>%
 
 ![](examples_files/figure-markdown_github/network_graph_cocktails-1.png)
 
-Singular Value Decomposition (PCA)
-----------------------------------
+## Singular Value Decomposition (PCA)
 
-<a href="https://youtu.be/EC0SVkFB2OU?t=3009" class="uri">https://youtu.be/EC0SVkFB2OU?t=3009</a>
+<https://youtu.be/EC0SVkFB2OU?t=3009>
 
 What dimensions drive a lot of the variation among cocktails?
 
@@ -1966,8 +1984,7 @@ recipe_svd %>%
 
 ![](examples_files/figure-markdown_github/singular_value_decomposition_recipes-1.png)
 
-Logistic Regression
--------------------
+## Logistic Regression
 
 ``` r
 head(beer_awards)
@@ -2020,7 +2037,7 @@ How has the probability of successes vs failtures (i.e. awards vs not
 awards) changed over time?
 
 See
-<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md</a>
+<https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md>
 
 > Logistic Regression is a linear model for log odds. The odds of an
 > event are the probability that it happens over the probability that it
@@ -2028,7 +2045,7 @@ See
 
 > `log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
 
-`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
+`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
 
 ``` r
 wi_model <- awards_by_year_state %>%
@@ -2068,8 +2085,7 @@ wi_model %>% summary()
 What do the coefficients mean?
 
 > This is a log-odds ratio. So this is how much the log-odds ratio
-> changes each year.
-> (<a href="https://youtu.be/BV_afpCDQ70?t=3001" class="uri">https://youtu.be/BV_afpCDQ70?t=3001</a>)
+> changes each year. (<https://youtu.be/BV_afpCDQ70?t=3001>)
 
 ``` r
 (.log_odds <- coef(wi_model)['year'])
@@ -2085,8 +2101,8 @@ What do the coefficients mean?
     ##      year 
     ## -1.070175
 
--   <a href="http://had.co.nz/notes/modelling/logistic-regression.html" class="uri">http://had.co.nz/notes/modelling/logistic-regression.html</a>
--   <a href="https://www.flutterbys.com.au/stats/tut/tut10.5a.html" class="uri">https://www.flutterbys.com.au/stats/tut/tut10.5a.html</a>
+-   <http://had.co.nz/notes/modelling/logistic-regression.html>
+-   <https://www.flutterbys.com.au/stats/tut/tut10.5a.html>
 
 ``` r
 library(broom)
@@ -2130,11 +2146,10 @@ models_by_state %>%
 
 ![](examples_files/figure-markdown_github/logistic_regression_coefficients_beer_awards-1.png)
 
-Nested Regression
------------------
+## Nested Regression
 
 Example from David Robinson’s screencast
-(<a href="https://youtu.be/lY0YLDZhT88?t=2977" class="uri">https://youtu.be/lY0YLDZhT88?t=2977</a>)
+(<https://youtu.be/lY0YLDZhT88?t=2977>)
 
 ``` r
 .ikea <- ikea %>% select(price_usd, category, other_colors, depth, height, width)
@@ -2202,7 +2217,7 @@ If we were to predict price based on only the volumn (cubic meters).
     ## F-statistic:  4440 on 1 and 1889 DF,  p-value: < 0.00000000000000022
 
 Then what this says that our Intercept (which is where `log2(volume_m3)`
-is `0`; or in other words when the volumn\_m3 is 1 (cubic meter) because
+is `0`; or in other words when the volumn_m3 is 1 (cubic meter) because
 `log2(1)` equals `0`) …
 
 ``` r
