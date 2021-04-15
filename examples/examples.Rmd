@@ -556,6 +556,8 @@ cateaceans_acquisition_by_decade_complete %>%
        y = "% of dolphins recorded")
 ```
 
+---
+
 ### Joy Plot
 
 Example from David Robinson's screencast (https://youtu.be/lY0YLDZhT88?t=665)
@@ -592,6 +594,29 @@ ikea %>%
 ```
 
 > "If we were building a predictive model, we'd probably include both category and other_colors"
+
+---
+
+### Sankey
+
+```{r}
+# devtools::install_github("davidsjoberg/ggsankey")
+library(ggsankey)
+
+example_dat <- mtcars %>%
+  make_long(cyl, vs, am, gear, carb) # function in ggsankey to format data correctly
+
+ggplot(example_dat,
+       aes(x = x,
+           next_x = next_x, 
+           node = node, 
+           next_node = next_node,
+           fill = factor(node))) +
+    geom_sankey(flow.alpha = .6) +
+    theme_minimal()
+```
+
+---
 
 # Advanced
 
