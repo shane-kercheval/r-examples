@@ -599,6 +599,8 @@ ikea %>%
 
 ### Sankey
 
+https://github.com/davidsjoberg/ggsankey
+
 ```{r}
 # devtools::install_github("davidsjoberg/ggsankey")
 library(ggsankey)
