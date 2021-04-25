@@ -643,7 +643,7 @@ cuisine_conf_ints <- restaurant_inspections_by_dba %>%
     mutate(num_dbas = map_int(data, ~ nrow(.))) %>%
     mutate(mean_avg_score = map_dbl(data, ~ mean(.$avg_score))) %>%
     mutate(model = map(data, ~ t.test(.$avg_score))) %>%
-    mutate(model = map(model, ~ tidy(.))) %>%
+    mutate(model = map(model, ~ broom::tidy(.))) %>%
     unnest(model)
 # note: the p-value is meaningless, the null hypothesis is that the mean is equal to 0
 # we are just using this to get us confidence intervals
@@ -779,7 +779,7 @@ We can use a `Cox proportional hazards regression model`
 
 ```{r}
 survival::coxph(survival::Surv(age, status) ~ sex, dolphin_survival) %>%
-  tidy()
+  broom::tidy()
 ```
 
 p.value is not statistically significant (confience intervals include 0) so we can say that there is an actual difference.
@@ -802,7 +802,7 @@ If we do `coxph` it looks like the holdout group is `Born` and each category is 
 
 ```{r}
 survival::coxph(survival::Surv(age, status) ~ acquisition, dolphin_survival) %>%
-  tidy()
+  broom::tidy()
 ```
 
 ## Pairwise Correlation
