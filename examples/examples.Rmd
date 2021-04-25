@@ -106,7 +106,7 @@ head(cetaceans)
 
 ```{r}
 #install.packages('fuzzyjoin')
-library(fuzzyjoin)
+#library(fuzzyjoin)
 
 regexes <- tribble(
   ~ regex, ~ category,
@@ -124,7 +124,7 @@ cetaceans %>%
     # so create a row number to track unique rows
     mutate(unique_id = row_number()) %>%
     # join on regexes, based on regex
-    regex_left_join(regexes, c(originLocation = "regex")) %>%
+    fuzzyjoin::regex_left_join(regexes, c(originLocation = "regex")) %>%
     # only keep the unique/distinct rows from the data.frame
     # If there are multiple rows for a given combination of inputs, only the first row will be preserved.
     # If omitted, will use all variables.
@@ -567,12 +567,12 @@ ikea %>% select(category, name, price_usd) %>% head()
 ```
 
 ```{r ggridges_1}
-library(ggridges)
+#library(ggridges)
 ikea %>%
   mutate(category = glue::glue("{ category } ({ category_total })"),
          category = fct_reorder(category, price_usd)) %>%
   ggplot(aes(price_usd, category)) +
-  geom_density_ridges() +
+  ggridges::geom_density_ridges() +
   # geom_jitter(width = 0, height = .1, alpha = .25) +
   scale_x_log10(labels = dollar) +
   labs(x = "Price (USD)",
@@ -603,10 +603,10 @@ https://github.com/davidsjoberg/ggsankey
 
 ```{r}
 # devtools::install_github("davidsjoberg/ggsankey")
-library(ggsankey)
+#library(ggsankey)
 
 example_dat <- mtcars %>%
-  make_long(cyl, vs, am, gear, carb) # function in ggsankey to format data correctly
+  ggsankey::make_long(cyl, vs, am, gear, carb) # function in ggsankey to format data correctly
 
 ggplot(example_dat,
        aes(x = x,
@@ -614,7 +614,7 @@ ggplot(example_dat,
            node = node, 
            next_node = next_node,
            fill = factor(node))) +
-    geom_sankey(flow.alpha = .6) +
+    ggsankey::geom_sankey(flow.alpha = .6) +
     theme_minimal()
 ```
 
@@ -635,7 +635,7 @@ head(restaurant_inspections_by_dba, 10)
 Then we take each of those data.frames, and run a `t.test` of `ave_score`.
 
 ```{r}
-library(broom)
+#library(broom)
 cuisine_conf_ints <- restaurant_inspections_by_dba %>%
     add_count(cuisine) %>%  # adds number of dbas for each cuisine
     filter(n > 100) %>%  # only keep cuisines that have >100 invidual DBAs
@@ -721,7 +721,7 @@ Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS
 Context is dolphins. Are some dolphins living longer than they used to? This is hard because some dolphins in are dataset are still alive.
 
 ```{r}
-library(survival)
+#library(survival)
 cetaceans <- cetaceans_raw
 dolphin_survival <- cetaceans %>%
   filter(status %in% c("Alive", "Died")) %>%
@@ -741,7 +741,7 @@ head(dolphin_survival)
 So the followin gives the median age of death, with confidence intervals.
 
 ```{r}
-model <- survival::survfit(Surv(age, status) ~ 1, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ 1, dolphin_survival)
 model
 ```
 
@@ -759,7 +759,7 @@ broom::tidy(model) %>%
 The followin gives the median age of death, by sex, with confidence intervals.
 
 ```{r}
-model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ sex, dolphin_survival)
 model
 ```
 
@@ -778,7 +778,7 @@ How can we tell if sex is actually meaningful (i.e. the survival rate is actual 
 We can use a `Cox proportional hazards regression model`
 
 ```{r}
-survival::coxph(Surv(age, status) ~ sex, dolphin_survival) %>%
+survival::coxph(survival::Surv(age, status) ~ sex, dolphin_survival) %>%
   tidy()
 ```
 
@@ -787,7 +787,7 @@ p.value is not statistically significant (confience intervals include 0) so we c
 We can do the same thing for acquisition.
 
 ```{r survival_dolphins_acquisition}
-model <- survival::survfit(Surv(age, status) ~ acquisition, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ acquisition, dolphin_survival)
 broom::tidy(model) %>%
   filter(strata != "acquisition=Unknown") %>%
   ggplot(aes(time, estimate, color = strata)) +
@@ -801,7 +801,7 @@ broom::tidy(model) %>%
 If we do `coxph` it looks like the holdout group is `Born` and each category is being compared to that. `Capture` is not statistically significant, but `Rescue` and `Unknown` are.
 
 ```{r}
-survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
+survival::coxph(survival::Surv(age, status) ~ acquisition, dolphin_survival) %>%
   tidy()
 ```
 
@@ -810,13 +810,13 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
 In this case, we are finding correlations of `lifeExp` among `countries` across/by `year`. So, which countries tend to have similar life-expectencies over time (i.e. by year)?
 
 ```{r message=FALSE, warning=FALSE}
-library(gapminder)
-library(widyr)
+#library(gapminder)
+#library(widyr)
 
-life_expectency_pairwise_cor <- gapminder %>% 
+life_expectency_pairwise_cor <- gapminder::gapminder %>% 
          filter(continent == 'Americas') %>%  # filter for one continent just so we can fit into a single graph.
          # add_count(country) %>%
-         pairwise_cor(country, year, lifeExp, sort = TRUE)
+         widyr::pairwise_cor(country, year, lifeExp, sort = TRUE)
 
 head(life_expectency_pairwise_cor)
 ```
@@ -870,23 +870,23 @@ Examples from `Robinson, David. Introduction to Empirical Bayes: Examples from B
 ```{r example_11.1, echo=FALSE}
 #devtools::install_github("dgrtwo/ebbr")
 #install.packages('Lahman')
-library(Lahman)
+#library(Lahman)
 
 # Grab career batting average of non-pitchers
 # (allow players that have pitched <= 3 games, like Ty Cobb)
-pitchers <- Pitching %>%
+pitchers <- Lahman::Pitching %>%
     group_by(playerID) %>%
     summarize(gamesPitched = sum(G)) %>%
     filter(gamesPitched > 3)
 
 # Add player names
-player_names <- Master %>%
+player_names <- Lahman::Master %>%
     tibble::as_tibble() %>%
     dplyr::select(playerID, nameFirst, nameLast, bats) %>%
     unite(name, nameFirst, nameLast, sep = " ")
 
 # include the "bats" (handedness) and "year" column for later
-career_full <- Batting %>%
+career_full <- Lahman::Batting %>%
     filter(AB > 0) %>%
     # remove pitchers
     anti_join(pitchers, by = "playerID") %>%
@@ -920,10 +920,11 @@ career %>%
 ### Prior Distribution
 
 ```{r message=FALSE, warning=FALSE}
-library(ebbr)
+#devtools::install_github("dgrtwo/ebbr")
+#library(ebbr)
 prior <- career %>%
   filter(at_bats >= 500) %>%
-  ebb_fit_prior(hits, at_bats)
+  ebbr::ebb_fit_prior(hits, at_bats)
 
 prior
 ```
@@ -979,7 +980,7 @@ head(augment(prior, data = career))
 
 ```{r}
 eb_career <- career %>%
-  add_ebb_estimate(hits, at_bats,
+  ebbr::add_ebb_estimate(hits, at_bats,
                    prior_subset = at_bats >= 500)
 ```
 
@@ -1063,7 +1064,7 @@ Obviously, now we do not want to filter our prior based on >=500 at-bats because
 
 ```{r message=FALSE, warning=FALSE}
 eb_career_ab <- career %>%
-  add_ebb_estimate(hits, at_bats, method = "gamlss",
+  ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss",
                     mu_predictors = ~ log10(at_bats))
 
 head(eb_career_ab)
@@ -1112,20 +1113,20 @@ Answer by Dave
 > Your question raises a very important issue- I bring it up in the following post in this series (http://varianceexplained.or.... In short you're 100% right that this doesn't work for predicting future performance of rookies without more adjustments. "One important aspect of this prediction is that it won’t be useful when we’ve just hired a “rookie” player, and we’re wondering what his batting average will be. This observed variable ABAB is based on a player’s entire career, such that a low number is evidence that a player didn’t have much of a chance to bat. (If we wanted to make a prediction, we’d have to consider the distribution of possible ABAB’s the player could end up with and integrate over that, which is beyond the scope of this post)."
 
 ```{r message=FALSE, warning=FALSE}
-library(splines)
+#library(splines)
 eb_career_prior <- career_full %>%
-  ebb_fit_prior(hits, at_bats, method = "gamlss",
-                mu_predictors = ~ 0 + ns(year, df = 5) * bats + log(at_bats))
+  ebbr::ebb_fit_prior(hits, at_bats, method = "gamlss",
+                      mu_predictors = ~ 0 + splines::ns(year, df = 5) * bats + log(at_bats))
 
-eb_career_prior
+head(eb_career_prior)
 ```
 
 ```{r ebb_gamlss_splines, message=FALSE, warning=FALSE}
 # fake data ranging from 1885 to 2013
-fake_data <- crossing(hits = 300,
-                      at_bats = 1000,
-                      year = seq(1885, 2013),
-                      bats = c("L", "R"))
+fake_data <- tidyr::crossing(hits = 300,
+                             at_bats = 1000,
+                             year = seq(1885, 2013),
+                             bats = c("L", "R"))
 
 # find the mean of the prior, as well as the 95% quantiles,
 # for each of these combinations. This does require a bit of
@@ -1146,8 +1147,8 @@ augment(eb_career_prior, newdata = fake_data) %>%
 
 ```{r}
 test_300 <- career %>%
-    add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
-    add_ebb_prop_test(.300, sort = TRUE)
+    ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
+    ebbr::add_ebb_prop_test(.300, sort = TRUE)
 
 round_4 <- function(.x) {
     round(.x, 4)
@@ -1180,7 +1181,7 @@ piazza_params ## [1] 2281 5183 This vector of two parameters, an alpha and a bet
 
 ```{r}
 compare_piazza <- eb_career_ab %>%
-  add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
+  ebbr::add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
 
 compare_piazza %>%
     select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
@@ -1201,12 +1202,12 @@ head(mr_boston)
 Example from David Robinson screencase (https://youtu.be/EC0SVkFB2OU?t=1234)
 
 ```{r}
-library(widyr)
-library(tidytext)
+#library(widyr)
+#library(tidytext)
 ingredient_pairs <- mr_boston %>%
   add_count(ingredient) %>%
   filter(n >= 10) %>%
-  pairwise_cor(ingredient, name, sort = TRUE)
+  widyr::pairwise_cor(ingredient, name, sort = TRUE)
 
 head(ingredient_pairs)
 ```
@@ -1218,11 +1219,11 @@ ingredient_pairs %>%
                       "Vodka")) %>%
   group_by(item1) %>%
   top_n(10, correlation) %>%
-  mutate(item2 = reorder_within(item2, correlation, item1)) %>%
+  mutate(item2 = tidytext::reorder_within(item2, correlation, item1)) %>%
   ggplot(aes(correlation, item2)) +
   geom_col() +
   facet_wrap(~ item1, scales = "free_y") +
-  scale_y_reordered() +
+  tidytext::scale_y_reordered() +
   labs(title = "What ingredients are most correlated with particular ingredients?")
 ```
 
@@ -1260,19 +1261,19 @@ head(ingredients_summarized)
 https://youtu.be/EC0SVkFB2OU?t=1269
 
 ```{r network_graph_cocktails, fig.height=7, fig.width=7}
-library(ggraph)
-library(igraph)
+#library(ggraph)
+#library(igraph)
 top_cors <- ingredient_pairs %>% head(150)  # most correlated cocktail ingrediants
 ingredient_info <- ingredients_summarized %>% filter(ingredient %in% top_cors$item1)
 
 set.seed(2)
 top_cors %>%
-  graph_from_data_frame(vertices = ingredient_info) %>%
-  ggraph(layout = "fr") +
-  geom_edge_link() +
-  geom_node_text(aes(label = name), repel = TRUE) +
-  geom_node_point(aes(size = 1.1 * n)) +
-  geom_node_point(aes(size = n, color = avg_position)) +
+  igraph::graph_from_data_frame(vertices = ingredient_info) %>%
+  ggraph::ggraph(layout = "fr") +
+  ggraph::geom_edge_link() +
+  ggraph::geom_node_text(aes(label = name), repel = TRUE) +
+  ggraph::geom_node_point(aes(size = 1.1 * n)) +
+  ggraph::geom_node_point(aes(size = n, color = avg_position)) +
   scale_color_gradient2(low = "red", high = "blue", midpoint = .5,
                         labels = scales::percent_format()) +
   labs(size = "# of recipes",
@@ -1298,7 +1299,7 @@ ingredient_svd <- mr_boston %>%
     distinct(ingredient, name) %>%
     mutate(value = 1) %>%
     # we're interested in components by intgrediate across name
-    widely_svd(ingredient, name, value)
+    widyr::widely_svd(ingredient, name, value)
 
 ingredient_svd %>%
     filter(dimension > 1, 
@@ -1306,10 +1307,10 @@ ingredient_svd %>%
     mutate(dimension = paste0("PC", dimension)) %>%
     group_by(dimension) %>%
     top_n(16, abs(value)) %>%
-    mutate(ingredient = reorder_within(ingredient, value, dimension)) %>%
+    mutate(ingredient = tidytext::reorder_within(ingredient, value, dimension)) %>%
     ggplot(aes(value, ingredient, fill = value > 0)) +
     geom_col(show.legend = FALSE) +
-    scale_y_reordered() +
+    tidytext::scale_y_reordered() +
     facet_wrap(~ dimension, scales = "free_y") +
     labs(x = "Principal component value",
          y = "Ingredient",
@@ -1320,17 +1321,17 @@ ingredient_svd %>%
 recipe_svd <- mr_boston %>%
   distinct(name, ingredient) %>%
   mutate(value = 1) %>%
-  widely_svd(name, ingredient, value)
+  widyr::widely_svd(name, ingredient, value)
 
 recipe_svd %>%
   filter(dimension > 1, dimension <= 5) %>%
   mutate(dimension = paste0("PC", dimension)) %>%
   group_by(dimension) %>%
   top_n(16, abs(value)) %>%
-  mutate(recipe = reorder_within(name, value, dimension)) %>%
+  mutate(recipe = tidytext::reorder_within(name, value, dimension)) %>%
   ggplot(aes(value, recipe, fill = value > 0)) +
   geom_col(show.legend = FALSE) +
-  scale_y_reordered() +
+  tidytext::scale_y_reordered() +
   facet_wrap(~ dimension, scales = "free_y") +
   labs(x = "Principal component value",
        y = "Ingredient",
@@ -1399,13 +1400,13 @@ What do the coefficients mean?
 - https://www.flutterbys.com.au/stats/tut/tut10.5a.html
 
 ```{r}
-library(broom)
+#library(broom)
 models_by_state <- awards_by_year_state %>%
   filter(state != "Other") %>%
   mutate(state = state.name[match(state, state.abb)]) %>%
   group_by(state) %>%
   summarize(model = list(glm(cbind(awards_won, awards_not_won) ~ year, family = "binomial"))) %>%
-  mutate(tidied = map(model, tidy, conf.int = TRUE)) %>%
+  mutate(tidied = map(model, broom::tidy, conf.int = TRUE)) %>%
   unnest(tidied) %>%
   filter(term == "year") %>%
   mutate(#p.value = format.pval(p.value),
@@ -1490,12 +1491,12 @@ i.e. every time we doulbe in cubic meters we would expect an increase to the pri
 But now lets include `category` and `other_colors`.
 
 ```{r nested_regression_ikea, fig.height=5, fig.width=7}
-library(broom)
+#library(broom)
 .ikea_volume %>%
     # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
     mutate(category = fct_relevel(category, "Tables & desks")) %>%
     lm(log2(price_usd) ~ log2(volume_m3) + category + other_colors, data = .) %>%
-    tidy(conf.int = TRUE) %>%
+    broom::tidy(conf.int = TRUE) %>%
     filter(term != "(Intercept)") %>%
     mutate(term = ifelse(term == "log2(volume_m3)", "Item volume (doubling)", term),
            term = str_remove(term, "^category")) %>%
