@@ -585,7 +585,7 @@ ikea %>%
   mutate(category = glue::glue("{ category } ({ category_total })"),
          category = fct_reorder(category, price_usd)) %>%
   ggplot(aes(price_usd, category, fill = other_colors)) +
-  geom_density_ridges(alpha = .5) +
+  ggridges::geom_density_ridges(alpha = .5) +
   # geom_jitter(width = 0, height = .1, alpha = .25) +
   scale_x_log10(labels = dollar) +
   labs(x = "Price (USD)",
