@@ -929,10 +929,10 @@ prior <- career %>%
 prior
 ```
 
-I'm not sure how `tidy(prior)$mean` is calculated.
+I'm not sure how `broom::tidy(prior)$mean` is calculated.
 
 ```{r}
-as.numeric(tidy(prior)$mean)
+as.numeric(broom::tidy(prior)$mean)
 
 career %>%
     filter(at_bats >= 500) %>%
@@ -1004,7 +1004,7 @@ eb_career %>%
     geom_point() +
     geom_abline(color = "red") +
     scale_color_continuous(trans = "log", breaks = c(1, 10, 100, 1000)) +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    geom_hline(yintercept = broom::tidy(prior)$mean, color = "red", lty = 2) +
     coord_cartesian(xlim = c(0, .6), ylim=c(0, 0.6)) +
     scale_x_continuous(breaks = pretty_breaks()) +
     scale_y_continuous(breaks = pretty_breaks()) +
@@ -1020,7 +1020,7 @@ eb_career %>%
     ggplot(aes(at_bats, estimate)) +
     geom_point() +
     geom_smooth(method='lm') +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    geom_hline(yintercept = broom::tidy(prior)$mean, color = "red", lty = 2) +
     facet_wrap(~ type) +
     scale_x_log10()
 ```
@@ -1045,7 +1045,7 @@ eb_career %>%
 
 > In Chapters 7 and 8, we examined how this beta-binomial model may not be appropriate, because of the relationship between a player's at-bats and their batting average. Good batters tend to have long careers, while poor batters may retire quickly. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-This means that, in the previous estimates and graphs, it's not appropriate to move people who have very few bats (and for example very low batting averages), all the way up to the prior mean batting average (``r tidy(prior)$mean``). We should assume (had they keep getting more and more at-bats) that they would have a lower batting average than average.
+This means that, in the previous estimates and graphs, it's not appropriate to move people who have very few bats (and for example very low batting averages), all the way up to the prior mean batting average (``r broom::tidy(prior)$mean``). We should assume (had they keep getting more and more at-bats) that they would have a lower batting average than average.
 
 ```{r ebb_at_bats_regression, message=FALSE}
 career %>%
@@ -1078,7 +1078,7 @@ eb_career_ab %>%
     ggplot(aes(at_bats, estimate)) +
     geom_point() +
     geom_smooth(method='lm') +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    geom_hline(yintercept = broom::tidy(prior)$mean, color = "red", lty = 2) +
     facet_wrap(~ type) +
     scale_x_log10()
 ```
