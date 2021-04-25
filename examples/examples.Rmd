@@ -971,7 +971,7 @@ career %>%
 > The second step of empirical Bayes analysis is updating each observation based on the overall statistical model. Based on the philosophy of the broom package, this is achieved with the augment() function. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
 ```{r}
-head(augment(prior, data = career))
+head(ebbr::augment(prior, data = career))
 ```
 
 ### `add_ebb_estimate`
@@ -1131,7 +1131,7 @@ fake_data <- tidyr::crossing(hits = 300,
 # find the mean of the prior, as well as the 95% quantiles,
 # for each of these combinations. This does require a bit of
 # manual manipulation of alpha0 and beta0:
-augment(eb_career_prior, newdata = fake_data) %>%
+ebbr::augment(eb_career_prior, newdata = fake_data) %>%
     mutate(prior = .alpha0 / (.alpha0 + .beta0),
          prior.low = qbeta(.025, .alpha0, .beta0),
          prior.high = qbeta(.975, .alpha0, .beta0)) %>%
