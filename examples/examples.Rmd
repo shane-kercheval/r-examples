@@ -666,6 +666,54 @@ cuisine_conf_ints %>%
        subtitle = "Each restaurant chain was counted once based on its average score")
 ```
 
+---
+
+## `optimize`
+
+The function optimize searches the interval from lower to upper for a minimum or maximum of the function f with respect to its first argument.
+
+Example: flipping a coin. `dbinom` gives the probability of observing x “successes” for a given sample size and assumed probability of observing x.
+
+The probability of observing `7` heads in `10` flips if the true probability of flipping heads is `50%`, is `11.7%`. dbinom over all values of heads for a given probability of heads (i.e. 0.5) is a probability distribution.
+
+```{r}
+dbinom(7, size=10, prob=0.5)
+sum(dbinom(0:10, size=10, prob=0.5))
+```
+
+However, let's say we want the relative **relative** probability/plausibility of observing `7` heads over `10` flips if we didn't know the true probability was `0.5`
+
+Now we would hold `7` fixed and search `prob` across a grid of possible values.
+
+```{r}
+sample_size <- 10
+num_heads <- 7
+probability_grid <- seq(0, 1, 0.001)
+likelihood <- dbinom(num_heads, size=sample_size, prob=probability_grid)
+```
+
+But we also want to find the most plausible likelihood.
+
+```{r}
+most_plausible <- optimize(function (.x) -dbinom(num_heads,
+                                                 size=sample_size,
+                                                 prob=.x),
+                           c(0, 1),
+                           tol = 0.0001)
+most_plausible
+```
+
+This is **not** a probability distribution, it is a distribution of relative plausibilities.
+
+```{r}
+plot(probability_grid, likelihood)
+abline(v = most_plausible$minimum, col='red', lwd=3)
+```
+
+See https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests for a more indepth example. 
+
+---
+
 ## Survival Analysis
 
 Example from David Robinson Tidy-Tuesday Screencast (https://youtu.be/KiqpX-gNIS4?t=2424)
