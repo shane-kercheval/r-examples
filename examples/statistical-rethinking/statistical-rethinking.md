@@ -88,27 +88,19 @@ Chapter 2
 Bayesian Updating
 -----------------
 
-dbinom gives the probability of getting `x` “successes” given a sample
-size of `size` and a certain probability.
-
-So `dbinom(x=5, size=10, prob=0.5)`
+`dbinom` gives the probability of observing x “successes” for a given
+sample size and probability of observing x.
 
 ``` r
-dbinom(x=6, size=9, prob=0.5)
+dbinom(x=5, size=10, prob=0.5)
 ```
 
-    ## [1] 0.1640625
+    ## [1] 0.2460938
 
-so if we say the probability of a “successful event” is 50%
+So if we say the probability of a “successful event” is 50%
 (e.g. flipping a coin and landing on heads) and that we are going to
 flip the coin 10 times (i.e. sample size of 10) the probability we will
 get exactly 5 heads (i.e. successes) is 24.6%.
-
-``` r
-plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
-```
-
-![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
 sum(dbinom(x=0:10, size=10, prob=0.5))
@@ -116,9 +108,18 @@ sum(dbinom(x=0:10, size=10, prob=0.5))
 
     ## [1] 1
 
+``` r
+plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+This is the probability distribution of observing `x` heads for `10`
+flips. (All numbers sum to `1`.)
+
 But we don’t want the probability distrubtion of seeing heads
-(i.e. assuming a constance 50% prob of flipping heads), which is what
-the graph above shows.
+(i.e. assuming a constant 50% prob of flipping heads), which is what the
+graph above shows.
 
 We want the **relative** probability/plausibility of seeing six heads
 out of 9 flips, assuming all sorts of probablities of flipping heads.
@@ -281,6 +282,10 @@ d %>%
 
 Grid Approximation
 ------------------
+
+For each possible value of `p`, the proportion of water, what is the
+relatively plausibility of observing the data (6 Ws in 9 tosses) for
+that value of p.
 
 ``` r
 ## R code 2.3
@@ -456,8 +461,8 @@ globe.qa <- quap(
 precis( globe.qa , digits = 4)
 ```
 
-    ##        mean        sd      5.5%     94.5%
-    ## p 0.6666664 0.1571338 0.4155362 0.9177967
+    ##        mean        sd     5.5%     94.5%
+    ## p 0.6666663 0.1571339 0.415536 0.9177966
 
 ``` r
 globe.qa <- quap(
@@ -473,7 +478,7 @@ precis( globe.qa , digits = 4)
 ```
 
     ##        mean        sd      5.5%     94.5%
-    ## p 0.6666667 0.1111104 0.4890909 0.8442425
+    ## p 0.6666662 0.1111104 0.4890903 0.8442421
 
 ``` r
 y <- c(1, 1, 1, 1, 1, 1, 0, 0, 0)
@@ -572,6 +577,8 @@ curve( dbeta( x , W+1 , L+1 ) , lty=2 , add=TRUE )
 
 Homework
 --------
+
+<a href="https://github.com/rmcelreath/stat_rethinking_2020/blob/main/homework/week01/week01_solutions.pdf" class="uri">https://github.com/rmcelreath/stat_rethinking_2020/blob/main/homework/week01/week01_solutions.pdf</a>
 
 1.  Suppose the globe tossing data (Chapter 2) had turned out to be 4
     water in 15 tosses. Construct the posterior distribution, using grid
@@ -696,15 +703,20 @@ Chapter 3
 
 ``` r
 ## R code 3.1
-Pr_Positive_Vampire <- 0.95
-Pr_Positive_Mortal <- 0.01
-Pr_Vampire <- 0.001
-Pr_Positive <- Pr_Positive_Vampire * Pr_Vampire +
-               Pr_Positive_Mortal * ( 1 - Pr_Vampire )
+Pr_Positive_Vampire <- 0.95 # true positive
+Pr_Positive_Mortal <- 0.01  # false positive
+Pr_Vampire <- 0.001  # prevalance 
+
+# (probability of true positive * relative occurance true positive) + (probability false positive * relative occurance of false positive)
+# i.e. average probability of data
+Pr_Positive <- Pr_Positive_Vampire * Pr_Vampire +  # (probability of true positive * relative occurance true positive)
+               Pr_Positive_Mortal * ( 1 - Pr_Vampire )  # (probability false positive * relative occurance of false positive)
 ( Pr_Vampire_Positive <- Pr_Positive_Vampire*Pr_Vampire / Pr_Positive )
 ```
 
     ## [1] 0.08683729
+
+------------------------------------------------------------------------
 
 ``` r
 ## R code 3.2
@@ -721,18 +733,29 @@ samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
 ```
 
 ``` r
-## R code 3.4
-plot( samples )
+## R code 3.5
+dens( samples )
 ```
 
 ![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-49-1.png)
 
 ``` r
-## R code 3.5
-dens( samples )
+dens( sample( p_grid , prob=posterior , size=1e3 , replace=TRUE ) )
 ```
 
 ![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-50-1.png)
+
+``` r
+dens( sample( p_grid , prob=posterior , size=1e4 , replace=TRUE ) )
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-50-2.png)
+
+``` r
+dens( sample( p_grid , prob=posterior , size=1e5 , replace=TRUE ) )
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-50-3.png)
 
 ``` r
 ## R code 3.6
@@ -774,6 +797,7 @@ quantile( samples , c( 0.1 , 0.9 ) )
 
 ``` r
 ## R code 3.11
+set.seed(1)
 p_grid <- seq( from=0 , to=1 , length.out=1000 )
 prior <- rep(1,1000)
 likelihood <- dbinom( 3 , size=3 , prob=p_grid )
@@ -783,12 +807,18 @@ samples <- sample( p_grid , size=1e4 , replace=TRUE , prob=posterior )
 ```
 
 ``` r
+plot(p_grid, posterior)
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-57-1.png)
+
+``` r
 ## R code 3.12
 PI( samples , prob=0.5 )
 ```
 
     ##       25%       75% 
-    ## 0.7047047 0.9309309
+    ## 0.7027027 0.9309309
 
 ``` r
 ## R code 3.13
@@ -796,7 +826,7 @@ HPDI( samples , prob=0.5 )
 ```
 
     ##      |0.5      0.5| 
-    ## 0.8388388 0.9989990
+    ## 0.8408408 1.0000000
 
 ``` r
 ## R code 3.14
@@ -810,20 +840,32 @@ p_grid[ which.max(posterior) ]
 chainmode( samples , adj=0.01 )
 ```
 
-    ## [1] 0.994899
+    ## [1] 0.9839674
 
 ``` r
 ## R code 3.16
 mean( samples )
 ```
 
-    ## [1] 0.7982984
+    ## [1] 0.7991177
 
 ``` r
 median( samples )
 ```
 
-    ## [1] 0.8398398
+    ## [1] 0.8408408
+
+------------------------------------------------------------------------
+
+Loss Functions, here is our posterior.
+
+``` r
+plot(p_grid, posterior)
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-63-1.png)
+
+Absolute loss, pg 60
 
 ``` r
 ## R code 3.17
@@ -831,6 +873,105 @@ sum( posterior*abs( 0.5 - p_grid ) )
 ```
 
     ## [1] 0.3128752
+
+``` r
+sum( posterior*abs( 0.8 - p_grid ) )
+```
+
+    ## [1] 0.1312101
+
+`posterior*abs( d - p_grid )` takes a particular guess at the “TRUE”
+value of p (the proportion of water in this example), and calculates the
+distance from our guess `d` to each of the possible points `p` which is
+defined by `p_grid`.
+
+Now that we have the relative distance away from our guess for each
+possible value of p, we multiply that by posterior which gives higher
+numbers for more plausible values.
+
+So the further a particular guess is from a particular point, the higher
+the distance and the more it will be penalized relative to the
+plausibility of that p.
+
+Let’s say our best guess is `0.5`. We’ll calculate a single value in the
+calculation above, let’s use `p=1` which corresponds with the mode of
+the graph.
+
+We are a distance of 0.5, and that posterior is going to penalize us the
+most since it has the highest plausiability.
+
+``` r
+abs(0.5 - p_grid[1000]) 
+```
+
+    ## [1] 0.5
+
+``` r
+posterior[1000]
+```
+
+    ## [1] 0.003996
+
+``` r
+posterior[1000] * abs(0.5 - p_grid[1000])
+```
+
+    ## [1] 0.001998
+
+Now if our guess was `0.8` we wouldn’t get penalized as much at that
+same point, because we are closer.
+
+``` r
+abs(0.8 - p_grid[1000]) 
+```
+
+    ## [1] 0.2
+
+``` r
+posterior[1000]
+```
+
+    ## [1] 0.003996
+
+``` r
+posterior[1000] * abs(0.8 - p_grid[1000])
+```
+
+    ## [1] 0.0007992
+
+Or a guess of `1.0`
+
+Now we aren’t penalized at all because we aren’t any distance away.
+
+``` r
+abs(1 - p_grid[1000]) 
+```
+
+    ## [1] 0
+
+``` r
+posterior[1000]
+```
+
+    ## [1] 0.003996
+
+``` r
+posterior[1000] * abs(1 - p_grid[1000])
+```
+
+    ## [1] 0
+
+But this function does not optimize for the mode, because you are still
+calculating all the penalties across the entire space of plausible
+values (p\_grid), for each guess.
+
+So while a guess of 0.8 gives you a higher penalty at that specific
+value of 1, it turns out that summing across all the penalties will
+produce a lower overall penalty (for 0.8) than if you were to guess 1.0
+
+Instead, we’ll make a guess at each possible value of p (probability of
+water), which is defined by p\_grid. At each value, we’ll calculate our
+loss.
 
 ``` r
 ## R code 3.18
@@ -845,6 +986,13 @@ p_grid[ which.min(loss) ]
     ## [1] 0.8408408
 
 ``` r
+plot(p_grid, loss)
+abline(v = p_grid[ which.min(loss) ], col="red", lwd=3, lty=2)
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-71-1.png)
+
+``` r
 ## R code 3.20
 dbinom( 0:2 , size=2 , prob=0.7 )
 ```
@@ -856,14 +1004,14 @@ dbinom( 0:2 , size=2 , prob=0.7 )
 rbinom( 1 , size=2 , prob=0.7 )
 ```
 
-    ## [1] 1
+    ## [1] 0
 
 ``` r
 ## R code 3.22
 rbinom( 10 , size=2 , prob=0.7 )
 ```
 
-    ##  [1] 2 1 1 1 1 2 1 2 1 2
+    ##  [1] 2 1 0 2 2 1 2 1 1 1
 
 ``` r
 ## R code 3.23
@@ -873,7 +1021,7 @@ table(dummy_w)/1e5
 
     ## dummy_w
     ##       0       1       2 
-    ## 0.09009 0.41694 0.49297
+    ## 0.08833 0.42170 0.48997
 
 ``` r
 ## R code 3.24
@@ -881,17 +1029,21 @@ dummy_w <- rbinom( 1e5 , size=9 , prob=0.7 )
 simplehist( dummy_w , xlab="dummy water count" )
 ```
 
-![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-69-1.png)
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-76-1.png)
 
 ``` r
 ## R code 3.25
 w <- rbinom( 1e4 , size=9 , prob=0.6 )
+w[1:20]
 ```
 
+    ##  [1] 6 5 4 6 5 3 5 5 5 6 7 7 4 5 5 7 4 7 5 8
+
 ``` r
-## R code 3.26
-w <- rbinom( 1e4 , size=9 , prob=samples )
+hist(w)
 ```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-78-1.png)
 
 ``` r
 ## R code 3.27
@@ -901,8 +1053,52 @@ likelihood <- dbinom( 6 , size=9 , prob=p_grid )
 posterior <- likelihood * prior
 posterior <- posterior / sum(posterior)
 set.seed(100)
-samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
+samples <- sample( p_grid , prob=posterior , size=1e5 , replace=TRUE )
 ```
+
+``` r
+## R code 3.26
+w <- rbinom( 1e5 , size=9 , prob=samples )
+length(w)
+```
+
+    ## [1] 100000
+
+``` r
+samples[1:20]
+```
+
+    ##  [1] 0.7137137 0.3573574 0.5985986 0.7177177 0.6296296 0.4694695 0.4734735
+    ##  [8] 0.8378378 0.9029029 0.7267267 0.5035035 0.6126126 0.5935936 0.4554555
+    ## [15] 0.7927928 0.4344344 0.7877878 0.6166166 0.6766767 0.3463463
+
+``` r
+w[1:20]
+```
+
+    ##  [1] 6 5 4 8 6 4 5 9 8 5 5 4 7 6 7 6 8 4 6 3
+
+So, we calculated the posterior probability based on our sample of
+observing 6 waters in 9 tosses.
+
+We then sampled our posterior distribution, which gives us a list of
+possible proportions of water with relative frequency corresponding to
+posterior probability.
+
+We then feed this into `rbinom` which produces random generation of how
+many times you’d expect to see water in 9 tosses, and uses the sampled
+proportions from our posterior distribution.
+
+So we are propagating the uncertainty of the posterior into `rbinom`
+which is why the histogram below is more spread out (less certain) than
+the histogram above. The histogram above only shows the expected
+distribution if the true proportion of water is 0.
+
+``` r
+hist(w)
+```
+
+![](statistical-rethinking_files/figure-markdown_github/unnamed-chunk-81-1.png)
 
 ``` r
 ## R code 3.28
@@ -928,3 +1124,7 @@ sum(birth1) + sum(birth2)
 ```
 
     ## [1] 111
+
+``` r
+knitr::knit_exit()
+```

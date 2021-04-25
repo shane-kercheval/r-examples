@@ -93,25 +93,25 @@ options(dplyr.summarise.inform=F)
 
 ## Bayesian Updating
 
-dbinom gives the probability of getting `x` "successes" given a sample size of `size` and a certain probability.
-
-So `dbinom(x=5, size=10, prob=0.5)`
+`dbinom` gives the probability of observing x “successes” for a given sample size and probability of observing x.
 
 ```{r}
-dbinom(x=6, size=9, prob=0.5)
+dbinom(x=5, size=10, prob=0.5)
 ```
 
-so if we say the probability of a "successful event" is 50% (e.g. flipping a coin and landing on heads) and that we are going to flip the coin 10 times (i.e. sample size of 10) the probability we will get exactly 5 heads (i.e. successes) is 24.6%. 
-
-```{r}
-plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
-```
+So if we say the probability of a "successful event" is 50% (e.g. flipping a coin and landing on heads) and that we are going to flip the coin 10 times (i.e. sample size of 10) the probability we will get exactly 5 heads (i.e. successes) is 24.6%. 
 
 ```{r}
 sum(dbinom(x=0:10, size=10, prob=0.5))
 ```
 
-But we don't want the probability distrubtion of seeing heads (i.e. assuming a constance 50% prob of flipping heads), which is what the graph above shows. 
+```{r}
+plot(x=0:10, y=dbinom(x=0:10, size=10, prob=0.5), type='h')
+```
+
+This is the probability distribution of observing `x` heads for `10` flips. (All numbers sum to `1`.)
+
+But we don't want the probability distrubtion of seeing heads (i.e. assuming a constant 50% prob of flipping heads), which is what the graph above shows. 
 
 We want the **relative** probability/plausibility of seeing six heads out of 9 flips, assuming all sorts of probablities of flipping heads.
 
@@ -800,6 +800,10 @@ rm(posterior)
 rm(samples)
 ```
 
+```{r}
+knitr::knit_exit()
+```
+
 # Chapter 4
 
 ```{r}
@@ -1367,9 +1371,6 @@ mu <- sapply( weight.seq , mu.link )
 mu.mean <- apply( mu , 2 , mean )
 mu.CI <- apply( mu , 2 , PI , prob=0.89 )
 ```
-
-
-
 
 
 ```{r}
