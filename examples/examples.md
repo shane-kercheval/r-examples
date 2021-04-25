@@ -2,7 +2,7 @@
     -   [General](#general)
         -   [`clean_names()`](#clean_names)
         -   [`extract()`](#extract)
-        -   [regex_left_join](#regex_left_join)
+        -   [regex\_left\_join](#regex_left_join)
     -   [Aggregation](#aggregation)
         -   [`group_by() & which.max()`](#group_by-which.max)
         -   [`group_by()` & `top_n()`](#group_by-top_n)
@@ -16,7 +16,7 @@
     -   [Indirection](#indirection)
         -   [dplyr-like function](#dplyr-like-function)
         -   [.data](#data)
-        -   [eval_tidy](#eval_tidy)
+        -   [eval\_tidy](#eval_tidy)
         -   [other examples](#other-examples)
 -   [ggplot](#ggplot)
     -   [`reorder_within()`](#reorder_within)
@@ -24,9 +24,11 @@
     -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
     -   [spinogram](#spinogram)
     -   [Joy Plot](#joy-plot)
+    -   [Sankey](#sankey)
 -   [Advanced](#advanced)
     -   [Confidence Intervals w/
         t-tests](#confidence-intervals-w-t-tests)
+    -   [`optimize`](#optimize)
     -   [Survival Analysis](#survival-analysis)
     -   [Pairwise Correlation](#pairwise-correlation)
     -   [`ebbr` package: Empirical Bayes on the Binomial in
@@ -46,11 +48,13 @@
     -   [Logistic Regression](#logistic-regression)
     -   [Nested Regression](#nested-regression)
 
-# Data Cleaning
+Data Cleaning
+=============
 
 ------------------------------------------------------------------------
 
-## General
+General
+-------
 
 ### `clean_names()`
 
@@ -94,10 +98,10 @@ Turn `1` column into `x` columns based on regex
 
 ------------------------------------------------------------------------
 
-### regex_left_join
+### regex\_left\_join
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<https://youtu.be/KiqpX-gNIS4?t=1715>)
+(<a href="https://youtu.be/KiqpX-gNIS4?t=1715" class="uri">https://youtu.be/KiqpX-gNIS4?t=1715</a>)
 
 Join data.frames based on matching regex.
 
@@ -120,7 +124,7 @@ head(cetaceans)
 
 ``` r
 #install.packages('fuzzyjoin')
-library(fuzzyjoin)
+#library(fuzzyjoin)
 
 regexes <- tribble(
   ~ regex, ~ category,
@@ -138,7 +142,7 @@ cetaceans %>%
     # so create a row number to track unique rows
     mutate(unique_id = row_number()) %>%
     # join on regexes, based on regex
-    regex_left_join(regexes, c(originLocation = "regex")) %>%
+    fuzzyjoin::regex_left_join(regexes, c(originLocation = "regex")) %>%
     # only keep the unique/distinct rows from the data.frame
     # If there are multiple rows for a given combination of inputs, only the first row will be preserved.
     # If omitted, will use all variables.
@@ -176,7 +180,8 @@ cetaceans %>%
 
 ------------------------------------------------------------------------
 
-## Aggregation
+Aggregation
+-----------
 
 ### `group_by() & which.max()`
 
@@ -326,9 +331,11 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 ------------------------------------------------------------------------
 
-# dplyr/tidyverse
+dplyr/tidyverse
+===============
 
-## `join` `suffix`
+`join` `suffix`
+---------------
 
 ``` r
 band_members %>%
@@ -345,7 +352,8 @@ band_members %>%
 
 ------------------------------------------------------------------------
 
-## `semi-join`
+`semi-join`
+-----------
 
 ``` r
 band_members
@@ -394,7 +402,8 @@ band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band
 
 ------------------------------------------------------------------------
 
-## `separate_rows`
+`separate_rows`
+---------------
 
 ``` r
 df <- tibble(
@@ -428,12 +437,13 @@ separate_rows(df, y, z, convert = TRUE)
 
 ------------------------------------------------------------------------
 
-## Indirection
+Indirection
+-----------
 
 Create a dplyr-like function that uses the column names of the dataframe
 rather than strings or the object directly.
 
-<https://dplyr.tidyverse.org/articles/programming.html>
+<a href="https://dplyr.tidyverse.org/articles/programming.html" class="uri">https://dplyr.tidyverse.org/articles/programming.html</a>
 
 ### dplyr-like function
 
@@ -604,7 +614,7 @@ mtcars %>%
     ## 10     4  32.4     2
     ## # … with 22 more rows
 
-### eval_tidy
+### eval\_tidy
 
 ``` r
 with_data <- function(data, .x) {
@@ -617,7 +627,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7f932b2d0be8
+    ## env:  0x7fe44f4cb208
 
     ## [1] 61.875
 
@@ -719,16 +729,18 @@ mtcars %>%
     ## 5     4     0     1  21.5
     ## 6     4     1     1  21.4
 
-# ggplot
+ggplot
+======
 
 ### `reorder_within()`
 
 Reorder sub-categories within category e.g. for faceting.
 
 For example, the order of `setosa`, `versicolor`, `virginica` is allowed
-to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
+to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
 
-other examples: <https://juliasilge.com/blog/reorder-within/>
+other examples:
+<a href="https://juliasilge.com/blog/reorder-within/" class="uri">https://juliasilge.com/blog/reorder-within/</a>
 
 ``` r
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
@@ -789,7 +801,7 @@ d %>%
 ### spinogram
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<https://youtu.be/KiqpX-gNIS4?t=1244>)
+(<a href="https://youtu.be/KiqpX-gNIS4?t=1244" class="uri">https://youtu.be/KiqpX-gNIS4?t=1244</a>)
 
 We will use `geom_area` but need to fill in the missing data with
 `complete`
@@ -830,7 +842,7 @@ cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>
 ```
 
 What did `complete()` do? Lets look at the rows that were added
-(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
+(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
 
 `complete` filled in the missing combinations with a default value of
 `n` = `1`
@@ -872,10 +884,12 @@ cateaceans_acquisition_by_decade_complete %>%
 
 ![](examples_files/figure-markdown_github/spinogram_dolphins_v2-1.png)
 
+------------------------------------------------------------------------
+
 ### Joy Plot
 
 Example from David Robinson’s screencast
-(<https://youtu.be/lY0YLDZhT88?t=665>)
+(<a href="https://youtu.be/lY0YLDZhT88?t=665" class="uri">https://youtu.be/lY0YLDZhT88?t=665</a>)
 
 ``` r
 ikea %>% select(category, name, price_usd) %>% head()
@@ -892,12 +906,12 @@ ikea %>% select(category, name, price_usd) %>% head()
     ## 6 Bar furniture INGOLF                     93.2
 
 ``` r
-library(ggridges)
+#library(ggridges)
 ikea %>%
   mutate(category = glue::glue("{ category } ({ category_total })"),
          category = fct_reorder(category, price_usd)) %>%
   ggplot(aes(price_usd, category)) +
-  geom_density_ridges() +
+  ggridges::geom_density_ridges() +
   # geom_jitter(width = 0, height = .1, alpha = .25) +
   scale_x_log10(labels = dollar) +
   labs(x = "Price (USD)",
@@ -914,7 +928,7 @@ ikea %>%
   mutate(category = glue::glue("{ category } ({ category_total })"),
          category = fct_reorder(category, price_usd)) %>%
   ggplot(aes(price_usd, category, fill = other_colors)) +
-  geom_density_ridges(alpha = .5) +
+  ggridges::geom_density_ridges(alpha = .5) +
   # geom_jitter(width = 0, height = .1, alpha = .25) +
   scale_x_log10(labels = dollar) +
   labs(x = "Price (USD)",
@@ -927,14 +941,43 @@ ikea %>%
 ![](examples_files/figure-markdown_github/ggridges_2-1.png)
 
 > “If we were building a predictive model, we’d probably include both
-> category and other_colors”
+> category and other\_colors”
 
-# Advanced
+------------------------------------------------------------------------
 
-## Confidence Intervals w/ t-tests
+### Sankey
+
+<a href="https://github.com/davidsjoberg/ggsankey" class="uri">https://github.com/davidsjoberg/ggsankey</a>
+
+``` r
+# devtools::install_github("davidsjoberg/ggsankey")
+#library(ggsankey)
+
+example_dat <- mtcars %>%
+  ggsankey::make_long(cyl, vs, am, gear, carb) # function in ggsankey to format data correctly
+
+ggplot(example_dat,
+       aes(x = x,
+           next_x = next_x, 
+           node = node, 
+           next_node = next_node,
+           fill = factor(node))) +
+    ggsankey::geom_sankey(flow.alpha = .6) +
+    theme_minimal()
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-35-1.png)
+
+------------------------------------------------------------------------
+
+Advanced
+========
+
+Confidence Intervals w/ t-tests
+-------------------------------
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<https://youtu.be/em4FXPf4H-Y?t=1783>)
+(<a href="https://youtu.be/em4FXPf4H-Y?t=1783" class="uri">https://youtu.be/em4FXPf4H-Y?t=1783</a>)
 
 ``` r
 head(restaurant_inspections_by_dba, 10)
@@ -962,7 +1005,7 @@ Then we take each of those data.frames, and run a `t.test` of
 `ave_score`.
 
 ``` r
-library(broom)
+#library(broom)
 cuisine_conf_ints <- restaurant_inspections_by_dba %>%
     add_count(cuisine) %>%  # adds number of dbas for each cuisine
     filter(n > 100) %>%  # only keep cuisines that have >100 invidual DBAs
@@ -970,7 +1013,7 @@ cuisine_conf_ints <- restaurant_inspections_by_dba %>%
     mutate(num_dbas = map_int(data, ~ nrow(.))) %>%
     mutate(mean_avg_score = map_dbl(data, ~ mean(.$avg_score))) %>%
     mutate(model = map(data, ~ t.test(.$avg_score))) %>%
-    mutate(model = map(model, ~ tidy(.))) %>%
+    mutate(model = map(model, ~ broom::tidy(.))) %>%
     unnest(model)
 # note: the p-value is meaningless, the null hypothesis is that the mean is equal to 0
 # we are just using this to get us confidence intervals
@@ -980,18 +1023,18 @@ head(cuisine_conf_ints %>% mutate_if(is.numeric, round_2), 10)
 ```
 
     ## # A tibble: 10 x 12
-    ##    cuisine data  num_dbas mean_avg_score estimate statistic p.value parameter
-    ##    <chr>   <lis>    <dbl>          <dbl>    <dbl>     <dbl>   <dbl>     <dbl>
-    ##  1 Café/C… <tib…     1004          12.1     12.1       39.2       0      1003
-    ##  2 Chicken <tib…      182          16.5     16.5       16.0       0       181
-    ##  3 Americ… <tib…     4699          13.5     13.5       90.5       0      4698
-    ##  4 Sandwi… <tib…      112          11.4     11.4       14.8       0       111
-    ##  5 Mexican <tib…      721          16.1     16.1       37.6       0       720
-    ##  6 Caribb… <tib…      560          18.5     18.5       29.5       0       559
-    ##  7 Pizza   <tib…      786          14.3     14.3       38.7       0       785
-    ##  8 Ice Cr… <tib…      186           9.95     9.95      17.0       0       185
-    ##  9 Bakery  <tib…      585          13.4     13.4       31.0       0       584
-    ## 10 Juice,… <tib…      275          12.1     12.1       22.2       0       274
+    ##    cuisine   data   num_dbas mean_avg_score estimate statistic p.value parameter
+    ##    <chr>     <list>    <dbl>          <dbl>    <dbl>     <dbl>   <dbl>     <dbl>
+    ##  1 Café/Cof… <tibb…     1004          12.1     12.1       39.2       0      1003
+    ##  2 Chicken   <tibb…      182          16.5     16.5       16.0       0       181
+    ##  3 American  <tibb…     4699          13.5     13.5       90.5       0      4698
+    ##  4 Sandwich… <tibb…      112          11.4     11.4       14.8       0       111
+    ##  5 Mexican   <tibb…      721          16.1     16.1       37.6       0       720
+    ##  6 Caribbean <tibb…      560          18.5     18.5       29.5       0       559
+    ##  7 Pizza     <tibb…      786          14.3     14.3       38.7       0       785
+    ##  8 Ice Crea… <tibb…      186           9.95     9.95      17.0       0       185
+    ##  9 Bakery    <tibb…      585          13.4     13.4       31.0       0       584
+    ## 10 Juice, S… <tibb…      275          12.1     12.1       22.2       0       274
     ## # … with 4 more variables: conf.low <dbl>, conf.high <dbl>, method <chr>,
     ## #   alternative <chr>
 
@@ -1011,16 +1054,93 @@ cuisine_conf_ints %>%
 
 ![](examples_files/figure-markdown_github/t_test_confidence_intervals-1.png)
 
-## Survival Analysis
+------------------------------------------------------------------------
+
+`optimize`
+----------
+
+The function optimize searches the interval from lower to upper for a
+minimum or maximum of the function f with respect to its first argument.
+
+Example: flipping a coin. `dbinom` gives the probability of observing x
+“successes” for a given sample size and assumed probability of observing
+x.
+
+The probability of observing `7` heads in `10` flips if the true
+probability of flipping heads is `50%`, is `11.7%`. dbinom over all
+values of heads for a given probability of heads (i.e. 0.5) is a
+probability distribution.
+
+``` r
+dbinom(7, size=10, prob=0.5)
+```
+
+    ## [1] 0.1171875
+
+``` r
+sum(dbinom(0:10, size=10, prob=0.5))
+```
+
+    ## [1] 1
+
+However, let’s say we want the relative **relative**
+probability/plausibility of observing `7` heads over `10` flips if we
+didn’t know the true probability was `0.5`
+
+Now we would hold `7` fixed and search `prob` across a grid of possible
+values.
+
+``` r
+sample_size <- 10
+num_heads <- 7
+probability_grid <- seq(0, 1, 0.001)
+likelihood <- dbinom(num_heads, size=sample_size, prob=probability_grid)
+```
+
+But we also want to find the most plausible likelihood.
+
+``` r
+most_plausible <- optimize(function (.x) -dbinom(num_heads,
+                                                 size=sample_size,
+                                                 prob=.x),
+                           c(0, 1),
+                           tol = 0.0001)
+most_plausible
+```
+
+    ## $minimum
+    ## [1] 0.6999843
+    ## 
+    ## $objective
+    ## [1] -0.2668279
+
+This is **not** a probability distribution, it is a distribution of
+relative plausibilities.
+
+``` r
+plot(probability_grid, likelihood)
+abline(v = most_plausible$minimum, col='red', lwd=3)
+```
+
+![](examples_files/figure-markdown_github/unnamed-chunk-41-1.png)
+
+See
+<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests</a>
+for a more indepth example.
+
+------------------------------------------------------------------------
+
+Survival Analysis
+-----------------
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<https://youtu.be/KiqpX-gNIS4?t=2424>)
+(<a href="https://youtu.be/KiqpX-gNIS4?t=2424" class="uri">https://youtu.be/KiqpX-gNIS4?t=2424</a>)
 
 Context is dolphins. Are some dolphins living longer than they used to?
 This is hard because some dolphins in are dataset are still alive.
 
 ``` r
-library(survival)
+#library(survival)
 cetaceans <- cetaceans_raw
 dolphin_survival <- cetaceans %>%
   filter(status %in% c("Alive", "Died")) %>%
@@ -1051,11 +1171,11 @@ So the followin gives the median age of death, with confidence
 intervals.
 
 ``` r
-model <- survival::survfit(Surv(age, status) ~ 1, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ 1, dolphin_survival)
 model
 ```
 
-    ## Call: survfit(formula = Surv(age, status) ~ 1, data = dolphin_survival)
+    ## Call: survfit(formula = survival::Surv(age, status) ~ 1, data = dolphin_survival)
     ## 
     ##       n  events  median 0.95LCL 0.95UCL 
     ##    1388     932      17      16      18
@@ -1076,11 +1196,11 @@ The followin gives the median age of death, by sex, with confidence
 intervals.
 
 ``` r
-model <- survival::survfit(Surv(age, status) ~ sex, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ sex, dolphin_survival)
 model
 ```
 
-    ## Call: survfit(formula = Surv(age, status) ~ sex, data = dolphin_survival)
+    ## Call: survfit(formula = survival::Surv(age, status) ~ sex, data = dolphin_survival)
     ## 
     ##         n events median 0.95LCL 0.95UCL
     ## sex=F 743    503     18      16      20
@@ -1104,8 +1224,8 @@ actual different and not due to chance?)
 We can use a `Cox proportional hazards regression model`
 
 ``` r
-survival::coxph(Surv(age, status) ~ sex, dolphin_survival) %>%
-  tidy()
+survival::coxph(survival::Surv(age, status) ~ sex, dolphin_survival) %>%
+  broom::tidy()
 ```
 
     ## # A tibble: 1 x 5
@@ -1119,7 +1239,7 @@ so we can say that there is an actual difference.
 We can do the same thing for acquisition.
 
 ``` r
-model <- survival::survfit(Surv(age, status) ~ acquisition, dolphin_survival)
+model <- survival::survfit(survival::Surv(age, status) ~ acquisition, dolphin_survival)
 broom::tidy(model) %>%
   filter(strata != "acquisition=Unknown") %>%
   ggplot(aes(time, estimate, color = strata)) +
@@ -1137,8 +1257,8 @@ category is being compared to that. `Capture` is not statistically
 significant, but `Rescue` and `Unknown` are.
 
 ``` r
-survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
-  tidy()
+survival::coxph(survival::Surv(age, status) ~ acquisition, dolphin_survival) %>%
+  broom::tidy()
 ```
 
     ## # A tibble: 3 x 5
@@ -1148,20 +1268,21 @@ survival::coxph(Surv(age, status) ~ acquisition, dolphin_survival) %>%
     ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211
     ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474
 
-## Pairwise Correlation
+Pairwise Correlation
+--------------------
 
 In this case, we are finding correlations of `lifeExp` among `countries`
 across/by `year`. So, which countries tend to have similar
 life-expectencies over time (i.e. by year)?
 
 ``` r
-library(gapminder)
-library(widyr)
+#library(gapminder)
+#library(widyr)
 
-life_expectency_pairwise_cor <- gapminder %>% 
+life_expectency_pairwise_cor <- gapminder::gapminder %>% 
          filter(continent == 'Americas') %>%  # filter for one continent just so we can fit into a single graph.
          # add_count(country) %>%
-         pairwise_cor(country, year, lifeExp, sort = TRUE)
+         widyr::pairwise_cor(country, year, lifeExp, sort = TRUE)
 
 head(life_expectency_pairwise_cor)
 ```
@@ -1227,12 +1348,13 @@ life_expectency_pairwise_cor[1:5, 1:5]
     ## 4 Canada        0.997   0.994  0.998 NA    
     ## 5 Chile         0.991   0.990  0.992  0.994
 
-## `ebbr` package: Empirical Bayes on the Binomial in R
+`ebbr` package: Empirical Bayes on the Binomial in R
+----------------------------------------------------
 
 > Methods for empirical Bayes shrinkage and estimation on data with many
 > observations of success/total counts.
 
-<https://github.com/dgrtwo/ebbr>
+<a href="https://github.com/dgrtwo/ebbr" class="uri">https://github.com/dgrtwo/ebbr</a>
 
 Examples from
 `Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
@@ -1267,10 +1389,11 @@ career %>%
 ### Prior Distribution
 
 ``` r
-library(ebbr)
+#devtools::install_github("dgrtwo/ebbr")
+#library(ebbr)
 prior <- career %>%
   filter(at_bats >= 500) %>%
-  ebb_fit_prior(hits, at_bats)
+  ebbr::ebb_fit_prior(hits, at_bats)
 
 prior
 ```
@@ -1280,15 +1403,15 @@ prior
     ## # A tibble: 1 x 2
     ##   alpha  beta
     ##   <dbl> <dbl>
-    ## 1  97.8  278.
+    ## 1  97.9  278.
 
-I’m not sure how `tidy(prior)$mean` is calculated.
+I’m not sure how `broom::tidy(prior)$mean` is calculated.
 
 ``` r
-as.numeric(tidy(prior)$mean)
+as.numeric(broom::tidy(prior)$mean)
 ```
 
-    ## [1] 0.2603578
+    ## [1] 0.2602605
 
 ``` r
 career %>%
@@ -1321,7 +1444,7 @@ career %>%
     ## # A tibble: 1 x 1
     ##   `median(batting_average)`
     ##                       <dbl>
-    ## 1                     0.259
+    ## 1                     0.258
 
 ``` r
 beta_distribution <- data.frame(x=seq(0.17,0.35,0.001)) %>%
@@ -1357,18 +1480,18 @@ career %>%
 > from Baseball Statistics . Kindle Edition.)
 
 ``` r
-head(augment(prior, data = career))
+head(ebbr::augment(prior, data = career))
 ```
 
     ## # A tibble: 6 x 11
-    ##   playerID name   hits at_bats batting_average .alpha1 .beta1 .fitted   .raw
-    ##   <chr>    <chr> <int>   <int>           <dbl>   <dbl>  <dbl>   <dbl>  <dbl>
-    ## 1 aaronha… Hank…  3771   12364          0.305   3869.   8871.   0.304 0.305 
-    ## 2 aaronto… Tomm…   216     944          0.229    314.   1006.   0.238 0.229 
-    ## 3 abadan01 Andy…     2      21          0.0952    99.8   297.   0.252 0.0952
-    ## 4 abadijo… John…    11      49          0.224    109.    316.   0.256 0.224 
-    ## 5 abbated… Ed A…   772    3044          0.254    870.   2550.   0.254 0.254 
-    ## 6 abbeych… Char…   493    1756          0.281    591.   1541.   0.277 0.281 
+    ##   playerID  name      hits at_bats batting_average .alpha1 .beta1 .fitted   .raw
+    ##   <chr>     <chr>    <int>   <int>           <dbl>   <dbl>  <dbl>   <dbl>  <dbl>
+    ## 1 aaronha01 Hank Aa…  3771   12364          0.305   3869.   8871.   0.304 0.305 
+    ## 2 aaronto01 Tommie …   216     944          0.229    314.   1006.   0.238 0.229 
+    ## 3 abadan01  Andy Ab…     2      21          0.0952    99.9   297.   0.252 0.0952
+    ## 4 abadijo01 John Ab…    11      49          0.224    109.    316.   0.256 0.224 
+    ## 5 abbated01 Ed Abba…   772    3044          0.254    870.   2550.   0.254 0.254 
+    ## 6 abbeych01 Charlie…   493    1756          0.281    591.   1541.   0.277 0.281 
     ## # … with 2 more variables: .low <dbl>, .high <dbl>
 
 ### `add_ebb_estimate`
@@ -1381,12 +1504,12 @@ head(augment(prior, data = career))
 > We often want to run these two steps in sequence: estimating a model,
 > then using it as a prior for each observation. The ebbr package
 > provides a shortcut, combining them into one step with
-> add_ebb_estimate(). (Robinson, David. Introduction to Empirical Bayes:
-> Examples from Baseball Statistics . Kindle Edition.)
+> add\_ebb\_estimate(). (Robinson, David. Introduction to Empirical
+> Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
 ``` r
 eb_career <- career %>%
-  add_ebb_estimate(hits, at_bats,
+  ebbr::add_ebb_estimate(hits, at_bats,
                    prior_subset = at_bats >= 500)
 ```
 
@@ -1400,7 +1523,7 @@ all(eb_career$batting_average == eb_career$.raw)
 > in Chapter 3. I like how it captures what empirical Bayes estimation
 > is doing: moving all batting averages towards the prior mean (the
 > dashed red line), but moving them less if there is a lot of
-> information about that player (high at_bats). (Robinson, David.
+> information about that player (high at\_bats). (Robinson, David.
 > Introduction to Empirical Bayes: Examples from Baseball Statistics .
 > Kindle Edition.)
 
@@ -1409,7 +1532,7 @@ estimated batting average are identical.
 
 The dashed red line represents the “prior mean” which is similar, but
 doesn’t seem to be exactly, the average of the batting averages (of
-people with \>= 500 at-bats).
+people with &gt;= 500 at-bats).
 
 So for example, look at the dots/people to the left of the graph. These
 are people that had very few at-bats (dark color), had a very low
@@ -1426,7 +1549,7 @@ eb_career %>%
     geom_point() +
     geom_abline(color = "red") +
     scale_color_continuous(trans = "log", breaks = c(1, 10, 100, 1000)) +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    geom_hline(yintercept = broom::tidy(prior)$mean, color = "red", lty = 2) +
     coord_cartesian(xlim = c(0, .6), ylim=c(0, 0.6)) +
     scale_x_continuous(breaks = pretty_breaks()) +
     scale_y_continuous(breaks = pretty_breaks()) +
@@ -1444,7 +1567,7 @@ eb_career %>%
     ggplot(aes(at_bats, estimate)) +
     geom_point() +
     geom_smooth(method='lm') +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
+    geom_hline(yintercept = broom::tidy(prior)$mean, color = "red", lty = 2) +
     facet_wrap(~ type) +
     scale_x_log10()
 ```
@@ -1486,7 +1609,7 @@ eb_career %>%
 This means that, in the previous estimates and graphs, it’s not
 appropriate to move people who have very few bats (and for example very
 low batting averages), all the way up to the prior mean batting average
-(`0.2603578`). We should assume (had they keep getting more and more
+(`0.2602605`). We should assume (had they keep getting more and more
 at-bats) that they would have a lower batting average than average.
 
 ``` r
@@ -1506,67 +1629,24 @@ should be pushing people towards who have very few at bats, rather than
 the dotted red line above.
 
 > We solved this by fitting a prior that depended on AB, through the
-> process of beta-binomial regression. The add_ebb_estimate() function
+> process of beta-binomial regression. The add\_ebb\_estimate() function
 > from ebbr offers this option, by setting method = “gamlss” and
-> providing a formula to mu_predictors.3 (Robinson, David. Introduction
+> providing a formula to mu\_predictors.3 (Robinson, David. Introduction
 > to Empirical Bayes: Examples from Baseball Statistics . Kindle
 > Edition.)
 
-Obviously, now we do not want to filter our prior based on \>=500
+Obviously, now we do not want to filter our prior based on &gt;=500
 at-bats because we are using at-bats directly in our estimation.
 
-``` r
-eb_career_ab <- career %>%
-  add_ebb_estimate(hits, at_bats, method = "gamlss",
-                    mu_predictors = ~ log10(at_bats))
+Code is Failing… Fix TBD
 
-head(eb_career_ab)
-```
-
-    ## # A tibble: 6 x 15
-    ##   playerID name   hits at_bats batting_average   .mu  .sigma .alpha0 .beta0
-    ##   <chr>    <chr> <int>   <int>           <dbl> <dbl>   <dbl>   <dbl>  <dbl>
-    ## 1 aaronha… Hank…  3771   12364          0.305  0.288 0.00179    161.   397.
-    ## 2 aaronto… Tomm…   216     944          0.229  0.246 0.00179    138.   420.
-    ## 3 abadan01 Andy…     2      21          0.0952 0.193 0.00179    108.   450.
-    ## 4 abadijo… John…    11      49          0.224  0.204 0.00179    114.   444.
-    ## 5 abbated… Ed A…   772    3044          0.254  0.265 0.00179    148.   410.
-    ## 6 abbeych… Char…   493    1756          0.281  0.256 0.00179    143.   415.
-    ## # … with 6 more variables: .alpha1 <dbl>, .beta1 <dbl>, .fitted <dbl>,
-    ## #   .raw <dbl>, .low <dbl>, .high <dbl>
-
-``` r
-eb_career_ab %>%
-    filter(at_bats > 10) %>%
-    rename(Raw = .raw, Shrunken = .fitted) %>%
-    gather(type, estimate, Raw, Shrunken) %>%
-    ggplot(aes(at_bats, estimate)) +
-    geom_point() +
-    geom_smooth(method='lm') +
-    geom_hline(yintercept = tidy(prior)$mean, color = "red", lty = 2) +
-    facet_wrap(~ type) +
-    scale_x_log10()
-```
-
-![](examples_files/figure-markdown_github/ebb_at_bats_raw_vs_shrunken-1.png)
+    eb_career_ab <- career %>%
+        ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss",
+                               mu_predictors = ~ log10(at_bats))
+    head(eb_career_ab)
 
 Now, we are shrinking the players with fewer at-bats to a lower batting
 average.
-
-``` r
-eb_career_ab %>%
-    head(10) %>%
-    mutate(name = reorder(name, .fitted)) %>%
-    ggplot(aes(x=.fitted, y=name)) +
-    geom_point() +
-    geom_errorbarh(aes(xmin = .low, xmax = .high)) +
-    geom_point(aes(x=.raw), color='red') +
-    geom_text(aes(x=.raw, label=glue::glue("({ hits } / { at_bats })")), vjust=-0.7, size=3) +
-    labs(x = "Estimated batting average (w/ 95% confidence interval)",
-         y = "Player")
-```
-
-![](examples_files/figure-markdown_github/ebb_estimated_batting_average_at_bats-1.png)
 
 Now, Andy Abad and Dan Abbot have much lower estimated batting-averages
 compared to the graph above. In the graph above Dan Abbot was estimated
@@ -1577,7 +1657,7 @@ batting-avearge.
 An important note is that this will not work for rookies, it is only
 meant to assess the players’ entire career.
 
-<http://varianceexplained.org/r/beta_binomial_baseball/>
+<a href="http://varianceexplained.org/r/beta_binomial_baseball/" class="uri">http://varianceexplained.org/r/beta_binomial_baseball/</a>
 
 Question in comments
 
@@ -1589,74 +1669,18 @@ Question in comments
 Answer by Dave
 
 > Your question raises a very important issue- I bring it up in the
-> following post in this series (<http://varianceexplained.or>…. In
-> short you’re 100% right that this doesn’t work for predicting future
-> performance of rookies without more adjustments. “One important aspect
-> of this prediction is that it won’t be useful when we’ve just hired a
-> “rookie” player, and we’re wondering what his batting average will be.
-> This observed variable ABAB is based on a player’s entire career, such
-> that a low number is evidence that a player didn’t have much of a
-> chance to bat. (If we wanted to make a prediction, we’d have to
-> consider the distribution of possible ABAB’s the player could end up
-> with and integrate over that, which is beyond the scope of this
+> following post in this series
+> (<a href="http://varianceexplained.or" class="uri">http://varianceexplained.or</a>….
+> In short you’re 100% right that this doesn’t work for predicting
+> future performance of rookies without more adjustments. “One important
+> aspect of this prediction is that it won’t be useful when we’ve just
+> hired a “rookie” player, and we’re wondering what his batting average
+> will be. This observed variable ABAB is based on a player’s entire
+> career, such that a low number is evidence that a player didn’t have
+> much of a chance to bat. (If we wanted to make a prediction, we’d have
+> to consider the distribution of possible ABAB’s the player could end
+> up with and integrate over that, which is beyond the scope of this
 > post)."
-
-``` r
-library(splines)
-eb_career_prior <- career_full %>%
-  ebb_fit_prior(hits, at_bats, method = "gamlss",
-                mu_predictors = ~ 0 + ns(year, df = 5) * bats + log(at_bats))
-
-eb_career_prior
-```
-
-    ## Empirical Bayes binomial fit with method gamlss 
-    ## Parameters:
-    ## # A tibble: 20 x 6
-    ##    parameter term                    estimate std.error statistic   p.value
-    ##    <chr>     <chr>                      <dbl>     <dbl>     <dbl>     <dbl>
-    ##  1 mu        ns(year, df = 5)1        0.0260    0.0502     0.517  6.05e-  1
-    ##  2 mu        ns(year, df = 5)2       -0.132     0.0642    -2.05   4.04e-  2
-    ##  3 mu        ns(year, df = 5)3        0.00867   0.0371     0.233  8.16e-  1
-    ##  4 mu        ns(year, df = 5)4       -0.0303    0.125     -0.242  8.09e-  1
-    ##  5 mu        ns(year, df = 5)5       -0.0300    0.0205    -1.46   1.43e-  1
-    ##  6 mu        batsB                   -1.69      0.0553   -30.4    7.77e-195
-    ##  7 mu        batsL                   -1.63      0.0212   -76.8    0.       
-    ##  8 mu        batsR                   -1.73      0.0150  -116.     0.       
-    ##  9 mu        log(at_bats)             0.0840    0.00117   72.0    0.       
-    ## 10 mu        ns(year, df = 5)1:batsL  0.0410    0.0537     0.765  4.45e-  1
-    ## 11 mu        ns(year, df = 5)2:batsL -0.0375    0.0689    -0.544  5.87e-  1
-    ## 12 mu        ns(year, df = 5)3:batsL -0.0258    0.0406    -0.636  5.25e-  1
-    ## 13 mu        ns(year, df = 5)4:batsL -0.0115    0.133     -0.0866 9.31e-  1
-    ## 14 mu        ns(year, df = 5)5:batsL -0.0676    0.0233    -2.90   3.71e-  3
-    ## 15 mu        ns(year, df = 5)1:batsR  0.0997    0.0518     1.93   5.41e-  2
-    ## 16 mu        ns(year, df = 5)2:batsR  0.0328    0.0663     0.495  6.21e-  1
-    ## 17 mu        ns(year, df = 5)3:batsR  0.0560    0.0388     1.44   1.49e-  1
-    ## 18 mu        ns(year, df = 5)4:batsR  0.0819    0.128      0.638  5.23e-  1
-    ## 19 mu        ns(year, df = 5)5:batsR  0.0474    0.0221     2.15   3.19e-  2
-    ## 20 mu        (Intercept)             -6.55      0.0229  -286.     0.
-
-``` r
-# fake data ranging from 1885 to 2013
-fake_data <- crossing(hits = 300,
-                      at_bats = 1000,
-                      year = seq(1885, 2013),
-                      bats = c("L", "R"))
-
-# find the mean of the prior, as well as the 95% quantiles,
-# for each of these combinations. This does require a bit of
-# manual manipulation of alpha0 and beta0:
-augment(eb_career_prior, newdata = fake_data) %>%
-    mutate(prior = .alpha0 / (.alpha0 + .beta0),
-         prior.low = qbeta(.025, .alpha0, .beta0),
-         prior.high = qbeta(.975, .alpha0, .beta0)) %>%
-    ggplot(aes(year, prior, color = bats)) +
-    geom_line() +
-    geom_ribbon(aes(ymin = prior.low, ymax = prior.high), alpha = .1, lty = 2) +
-    ylab("Prior distribution (mean + 95% quantiles)")
-```
-
-![](examples_files/figure-markdown_github/ebb_gamlss_splines-1.png)
 
 ### Hypothesis Testing
 
@@ -1666,36 +1690,6 @@ augment(eb_career_prior, newdata = fake_data) %>%
 > (Robinson, David. Introduction to Empirical Bayes: Examples from
 > Baseball Statistics . Kindle Edition.)
 
-``` r
-test_300 <- career %>%
-    add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
-    add_ebb_prop_test(.300, sort = TRUE)
-```
-
-    ## Warning: gamlss tidiers are deprecated and will be removed in an upcoming
-    ## release of broom. These tidiers are now maintained in the broom.mixed package.
-
-``` r
-round_4 <- function(.x) {
-    round(.x, 4)
-}
-
-test_300 %>%
-    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
-    mutate_if(is.numeric, round_4) %>%
-    head()
-```
-
-    ## # A tibble: 6 x 8
-    ##   name            hits at_bats .fitted  .low .high  .pep .qvalue
-    ##   <chr>          <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>   <dbl>
-    ## 1 Ty Cobb         4189   11436   0.363 0.354 0.371     0       0
-    ## 2 Rogers Hornsby  2930    8173   0.354 0.344 0.364     0       0
-    ## 3 Tris Speaker    3514   10195   0.342 0.333 0.351     0       0
-    ## 4 Ed Delahanty    2597    7510   0.341 0.331 0.352     0       0
-    ## 5 Ted Williams    2654    7706   0.340 0.330 0.350     0       0
-    ## 6 Willie Keeler   2932    8591   0.338 0.328 0.347     0       0
-
 > `.pep`: the posterior error probability- the probability that this
 > player’s true batting average is less than .3. `.qvalue`: the q-value,
 > which corrects for multiple testing by controlling for false discovery
@@ -1703,18 +1697,6 @@ test_300 %>%
 > only 5% of the ones included would be false discoveries. (Robinson,
 > David. Introduction to Empirical Bayes: Examples from Baseball
 > Statistics . Kindle Edition.)
-
-``` r
-sum(test_300$.qvalue < .05)
-```
-
-    ## [1] 112
-
-``` r
-sum(test_300$.qvalue < .01)
-```
-
-    ## [1] 77
 
 #### Player-Player AB-test
 
@@ -1726,42 +1708,13 @@ sum(test_300$.qvalue < .01)
 > David. Introduction to Empirical Bayes: Examples from Baseball
 > Statistics . Kindle Edition.)
 
-``` r
-piazza <- eb_career_ab %>%
-  filter(name == "Mike Piazza")
-
-piazza_params <- c(piazza$.alpha1, piazza$.beta1)
-piazza_params ## [1] 2281 5183 This vector of two parameters, an alpha and a beta, can be passed into add_ebb_prop_test just like we passed in a threshold.4 
-```
-
-    ## [1] 2282.291 5186.696
-
-``` r
-compare_piazza <- eb_career_ab %>%
-  add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
-
-compare_piazza %>%
-    select(name, hits, at_bats, .fitted, .low, .high, .pep, .qvalue) %>%
-    mutate_if(is.numeric, round_4) %>%
-    head()
-```
-
-    ## # A tibble: 6 x 8
-    ##   name                  hits at_bats .fitted  .low .high  .pep .qvalue
-    ##   <chr>                <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>   <dbl>
-    ## 1 Ty Cobb               4189   11436   0.363 0.354 0.371     0       0
-    ## 2 Rogers Hornsby        2930    8173   0.354 0.344 0.364     0       0
-    ## 3 Tris Speaker          3514   10195   0.342 0.333 0.351     0       0
-    ## 4 Shoeless Joe Jackson  1772    4981   0.347 0.335 0.36      0       0
-    ## 5 Ed Delahanty          2597    7510   0.341 0.331 0.352     0       0
-    ## 6 Ted Williams          2654    7706   0.340 0.330 0.350     0       0
-
 > Just like the one-sample test, the function has added .pep and .qvalue
 > columns. From this we can see a few players who we’re extremely
 > confident are better than Piazza. (Robinson, David. Introduction to
 > Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-## Tidy Text
+Tidy Text
+---------
 
 ``` r
 head(mr_boston)
@@ -1777,18 +1730,19 @@ head(mr_boston)
     ## 5 Fort Lauder… Cocktail Class…      2                 1 Light Rum        1 1/2 …
     ## 6 Fort Lauder… Cocktail Class…      2                 2 Sweet Vermouth   1/2 oz
 
-## Pairwise Correlations (again)
+Pairwise Correlations (again)
+-----------------------------
 
 Example from David Robinson screencase
-(<https://youtu.be/EC0SVkFB2OU?t=1234>)
+(<a href="https://youtu.be/EC0SVkFB2OU?t=1234" class="uri">https://youtu.be/EC0SVkFB2OU?t=1234</a>)
 
 ``` r
-library(widyr)
-library(tidytext)
+#library(widyr)
+#library(tidytext)
 ingredient_pairs <- mr_boston %>%
   add_count(ingredient) %>%
   filter(n >= 10) %>%
-  pairwise_cor(ingredient, name, sort = TRUE)
+  widyr::pairwise_cor(ingredient, name, sort = TRUE)
 
 head(ingredient_pairs)
 ```
@@ -1810,17 +1764,18 @@ ingredient_pairs %>%
                       "Vodka")) %>%
   group_by(item1) %>%
   top_n(10, correlation) %>%
-  mutate(item2 = reorder_within(item2, correlation, item1)) %>%
+  mutate(item2 = tidytext::reorder_within(item2, correlation, item1)) %>%
   ggplot(aes(correlation, item2)) +
   geom_col() +
   facet_wrap(~ item1, scales = "free_y") +
-  scale_y_reordered() +
+  tidytext::scale_y_reordered() +
   labs(title = "What ingredients are most correlated with particular ingredients?")
 ```
 
 ![](examples_files/figure-markdown_github/pairwise_correlations_cocktails-1.png)
 
-## Network Graph
+Network Graph
+-------------
 
 ``` r
 mr_boston_parsed <- mr_boston %>%
@@ -1862,56 +1817,22 @@ head(ingredients_summarized)
 `avg_position` is the step number that the ingredient, on average, shows
 up when mixing the drink.
 
-<https://youtu.be/EC0SVkFB2OU?t=1269>
+<a href="https://youtu.be/EC0SVkFB2OU?t=1269" class="uri">https://youtu.be/EC0SVkFB2OU?t=1269</a>
 
 ``` r
-library(ggraph)
-library(igraph)
-```
-
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     as_data_frame, groups, union
-
-    ## The following objects are masked from 'package:purrr':
-    ## 
-    ##     compose, simplify
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     crossing
-
-    ## The following object is masked from 'package:tibble':
-    ## 
-    ##     as_data_frame
-
-    ## The following objects are masked from 'package:lubridate':
-    ## 
-    ##     %--%, union
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-``` r
+#library(ggraph)
+#library(igraph)
 top_cors <- ingredient_pairs %>% head(150)  # most correlated cocktail ingrediants
 ingredient_info <- ingredients_summarized %>% filter(ingredient %in% top_cors$item1)
 
 set.seed(2)
 top_cors %>%
-  graph_from_data_frame(vertices = ingredient_info) %>%
-  ggraph(layout = "fr") +
-  geom_edge_link() +
-  geom_node_text(aes(label = name), repel = TRUE) +
-  geom_node_point(aes(size = 1.1 * n)) +
-  geom_node_point(aes(size = n, color = avg_position)) +
+  igraph::graph_from_data_frame(vertices = ingredient_info) %>%
+  ggraph::ggraph(layout = "fr") +
+  ggraph::geom_edge_link() +
+  ggraph::geom_node_text(aes(label = name), repel = TRUE) +
+  ggraph::geom_node_point(aes(size = 1.1 * n)) +
+  ggraph::geom_node_point(aes(size = n, color = avg_position)) +
   scale_color_gradient2(low = "red", high = "blue", midpoint = .5,
                         labels = scales::percent_format()) +
   labs(size = "# of recipes",
@@ -1922,9 +1843,10 @@ top_cors %>%
 
 ![](examples_files/figure-markdown_github/network_graph_cocktails-1.png)
 
-## Singular Value Decomposition (PCA)
+Singular Value Decomposition (PCA)
+----------------------------------
 
-<https://youtu.be/EC0SVkFB2OU?t=3009>
+<a href="https://youtu.be/EC0SVkFB2OU?t=3009" class="uri">https://youtu.be/EC0SVkFB2OU?t=3009</a>
 
 What dimensions drive a lot of the variation among cocktails?
 
@@ -1941,7 +1863,7 @@ ingredient_svd <- mr_boston %>%
     distinct(ingredient, name) %>%
     mutate(value = 1) %>%
     # we're interested in components by intgrediate across name
-    widely_svd(ingredient, name, value)
+    widyr::widely_svd(ingredient, name, value)
 
 ingredient_svd %>%
     filter(dimension > 1, 
@@ -1949,10 +1871,10 @@ ingredient_svd %>%
     mutate(dimension = paste0("PC", dimension)) %>%
     group_by(dimension) %>%
     top_n(16, abs(value)) %>%
-    mutate(ingredient = reorder_within(ingredient, value, dimension)) %>%
+    mutate(ingredient = tidytext::reorder_within(ingredient, value, dimension)) %>%
     ggplot(aes(value, ingredient, fill = value > 0)) +
     geom_col(show.legend = FALSE) +
-    scale_y_reordered() +
+    tidytext::scale_y_reordered() +
     facet_wrap(~ dimension, scales = "free_y") +
     labs(x = "Principal component value",
          y = "Ingredient",
@@ -1965,17 +1887,17 @@ ingredient_svd %>%
 recipe_svd <- mr_boston %>%
   distinct(name, ingredient) %>%
   mutate(value = 1) %>%
-  widely_svd(name, ingredient, value)
+  widyr::widely_svd(name, ingredient, value)
 
 recipe_svd %>%
   filter(dimension > 1, dimension <= 5) %>%
   mutate(dimension = paste0("PC", dimension)) %>%
   group_by(dimension) %>%
   top_n(16, abs(value)) %>%
-  mutate(recipe = reorder_within(name, value, dimension)) %>%
+  mutate(recipe = tidytext::reorder_within(name, value, dimension)) %>%
   ggplot(aes(value, recipe, fill = value > 0)) +
   geom_col(show.legend = FALSE) +
-  scale_y_reordered() +
+  tidytext::scale_y_reordered() +
   facet_wrap(~ dimension, scales = "free_y") +
   labs(x = "Principal component value",
        y = "Ingredient",
@@ -1984,7 +1906,8 @@ recipe_svd %>%
 
 ![](examples_files/figure-markdown_github/singular_value_decomposition_recipes-1.png)
 
-## Logistic Regression
+Logistic Regression
+-------------------
 
 ``` r
 head(beer_awards)
@@ -2037,7 +1960,7 @@ How has the probability of successes vs failtures (i.e. awards vs not
 awards) changed over time?
 
 See
-<https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md>
+<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md</a>
 
 > Logistic Regression is a linear model for log odds. The odds of an
 > event are the probability that it happens over the probability that it
@@ -2045,7 +1968,7 @@ See
 
 > `log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
 
-`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
+`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
 
 ``` r
 wi_model <- awards_by_year_state %>%
@@ -2085,7 +2008,8 @@ wi_model %>% summary()
 What do the coefficients mean?
 
 > This is a log-odds ratio. So this is how much the log-odds ratio
-> changes each year. (<https://youtu.be/BV_afpCDQ70?t=3001>)
+> changes each year.
+> (<a href="https://youtu.be/BV_afpCDQ70?t=3001" class="uri">https://youtu.be/BV_afpCDQ70?t=3001</a>)
 
 ``` r
 (.log_odds <- coef(wi_model)['year'])
@@ -2101,17 +2025,17 @@ What do the coefficients mean?
     ##      year 
     ## -1.070175
 
--   <http://had.co.nz/notes/modelling/logistic-regression.html>
--   <https://www.flutterbys.com.au/stats/tut/tut10.5a.html>
+-   <a href="http://had.co.nz/notes/modelling/logistic-regression.html" class="uri">http://had.co.nz/notes/modelling/logistic-regression.html</a>
+-   <a href="https://www.flutterbys.com.au/stats/tut/tut10.5a.html" class="uri">https://www.flutterbys.com.au/stats/tut/tut10.5a.html</a>
 
 ``` r
-library(broom)
+#library(broom)
 models_by_state <- awards_by_year_state %>%
   filter(state != "Other") %>%
   mutate(state = state.name[match(state, state.abb)]) %>%
   group_by(state) %>%
   summarize(model = list(glm(cbind(awards_won, awards_not_won) ~ year, family = "binomial"))) %>%
-  mutate(tidied = map(model, tidy, conf.int = TRUE)) %>%
+  mutate(tidied = map(model, broom::tidy, conf.int = TRUE)) %>%
   unnest(tidied) %>%
   filter(term == "year") %>%
   mutate(#p.value = format.pval(p.value),
@@ -2146,10 +2070,11 @@ models_by_state %>%
 
 ![](examples_files/figure-markdown_github/logistic_regression_coefficients_beer_awards-1.png)
 
-## Nested Regression
+Nested Regression
+-----------------
 
 Example from David Robinson’s screencast
-(<https://youtu.be/lY0YLDZhT88?t=2977>)
+(<a href="https://youtu.be/lY0YLDZhT88?t=2977" class="uri">https://youtu.be/lY0YLDZhT88?t=2977</a>)
 
 ``` r
 .ikea <- ikea %>% select(price_usd, category, other_colors, depth, height, width)
@@ -2217,7 +2142,7 @@ If we were to predict price based on only the volumn (cubic meters).
     ## F-statistic:  4440 on 1 and 1889 DF,  p-value: < 0.00000000000000022
 
 Then what this says that our Intercept (which is where `log2(volume_m3)`
-is `0`; or in other words when the volumn_m3 is 1 (cubic meter) because
+is `0`; or in other words when the volumn\_m3 is 1 (cubic meter) because
 `log2(1)` equals `0`) …
 
 ``` r
@@ -2270,12 +2195,12 @@ the price by a factor of `1.7558755`
 But now lets include `category` and `other_colors`.
 
 ``` r
-library(broom)
+#library(broom)
 .ikea_volume %>%
     # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
     mutate(category = fct_relevel(category, "Tables & desks")) %>%
     lm(log2(price_usd) ~ log2(volume_m3) + category + other_colors, data = .) %>%
-    tidy(conf.int = TRUE) %>%
+    broom::tidy(conf.int = TRUE) %>%
     filter(term != "(Intercept)") %>%
     mutate(term = ifelse(term == "log2(volume_m3)", "Item volume (doubling)", term),
            term = str_remove(term, "^category")) %>%

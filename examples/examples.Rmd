@@ -868,7 +868,7 @@ https://github.com/dgrtwo/ebbr
 Examples from `Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
 
 ```{r example_11.1, echo=FALSE}
-#devtools::install_github("dgrtwo/ebbr")
+#devtools::install_github("dgrtwo/ebbr", force=TRUE)
 #install.packages('Lahman')
 #library(Lahman)
 
@@ -1062,15 +1062,16 @@ This graphs shows that the more at-bats someone has, the better their batting av
 
 Obviously, now we do not want to filter our prior based on >=500 at-bats because we are using at-bats directly in our estimation.
 
-```{r message=FALSE, warning=FALSE}
-eb_career_ab <- career %>%
-  ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss",
-                    mu_predictors = ~ log10(at_bats))
+Code is Failing... Fix TBD
 
+```
+eb_career_ab <- career %>%
+    ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss",
+                           mu_predictors = ~ log10(at_bats))
 head(eb_career_ab)
 ```
 
-```{r ebb_at_bats_raw_vs_shrunken, message=FALSE}
+```{r ebb_at_bats_raw_vs_shrunken, eval=FALSE, message=FALSE, include=FALSE}
 eb_career_ab %>%
     filter(at_bats > 10) %>%
     rename(Raw = .raw, Shrunken = .fitted) %>%
@@ -1085,7 +1086,7 @@ eb_career_ab %>%
 
 Now, we are shrinking the players with fewer at-bats to a lower batting average.
 
-```{r ebb_estimated_batting_average_at_bats}
+```{r ebb_estimated_batting_average_at_bats, eval=FALSE, include=FALSE}
 eb_career_ab %>%
     head(10) %>%
     mutate(name = reorder(name, .fitted)) %>%
@@ -1112,7 +1113,7 @@ Answer by Dave
 
 > Your question raises a very important issue- I bring it up in the following post in this series (http://varianceexplained.or.... In short you're 100% right that this doesn't work for predicting future performance of rookies without more adjustments. "One important aspect of this prediction is that it won’t be useful when we’ve just hired a “rookie” player, and we’re wondering what his batting average will be. This observed variable ABAB is based on a player’s entire career, such that a low number is evidence that a player didn’t have much of a chance to bat. (If we wanted to make a prediction, we’d have to consider the distribution of possible ABAB’s the player could end up with and integrate over that, which is beyond the scope of this post)."
 
-```{r message=FALSE, warning=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 #library(splines)
 eb_career_prior <- career_full %>%
   ebbr::ebb_fit_prior(hits, at_bats, method = "gamlss",
@@ -1121,7 +1122,7 @@ eb_career_prior <- career_full %>%
 head(eb_career_prior)
 ```
 
-```{r ebb_gamlss_splines, message=FALSE, warning=FALSE}
+```{r ebb_gamlss_splines, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # fake data ranging from 1885 to 2013
 fake_data <- tidyr::crossing(hits = 300,
                              at_bats = 1000,
@@ -1145,7 +1146,8 @@ ebbr::augment(eb_career_prior, newdata = fake_data) %>%
 
 > For example, we wanted to get a posterior probability for the statement "this player's true batting average is greater than .300", so that we could construct a "Hall of Fame" of such players. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
+library(ebbr)
 test_300 <- career %>%
     ebbr::add_ebb_estimate(hits, at_bats, method = "gamlss", mu_predictors = ~ log10(at_bats)) %>%
     ebbr::add_ebb_prop_test(.300, sort = TRUE)
@@ -1162,7 +1164,7 @@ test_300 %>%
 
 > `.pep`: the posterior error probability- the probability that this player's true batting average is less than .3. `.qvalue`: the q-value, which corrects for multiple testing by controlling for false discovery rate (FDR). Allowing players with a q-value `below .05` would mean only 5% of the ones included would be false discoveries. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 sum(test_300$.qvalue < .05)
 sum(test_300$.qvalue < .01)
 ```
@@ -1171,7 +1173,7 @@ sum(test_300$.qvalue < .01)
 
 > Chapter 6 discussed the case where instead of comparing each observation to a single threshold (like .300) we want to compare to another player's posterior distribution. We noted that this is similar to the problem of "A/B testing", where we might be comparing two clickthrough rates, each represented by successes / total. (Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 piazza <- eb_career_ab %>%
   filter(name == "Mike Piazza")
 
@@ -1179,7 +1181,7 @@ piazza_params <- c(piazza$.alpha1, piazza$.beta1)
 piazza_params ## [1] 2281 5183 This vector of two parameters, an alpha and a beta, can be passed into add_ebb_prop_test just like we passed in a threshold.4 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 compare_piazza <- eb_career_ab %>%
   ebbr::add_ebb_prop_test(piazza_params, approx = TRUE, sort = TRUE)
 
