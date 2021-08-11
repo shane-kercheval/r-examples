@@ -37,12 +37,12 @@ beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidyt
          medal = fct_relevel(medal, c("Bronze", "Silver")))
 
 cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
-    select(-X1) %>%
+    select(-`...1`) %>%
     mutate(birthYear = as.numeric(birthYear))
 cetaceans <- cetaceans_raw %>% select(species, originLocation)
 
 ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv') %>%
-    select(-X1) %>%
+    select(-`...1`) %>%
     mutate(price_usd = 0.27 * price,
            short_description = str_squish(short_description)) %>%
     add_count(category, name = "category_total") %>%
@@ -213,6 +213,27 @@ mtcars %>%
 
 ```{r}
 iris %>% group_by(Species) %>% summarise_at(vars(Sepal.Length, Sepal.Width), sum, na.rm = TRUE)
+```
+
+---
+
+### dynamic `group_by` with `across`
+
+```{r}
+.group_by <- c("vs", "cyl")
+
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
+
+.group_by <- c("vs")
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
 ```
 
 ---
