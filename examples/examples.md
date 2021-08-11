@@ -1,60 +1,8 @@
--   [Data Cleaning](#data-cleaning)
-    -   [General](#general)
-        -   [`clean_names()`](#clean_names)
-        -   [`extract()`](#extract)
-        -   [regex\_left\_join](#regex_left_join)
-    -   [Aggregation](#aggregation)
-        -   [`group_by() & which.max()`](#group_by-which.max)
-        -   [`group_by()` & `top_n()`](#group_by-top_n)
-        -   [`summarise()` & `across`](#summarise-across)
-        -   [`summarise_at()`](#summarise_at)
-        -   [`add_count`](#add_count)
--   [dplyr/tidyverse](#dplyrtidyverse)
-    -   [`join` `suffix`](#join-suffix)
-    -   [`semi-join`](#semi-join)
-    -   [`separate_rows`](#separate_rows)
-    -   [Indirection](#indirection)
-        -   [dplyr-like function](#dplyr-like-function)
-        -   [.data](#data)
-        -   [eval\_tidy](#eval_tidy)
-        -   [other examples](#other-examples)
--   [ggplot](#ggplot)
-    -   [`reorder_within()`](#reorder_within)
-    -   [`scale_x_log10()` with seconds](#scale_x_log10-with-seconds)
-    -   [ggplot2 with `interaction()`](#ggplot2-with-interaction)
-    -   [spinogram](#spinogram)
-    -   [Joy Plot](#joy-plot)
-    -   [Sankey](#sankey)
--   [Advanced](#advanced)
-    -   [Confidence Intervals w/
-        t-tests](#confidence-intervals-w-t-tests)
-    -   [`optimize`](#optimize)
-    -   [Survival Analysis](#survival-analysis)
-    -   [Pairwise Correlation](#pairwise-correlation)
-    -   [`ebbr` package: Empirical Bayes on the Binomial in
-        R](#ebbr-package-empirical-bayes-on-the-binomial-in-r)
-        -   [Prior Distribution](#prior-distribution)
-        -   [Updating Observations based on
-            Priors](#updating-observations-based-on-priors)
-        -   [`add_ebb_estimate`](#add_ebb_estimate)
-        -   [Hierarchical Modeling](#hierarchical-modeling)
-        -   [Hypothesis Testing](#hypothesis-testing)
-            -   [Player-Player AB-test](#player-player-ab-test)
-    -   [Tidy Text](#tidy-text)
-    -   [Pairwise Correlations (again)](#pairwise-correlations-again)
-    -   [Network Graph](#network-graph)
-    -   [Singular Value Decomposition
-        (PCA)](#singular-value-decomposition-pca)
-    -   [Logistic Regression](#logistic-regression)
-    -   [Nested Regression](#nested-regression)
-
-Data Cleaning
-=============
+# Data Cleaning
 
 ------------------------------------------------------------------------
 
-General
--------
+## General
 
 ### `clean_names()`
 
@@ -98,10 +46,10 @@ Turn `1` column into `x` columns based on regex
 
 ------------------------------------------------------------------------
 
-### regex\_left\_join
+### regex_left_join
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=1715" class="uri">https://youtu.be/KiqpX-gNIS4?t=1715</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=1715>)
 
 Join data.frames based on matching regex.
 
@@ -112,7 +60,7 @@ data.frame based on regex.
 head(cetaceans)
 ```
 
-    ## # A tibble: 6 x 2
+    ## # A tibble: 6 × 2
     ##   species    originLocation         
     ##   <chr>      <chr>                  
     ## 1 Bottlenose Marineland Florida     
@@ -154,34 +102,33 @@ cetaceans %>%
     head(20)
 ```
 
-    ## # A tibble: 20 x 5
-    ##    species    originLocation          unique_id regex     category              
-    ##    <chr>      <chr>                       <int> <chr>     <chr>                 
-    ##  1 Bottlenose Marineland Florida              1 Florida|… Florida               
-    ##  2 Bottlenose Dolphin Research Center         2 <NA>      Dolphin Research Cent…
-    ##  3 Bottlenose SeaWorld San Diego              3 SeaWorld  SeaWorld              
-    ##  4 Bottlenose SeaWorld Orlando                4 SeaWorld  SeaWorld              
-    ##  5 Bottlenose SeaWorld Orlando                5 SeaWorld  SeaWorld              
-    ##  6 Bottlenose SeaWorld San Diego              6 SeaWorld  SeaWorld              
-    ##  7 Bottlenose SeaWorld San Diego              7 SeaWorld  SeaWorld              
-    ##  8 Bottlenose SeaWorld Orlando                8 SeaWorld  SeaWorld              
-    ##  9 Bottlenose SeaWorld San Diego              9 SeaWorld  SeaWorld              
-    ## 10 Bottlenose SeaWorld San Diego             10 SeaWorld  SeaWorld              
-    ## 11 Bottlenose Marineland Florida             11 Florida|… Florida               
-    ## 12 Bottlenose SeaWorld San Diego             12 SeaWorld  SeaWorld              
-    ## 13 Bottlenose SeaWorld Orlando               13 SeaWorld  SeaWorld              
-    ## 14 Bottlenose Dolphin Research Center        14 <NA>      Dolphin Research Cent…
-    ## 15 Bottlenose Dolphin Research Center        15 <NA>      Dolphin Research Cent…
-    ## 16 Bottlenose Dolphin Research Center        16 <NA>      Dolphin Research Cent…
-    ## 17 Bottlenose Dolphin Connection             17 <NA>      Dolphin Connection    
-    ## 18 Bottlenose SeaWorld Orlando               18 SeaWorld  SeaWorld              
-    ## 19 Bottlenose SeaWorld Orlando               19 SeaWorld  SeaWorld              
-    ## 20 Bottlenose SeaWorld San Diego             20 SeaWorld  SeaWorld
+    ## # A tibble: 20 × 5
+    ##    species    originLocation          unique_id regex      category             
+    ##    <chr>      <chr>                       <int> <chr>      <chr>                
+    ##  1 Bottlenose Marineland Florida              1 Florida|FL Florida              
+    ##  2 Bottlenose Dolphin Research Center         2 <NA>       Dolphin Research Cen…
+    ##  3 Bottlenose SeaWorld San Diego              3 SeaWorld   SeaWorld             
+    ##  4 Bottlenose SeaWorld Orlando                4 SeaWorld   SeaWorld             
+    ##  5 Bottlenose SeaWorld Orlando                5 SeaWorld   SeaWorld             
+    ##  6 Bottlenose SeaWorld San Diego              6 SeaWorld   SeaWorld             
+    ##  7 Bottlenose SeaWorld San Diego              7 SeaWorld   SeaWorld             
+    ##  8 Bottlenose SeaWorld Orlando                8 SeaWorld   SeaWorld             
+    ##  9 Bottlenose SeaWorld San Diego              9 SeaWorld   SeaWorld             
+    ## 10 Bottlenose SeaWorld San Diego             10 SeaWorld   SeaWorld             
+    ## 11 Bottlenose Marineland Florida             11 Florida|FL Florida              
+    ## 12 Bottlenose SeaWorld San Diego             12 SeaWorld   SeaWorld             
+    ## 13 Bottlenose SeaWorld Orlando               13 SeaWorld   SeaWorld             
+    ## 14 Bottlenose Dolphin Research Center        14 <NA>       Dolphin Research Cen…
+    ## 15 Bottlenose Dolphin Research Center        15 <NA>       Dolphin Research Cen…
+    ## 16 Bottlenose Dolphin Research Center        16 <NA>       Dolphin Research Cen…
+    ## 17 Bottlenose Dolphin Connection             17 <NA>       Dolphin Connection   
+    ## 18 Bottlenose SeaWorld Orlando               18 SeaWorld   SeaWorld             
+    ## 19 Bottlenose SeaWorld Orlando               19 SeaWorld   SeaWorld             
+    ## 20 Bottlenose SeaWorld San Diego             20 SeaWorld   SeaWorld
 
 ------------------------------------------------------------------------
 
-Aggregation
------------
+## Aggregation
 
 ### `group_by() & which.max()`
 
@@ -208,7 +155,7 @@ starwars %>%
               oldest_person = first(name[which.min(birth_year)]))
 ```
 
-    ## # A tibble: 3 x 5
+    ## # A tibble: 3 × 5
     ##   gender        n tallest_person tallest_height oldest_person        
     ##   <chr>     <int> <chr>                   <int> <chr>                
     ## 1 feminine     17 Taun We                   213 Leia Organa          
@@ -236,7 +183,7 @@ starwars %>%
     ungroup()
 ```
 
-    ## # A tibble: 10 x 3
+    ## # A tibble: 10 × 3
     ##    gender    name          height
     ##    <chr>     <chr>          <int>
     ##  1 feminine  Ayla Secura      178
@@ -266,7 +213,7 @@ mtcars %>%
                    .names = "{col}_{fn}"))
 ```
 
-    ## # A tibble: 3 x 5
+    ## # A tibble: 3 × 5
     ##     cyl disp_mean disp_sd drat_mean drat_sd
     ##   <dbl>     <dbl>   <dbl>     <dbl>   <dbl>
     ## 1     4      105.    26.9      4.07   0.365
@@ -287,7 +234,7 @@ mtcars %>%
                    ))
 ```
 
-    ## # A tibble: 3 x 7
+    ## # A tibble: 3 × 7
     ##     cyl disp_minus_sd disp_mean disp_plus_sd drat_minus_sd drat_mean
     ##   <dbl>         <dbl>     <dbl>        <dbl>         <dbl>     <dbl>
     ## 1     4          78.3      105.         132.          3.71      4.07
@@ -303,12 +250,66 @@ mtcars %>%
 iris %>% group_by(Species) %>% summarise_at(vars(Sepal.Length, Sepal.Width), sum, na.rm = TRUE)
 ```
 
-    ## # A tibble: 3 x 3
+    ## # A tibble: 3 × 3
     ##   Species    Sepal.Length Sepal.Width
     ##   <fct>             <dbl>       <dbl>
     ## 1 setosa             250.        171.
-    ## 2 versicolor         297.        138.
+    ## 2 versicolor         297.        139.
     ## 3 virginica          329.        149.
+
+------------------------------------------------------------------------
+
+### dynamic `group_by` with `across`
+
+``` r
+.group_by <- c("vs", "cyl")
+
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+```
+
+    ## # A tibble: 5 × 3
+    ## # Groups:   vs [2]
+    ##      vs   cyl    wt
+    ##   <dbl> <dbl> <dbl>
+    ## 1     0     4  2.14
+    ## 2     0     6  8.26
+    ## 3     0     8 56.0 
+    ## 4     1     4 23.0 
+    ## 5     1     6 13.6
+
+``` r
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
+```
+
+    ##   vs cyl     wt
+    ## 1  0   4  2.140
+    ## 2  0   6  8.265
+    ## 3  0   8 55.989
+    ## 4  1   4 23.003
+    ## 5  1   6 13.555
+
+``` r
+.group_by <- c("vs")
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+```
+
+    ## # A tibble: 2 × 2
+    ##      vs    wt
+    ##   <dbl> <dbl>
+    ## 1     0  66.4
+    ## 2     1  36.6
+
+``` r
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
+```
+
+    ##   vs     wt
+    ## 1  0 66.394
+    ## 2  1 36.558
 
 ------------------------------------------------------------------------
 
@@ -331,11 +332,9 @@ iris %>% add_count(Species, name = 'num_species') %>% head()
 
 ------------------------------------------------------------------------
 
-dplyr/tidyverse
-===============
+# dplyr/tidyverse
 
-`join` `suffix`
----------------
+## `join` `suffix`
 
 ``` r
 band_members %>%
@@ -343,7 +342,7 @@ band_members %>%
                suffix = c('.x', '.y'))
 ```
 
-    ## # A tibble: 3 x 3
+    ## # A tibble: 3 × 3
     ##   name  band.x  band.y 
     ##   <chr> <chr>   <chr>  
     ## 1 Mick  Stones  Stones 
@@ -352,14 +351,13 @@ band_members %>%
 
 ------------------------------------------------------------------------
 
-`semi-join`
------------
+## `semi-join`
 
 ``` r
 band_members
 ```
 
-    ## # A tibble: 3 x 2
+    ## # A tibble: 3 × 2
     ##   name  band   
     ##   <chr> <chr>  
     ## 1 Mick  Stones 
@@ -370,7 +368,7 @@ band_members
 band_instruments
 ```
 
-    ## # A tibble: 3 x 2
+    ## # A tibble: 3 × 2
     ##   name  plays 
     ##   <chr> <chr> 
     ## 1 John  guitar
@@ -384,7 +382,7 @@ band_instruments
 band_members %>% semi_join(band_instruments, by = 'name')
 ```
 
-    ## # A tibble: 2 x 2
+    ## # A tibble: 2 × 2
     ##   name  band   
     ##   <chr> <chr>  
     ## 1 John  Beatles
@@ -394,7 +392,7 @@ band_members %>% semi_join(band_instruments, by = 'name')
 band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band)
 ```
 
-    ## # A tibble: 2 x 2
+    ## # A tibble: 2 × 2
     ##   name  band   
     ##   <chr> <chr>  
     ## 1 John  Beatles
@@ -402,8 +400,7 @@ band_members %>% inner_join(band_instruments, by = 'name') %>% select(name, band
 
 ------------------------------------------------------------------------
 
-`separate_rows`
----------------
+## `separate_rows`
 
 ``` r
 df <- tibble(
@@ -414,7 +411,7 @@ df <- tibble(
 df
 ```
 
-    ## # A tibble: 3 x 3
+    ## # A tibble: 3 × 3
     ##       x y     z    
     ##   <int> <chr> <chr>
     ## 1     1 a     1    
@@ -425,7 +422,7 @@ df
 separate_rows(df, y, z, convert = TRUE)
 ```
 
-    ## # A tibble: 6 x 3
+    ## # A tibble: 6 × 3
     ##       x y         z
     ##   <int> <chr> <int>
     ## 1     1 a         1
@@ -437,13 +434,12 @@ separate_rows(df, y, z, convert = TRUE)
 
 ------------------------------------------------------------------------
 
-Indirection
------------
+## Indirection
 
 Create a dplyr-like function that uses the column names of the dataframe
 rather than strings or the object directly.
 
-<a href="https://dplyr.tidyverse.org/articles/programming.html" class="uri">https://dplyr.tidyverse.org/articles/programming.html</a>
+<https://dplyr.tidyverse.org/articles/programming.html>
 
 ### dplyr-like function
 
@@ -461,7 +457,7 @@ mtcars %>%
     var_summary(mpg)
 ```
 
-    ## # A tibble: 3 x 4
+    ## # A tibble: 3 × 4
     ##     cyl     n   min   max
     ##   <dbl> <int> <dbl> <dbl>
     ## 1     4    11  21.4  33.9
@@ -484,7 +480,7 @@ var_summary <- function(data, .group_by, .var) {
 mtcars %>% var_summary(.group_by=cyl, .var=mpg)
 ```
 
-    ## # A tibble: 3 x 4
+    ## # A tibble: 3 × 4
     ##     cyl     n   min   max
     ##   <dbl> <int> <dbl> <dbl>
     ## 1     4    11  21.4  33.9
@@ -495,7 +491,7 @@ mtcars %>% var_summary(.group_by=cyl, .var=mpg)
 mtcars %>% var_summary(.group_by=c(cyl, vs), .var=mpg)
 ```
 
-    ## # A tibble: 5 x 5
+    ## # A tibble: 5 × 5
     ## # Groups:   cyl [3]
     ##     cyl    vs     n   min   max
     ##   <dbl> <dbl> <int> <dbl> <dbl>
@@ -523,7 +519,7 @@ my_summarise <- function(data, .group_by, .summarise_vars) {
 mtcars %>% my_summarise(cyl, mpg)
 ```
 
-    ## # A tibble: 3 x 2
+    ## # A tibble: 3 × 2
     ##     cyl mean_mpg
     ##   <dbl>    <dbl>
     ## 1     4     26.7
@@ -534,7 +530,7 @@ mtcars %>% my_summarise(cyl, mpg)
 mtcars %>% my_summarise(c(cyl, vs), .summarise_vars=c(mpg, hp))
 ```
 
-    ## # A tibble: 5 x 4
+    ## # A tibble: 5 × 4
     ## # Groups:   cyl [3]
     ##     cyl    vs mean_mpg mean_hp
     ##   <dbl> <dbl>    <dbl>   <dbl>
@@ -577,7 +573,7 @@ mtcars %>%
     arrange(cyl, mpg)
 ```
 
-    ## # A tibble: 32 x 3
+    ## # A tibble: 32 × 3
     ##      cyl   mpg index
     ##    <dbl> <dbl> <int>
     ##  1     4  21.4     1
@@ -599,7 +595,7 @@ mtcars %>%
     arrange(cyl, mpg)
 ```
 
-    ## # A tibble: 32 x 3
+    ## # A tibble: 32 × 3
     ##      cyl   mpg index
     ##    <dbl> <dbl> <int>
     ##  1     4  21.4    11
@@ -614,7 +610,7 @@ mtcars %>%
     ## 10     4  32.4     2
     ## # … with 22 more rows
 
-### eval\_tidy
+### eval_tidy
 
 ``` r
 with_data <- function(data, .x) {
@@ -627,7 +623,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x7fe44f4cb208
+    ## env:  0x1315edf30
 
     ## [1] 61.875
 
@@ -719,7 +715,7 @@ mtcars %>%
     arrange(desc(cyl), am, desc(vs), mpg)
 ```
 
-    ## # A tibble: 6 x 4
+    ## # A tibble: 6 × 4
     ##     cyl    am    vs   mpg
     ##   <dbl> <dbl> <dbl> <dbl>
     ## 1     8     0     0  10.4
@@ -729,18 +725,16 @@ mtcars %>%
     ## 5     4     0     1  21.5
     ## 6     4     1     1  21.4
 
-ggplot
-======
+# ggplot
 
 ### `reorder_within()`
 
 Reorder sub-categories within category e.g. for faceting.
 
 For example, the order of `setosa`, `versicolor`, `virginica` is allowed
-to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
+to change for each measurement (e.g. `Petal.Length`, `Sepal.Width`)
 
-other examples:
-<a href="https://juliasilge.com/blog/reorder-within/" class="uri">https://juliasilge.com/blog/reorder-within/</a>
+other examples: <https://juliasilge.com/blog/reorder-within/>
 
 ``` r
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
@@ -801,7 +795,7 @@ d %>%
 ### spinogram
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=1244" class="uri">https://youtu.be/KiqpX-gNIS4?t=1244</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=1244>)
 
 We will use `geom_area` but need to fill in the missing data with
 `complete`
@@ -842,7 +836,7 @@ cateaceans_acquisition_by_decade_complete <- cateaceans_acquisition_by_decade %>
 ```
 
 What did `complete()` do? Lets look at the rows that were added
-(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
+(i.e. the rows in \_complete that are not in \_decade i.e. `anti_join`)?
 
 `complete` filled in the missing combinations with a default value of
 `n` = `1`
@@ -853,7 +847,7 @@ cateaceans_acquisition_by_decade_complete %>%
     head(10)
 ```
 
-    ## # A tibble: 10 x 3
+    ## # A tibble: 10 × 3
     ##    acquisition decade     n
     ##    <chr>        <dbl> <dbl>
     ##  1 Born          1960     0
@@ -889,13 +883,13 @@ cateaceans_acquisition_by_decade_complete %>%
 ### Joy Plot
 
 Example from David Robinson’s screencast
-(<a href="https://youtu.be/lY0YLDZhT88?t=665" class="uri">https://youtu.be/lY0YLDZhT88?t=665</a>)
+(<https://youtu.be/lY0YLDZhT88?t=665>)
 
 ``` r
 ikea %>% select(category, name, price_usd) %>% head()
 ```
 
-    ## # A tibble: 6 x 3
+    ## # A tibble: 6 × 3
     ##   category      name                  price_usd
     ##   <chr>         <chr>                     <dbl>
     ## 1 Bar furniture FREKVENS                   71.6
@@ -941,13 +935,13 @@ ikea %>%
 ![](examples_files/figure-markdown_github/ggridges_2-1.png)
 
 > “If we were building a predictive model, we’d probably include both
-> category and other\_colors”
+> category and other_colors”
 
 ------------------------------------------------------------------------
 
 ### Sankey
 
-<a href="https://github.com/davidsjoberg/ggsankey" class="uri">https://github.com/davidsjoberg/ggsankey</a>
+<https://github.com/davidsjoberg/ggsankey>
 
 ``` r
 # devtools::install_github("davidsjoberg/ggsankey")
@@ -966,36 +960,34 @@ ggplot(example_dat,
     theme_minimal()
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-35-1.png)
+![](examples_files/figure-markdown_github/sankey-1.png)
 
 ------------------------------------------------------------------------
 
-Advanced
-========
+# Advanced
 
-Confidence Intervals w/ t-tests
--------------------------------
+## Confidence Intervals w/ t-tests
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/em4FXPf4H-Y?t=1783" class="uri">https://youtu.be/em4FXPf4H-Y?t=1783</a>)
+(<https://youtu.be/em4FXPf4H-Y?t=1783>)
 
 ``` r
 head(restaurant_inspections_by_dba, 10)
 ```
 
-    ## # A tibble: 10 x 5
-    ##    dba                 cuisine                  locations avg_score median_score
-    ##    <chr>               <chr>                        <int>     <dbl>        <dbl>
-    ##  1 DUNKIN'             Donuts                         340      9.07          8.5
-    ##  2 STARBUCKS           Café/Coffee/Tea                244      7.95          7  
-    ##  3 SUBWAY              Sandwiches                     179     11.5          10  
-    ##  4 MCDONALD'S          Hamburgers                     106      9.35          9  
-    ##  5 DUNKIN', BASKIN RO… Donuts                          79     10.8           9  
-    ##  6 POPEYES             Chicken                         71     10.5          10  
-    ##  7 MCDONALD'S          American                        60      9.33          9  
-    ##  8 BURGER KING         Hamburgers                      58     10.9          10  
-    ##  9 SUBWAY              Sandwiches/Salads/Mixed…        54     11.3           7.5
-    ## 10 KENNEDY FRIED CHIC… Chicken                         51     15.8          13
+    ## # A tibble: 10 × 5
+    ##    dba                     cuisine              locations avg_score median_score
+    ##    <chr>                   <chr>                    <int>     <dbl>        <dbl>
+    ##  1 DUNKIN'                 Donuts                     340      9.07          8.5
+    ##  2 STARBUCKS               Café/Coffee/Tea            244      7.95          7  
+    ##  3 SUBWAY                  Sandwiches                 179     11.5          10  
+    ##  4 MCDONALD'S              Hamburgers                 106      9.35          9  
+    ##  5 DUNKIN', BASKIN ROBBINS Donuts                      79     10.8           9  
+    ##  6 POPEYES                 Chicken                     71     10.5          10  
+    ##  7 MCDONALD'S              American                    60      9.33          9  
+    ##  8 BURGER KING             Hamburgers                  58     10.9          10  
+    ##  9 SUBWAY                  Sandwiches/Salads/M…        54     11.3           7.5
+    ## 10 KENNEDY FRIED CHICKEN   Chicken                     51     15.8          13
 
 `nest(data=-cuisine)` groups by cuisine and creates a data-frame
 (tibble) out of all of the rest of the columns. That is, it `nests` the
@@ -1022,7 +1014,7 @@ round_2 <- function(.x) {round(.x, 2)}
 head(cuisine_conf_ints %>% mutate_if(is.numeric, round_2), 10)
 ```
 
-    ## # A tibble: 10 x 12
+    ## # A tibble: 10 × 12
     ##    cuisine   data   num_dbas mean_avg_score estimate statistic p.value parameter
     ##    <chr>     <list>    <dbl>          <dbl>    <dbl>     <dbl>   <dbl>     <dbl>
     ##  1 Café/Cof… <tibb…     1004          12.1     12.1       39.2       0      1003
@@ -1056,8 +1048,7 @@ cuisine_conf_ints %>%
 
 ------------------------------------------------------------------------
 
-`optimize`
-----------
+## `optimize`
 
 The function optimize searches the interval from lower to upper for a
 minimum or maximum of the function f with respect to its first argument.
@@ -1122,19 +1113,18 @@ plot(probability_grid, likelihood)
 abline(v = most_plausible$minimum, col='red', lwd=3)
 ```
 
-![](examples_files/figure-markdown_github/unnamed-chunk-41-1.png)
+![](examples_files/figure-markdown_github/optimize-1.png)
 
 See
-<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests</a>
+<https://github.com/shane-kercheval/r-examples/blob/main/examples/examples.md#confidence-intervals-w-t-tests>
 for a more indepth example.
 
 ------------------------------------------------------------------------
 
-Survival Analysis
------------------
+## Survival Analysis
 
 Example from David Robinson Tidy-Tuesday Screencast
-(<a href="https://youtu.be/KiqpX-gNIS4?t=2424" class="uri">https://youtu.be/KiqpX-gNIS4?t=2424</a>)
+(<https://youtu.be/KiqpX-gNIS4?t=2424>)
 
 Context is dolphins. Are some dolphins living longer than they used to?
 This is hard because some dolphins in are dataset are still alive.
@@ -1155,7 +1145,7 @@ dolphin_survival <- cetaceans %>%
 head(dolphin_survival)
 ```
 
-    ## # A tibble: 6 x 7
+    ## # A tibble: 6 × 7
     ##   birthYear deathYear status sex     age acquisition species   
     ##       <dbl>     <dbl>  <dbl> <chr> <dbl> <chr>       <chr>     
     ## 1      1989      2017      0 F        28 Born        Bottlenose
@@ -1178,7 +1168,7 @@ model
     ## Call: survfit(formula = survival::Surv(age, status) ~ 1, data = dolphin_survival)
     ## 
     ##       n  events  median 0.95LCL 0.95UCL 
-    ##    1388     932      17      16      18
+    ##    1389     933      17      16      18
 
 ``` r
 broom::tidy(model) %>%
@@ -1203,7 +1193,7 @@ model
     ## Call: survfit(formula = survival::Surv(age, status) ~ sex, data = dolphin_survival)
     ## 
     ##         n events median 0.95LCL 0.95UCL
-    ## sex=F 743    503     18      16      20
+    ## sex=F 744    504     18      16      20
     ## sex=M 645    429     16      14      18
 
 ``` r
@@ -1228,7 +1218,7 @@ survival::coxph(survival::Surv(age, status) ~ sex, dolphin_survival) %>%
   broom::tidy()
 ```
 
-    ## # A tibble: 1 x 5
+    ## # A tibble: 1 × 5
     ##   term  estimate std.error statistic p.value
     ##   <chr>    <dbl>     <dbl>     <dbl>   <dbl>
     ## 1 sexM    0.0982    0.0659      1.49   0.136
@@ -1261,15 +1251,14 @@ survival::coxph(survival::Surv(age, status) ~ acquisition, dolphin_survival) %>%
   broom::tidy()
 ```
 
-    ## # A tibble: 3 x 5
+    ## # A tibble: 3 × 5
     ##   term               estimate std.error statistic p.value
     ##   <chr>                 <dbl>     <dbl>     <dbl>   <dbl>
-    ## 1 acquisitionCapture  -0.0727    0.0753    -0.965 0.334  
-    ## 2 acquisitionRescue    0.504     0.164      3.07  0.00211
-    ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0474
+    ## 1 acquisitionCapture  -0.0732    0.0753    -0.972 0.331  
+    ## 2 acquisitionRescue    0.489     0.162      3.02  0.00256
+    ## 3 acquisitionUnknown   0.293     0.148      1.98  0.0476
 
-Pairwise Correlation
---------------------
+## Pairwise Correlation
 
 In this case, we are finding correlations of `lifeExp` among `countries`
 across/by `year`. So, which countries tend to have similar
@@ -1287,7 +1276,7 @@ life_expectency_pairwise_cor <- gapminder::gapminder %>%
 head(life_expectency_pairwise_cor)
 ```
 
-    ## # A tibble: 6 x 3
+    ## # A tibble: 6 × 3
     ##   item1     item2     correlation
     ##   <fct>     <fct>           <dbl>
     ## 1 Nicaragua Brazil          0.999
@@ -1339,7 +1328,7 @@ life_expectency_pairwise_cor <- life_expectency_pairwise_cor %>%
 life_expectency_pairwise_cor[1:5, 1:5]
 ```
 
-    ## # A tibble: 5 x 5
+    ## # A tibble: 5 × 5
     ##   item1     Argentina Bolivia Brazil Canada
     ##   <fct>         <dbl>   <dbl>  <dbl>  <dbl>
     ## 1 Argentina    NA       0.993  0.997  0.997
@@ -1348,18 +1337,17 @@ life_expectency_pairwise_cor[1:5, 1:5]
     ## 4 Canada        0.997   0.994  0.998 NA    
     ## 5 Chile         0.991   0.990  0.992  0.994
 
-`ebbr` package: Empirical Bayes on the Binomial in R
-----------------------------------------------------
+## `ebbr` package: Empirical Bayes on the Binomial in R
 
 > Methods for empirical Bayes shrinkage and estimation on data with many
 > observations of success/total counts.
 
-<a href="https://github.com/dgrtwo/ebbr" class="uri">https://github.com/dgrtwo/ebbr</a>
+<https://github.com/dgrtwo/ebbr>
 
 Examples from
 `Robinson, David. Introduction to Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.`
 
-    ## # A tibble: 6 x 5
+    ## # A tibble: 6 × 5
     ##   playerID  name            hits at_bats batting_average
     ##   <chr>     <chr>          <int>   <int>           <dbl>
     ## 1 aaronha01 Hank Aaron      3771   12364          0.305 
@@ -1400,7 +1388,7 @@ prior
 
     ## Empirical Bayes binomial fit with method mle 
     ## Parameters:
-    ## # A tibble: 1 x 2
+    ## # A tibble: 1 × 2
     ##   alpha  beta
     ##   <dbl> <dbl>
     ## 1  97.9  278.
@@ -1419,7 +1407,7 @@ career %>%
     summarise(sum(hits) / sum(at_bats))
 ```
 
-    ## # A tibble: 1 x 1
+    ## # A tibble: 1 × 1
     ##   `sum(hits)/sum(at_bats)`
     ##                      <dbl>
     ## 1                    0.269
@@ -1430,7 +1418,7 @@ career %>%
     summarise(mean(batting_average))
 ```
 
-    ## # A tibble: 1 x 1
+    ## # A tibble: 1 × 1
     ##   `mean(batting_average)`
     ##                     <dbl>
     ## 1                   0.259
@@ -1441,7 +1429,7 @@ career %>%
     summarise(median(batting_average))
 ```
 
-    ## # A tibble: 1 x 1
+    ## # A tibble: 1 × 1
     ##   `median(batting_average)`
     ##                       <dbl>
     ## 1                     0.258
@@ -1483,7 +1471,7 @@ career %>%
 head(ebbr::augment(prior, data = career))
 ```
 
-    ## # A tibble: 6 x 11
+    ## # A tibble: 6 × 11
     ##   playerID  name      hits at_bats batting_average .alpha1 .beta1 .fitted   .raw
     ##   <chr>     <chr>    <int>   <int>           <dbl>   <dbl>  <dbl>   <dbl>  <dbl>
     ## 1 aaronha01 Hank Aa…  3771   12364          0.305   3869.   8871.   0.304 0.305 
@@ -1504,8 +1492,8 @@ head(ebbr::augment(prior, data = career))
 > We often want to run these two steps in sequence: estimating a model,
 > then using it as a prior for each observation. The ebbr package
 > provides a shortcut, combining them into one step with
-> add\_ebb\_estimate(). (Robinson, David. Introduction to Empirical
-> Bayes: Examples from Baseball Statistics . Kindle Edition.)
+> add_ebb_estimate(). (Robinson, David. Introduction to Empirical Bayes:
+> Examples from Baseball Statistics . Kindle Edition.)
 
 ``` r
 eb_career <- career %>%
@@ -1523,7 +1511,7 @@ all(eb_career$batting_average == eb_career$.raw)
 > in Chapter 3. I like how it captures what empirical Bayes estimation
 > is doing: moving all batting averages towards the prior mean (the
 > dashed red line), but moving them less if there is a lot of
-> information about that player (high at\_bats). (Robinson, David.
+> information about that player (high at_bats). (Robinson, David.
 > Introduction to Empirical Bayes: Examples from Baseball Statistics .
 > Kindle Edition.)
 
@@ -1532,7 +1520,7 @@ estimated batting average are identical.
 
 The dashed red line represents the “prior mean” which is similar, but
 doesn’t seem to be exactly, the average of the batting averages (of
-people with &gt;= 500 at-bats).
+people with \>= 500 at-bats).
 
 So for example, look at the dots/people to the left of the graph. These
 are people that had very few at-bats (dark color), had a very low
@@ -1629,13 +1617,13 @@ should be pushing people towards who have very few at bats, rather than
 the dotted red line above.
 
 > We solved this by fitting a prior that depended on AB, through the
-> process of beta-binomial regression. The add\_ebb\_estimate() function
+> process of beta-binomial regression. The add_ebb_estimate() function
 > from ebbr offers this option, by setting method = “gamlss” and
-> providing a formula to mu\_predictors.3 (Robinson, David. Introduction
+> providing a formula to mu_predictors.3 (Robinson, David. Introduction
 > to Empirical Bayes: Examples from Baseball Statistics . Kindle
 > Edition.)
 
-Obviously, now we do not want to filter our prior based on &gt;=500
+Obviously, now we do not want to filter our prior based on \>=500
 at-bats because we are using at-bats directly in our estimation.
 
 Code is Failing… Fix TBD
@@ -1657,7 +1645,7 @@ batting-avearge.
 An important note is that this will not work for rookies, it is only
 meant to assess the players’ entire career.
 
-<a href="http://varianceexplained.org/r/beta_binomial_baseball/" class="uri">http://varianceexplained.org/r/beta_binomial_baseball/</a>
+<http://varianceexplained.org/r/beta_binomial_baseball/>
 
 Question in comments
 
@@ -1669,17 +1657,16 @@ Question in comments
 Answer by Dave
 
 > Your question raises a very important issue- I bring it up in the
-> following post in this series
-> (<a href="http://varianceexplained.or" class="uri">http://varianceexplained.or</a>….
-> In short you’re 100% right that this doesn’t work for predicting
-> future performance of rookies without more adjustments. “One important
-> aspect of this prediction is that it won’t be useful when we’ve just
-> hired a “rookie” player, and we’re wondering what his batting average
-> will be. This observed variable ABAB is based on a player’s entire
-> career, such that a low number is evidence that a player didn’t have
-> much of a chance to bat. (If we wanted to make a prediction, we’d have
-> to consider the distribution of possible ABAB’s the player could end
-> up with and integrate over that, which is beyond the scope of this
+> following post in this series (<http://varianceexplained.or>…. In
+> short you’re 100% right that this doesn’t work for predicting future
+> performance of rookies without more adjustments. “One important aspect
+> of this prediction is that it won’t be useful when we’ve just hired a
+> “rookie” player, and we’re wondering what his batting average will be.
+> This observed variable ABAB is based on a player’s entire career, such
+> that a low number is evidence that a player didn’t have much of a
+> chance to bat. (If we wanted to make a prediction, we’d have to
+> consider the distribution of possible ABAB’s the player could end up
+> with and integrate over that, which is beyond the scope of this
 > post)."
 
 ### Hypothesis Testing
@@ -1713,28 +1700,26 @@ Answer by Dave
 > confident are better than Piazza. (Robinson, David. Introduction to
 > Empirical Bayes: Examples from Baseball Statistics . Kindle Edition.)
 
-Tidy Text
----------
+## Tidy Text
 
 ``` r
 head(mr_boston)
 ```
 
-    ## # A tibble: 6 x 6
-    ##   name         category        row_id ingredient_number ingredient       measure
-    ##   <chr>        <chr>            <dbl>             <dbl> <chr>            <chr>  
-    ## 1 Gauguin      Cocktail Class…      1                 1 Light Rum        2 oz   
-    ## 2 Gauguin      Cocktail Class…      1                 2 Passion Fruit S… 1 oz   
-    ## 3 Gauguin      Cocktail Class…      1                 3 Lemon Juice      1 oz   
-    ## 4 Gauguin      Cocktail Class…      1                 4 Lime Juice       1 oz   
-    ## 5 Fort Lauder… Cocktail Class…      2                 1 Light Rum        1 1/2 …
-    ## 6 Fort Lauder… Cocktail Class…      2                 2 Sweet Vermouth   1/2 oz
+    ## # A tibble: 6 × 6
+    ##   name            category          row_id ingredient_number ingredient  measure
+    ##   <chr>           <chr>              <dbl>             <dbl> <chr>       <chr>  
+    ## 1 Gauguin         Cocktail Classics      1                 1 Light Rum   2 oz   
+    ## 2 Gauguin         Cocktail Classics      1                 2 Passion Fr… 1 oz   
+    ## 3 Gauguin         Cocktail Classics      1                 3 Lemon Juice 1 oz   
+    ## 4 Gauguin         Cocktail Classics      1                 4 Lime Juice  1 oz   
+    ## 5 Fort Lauderdale Cocktail Classics      2                 1 Light Rum   1 1/2 …
+    ## 6 Fort Lauderdale Cocktail Classics      2                 2 Sweet Verm… 1/2 oz
 
-Pairwise Correlations (again)
------------------------------
+## Pairwise Correlations (again)
 
 Example from David Robinson screencase
-(<a href="https://youtu.be/EC0SVkFB2OU?t=1234" class="uri">https://youtu.be/EC0SVkFB2OU?t=1234</a>)
+(<https://youtu.be/EC0SVkFB2OU?t=1234>)
 
 ``` r
 #library(widyr)
@@ -1747,7 +1732,7 @@ ingredient_pairs <- mr_boston %>%
 head(ingredient_pairs)
 ```
 
-    ## # A tibble: 6 x 3
+    ## # A tibble: 6 × 3
     ##   item1                  item2                  correlation
     ##   <chr>                  <chr>                        <dbl>
     ## 1 Juice of a Lemon       Powdered Sugar               0.462
@@ -1774,8 +1759,7 @@ ingredient_pairs %>%
 
 ![](examples_files/figure-markdown_github/pairwise_correlations_cocktails-1.png)
 
-Network Graph
--------------
+## Network Graph
 
 ``` r
 mr_boston_parsed <- mr_boston %>%
@@ -1804,7 +1788,7 @@ ingredients_summarized <- mr_boston_parsed %>%
 head(ingredients_summarized)
 ```
 
-    ## # A tibble: 6 x 5
+    ## # A tibble: 6 × 5
     ##   ingredient            n n_with_oz avg_position avg_serving
     ##   <chr>             <int>     <int>        <dbl>       <dbl>
     ## 1 Gin                 176       176        0.577       1.35 
@@ -1817,7 +1801,7 @@ head(ingredients_summarized)
 `avg_position` is the step number that the ingredient, on average, shows
 up when mixing the drink.
 
-<a href="https://youtu.be/EC0SVkFB2OU?t=1269" class="uri">https://youtu.be/EC0SVkFB2OU?t=1269</a>
+<https://youtu.be/EC0SVkFB2OU?t=1269>
 
 ``` r
 #library(ggraph)
@@ -1843,10 +1827,9 @@ top_cors %>%
 
 ![](examples_files/figure-markdown_github/network_graph_cocktails-1.png)
 
-Singular Value Decomposition (PCA)
-----------------------------------
+## Singular Value Decomposition (PCA)
 
-<a href="https://youtu.be/EC0SVkFB2OU?t=3009" class="uri">https://youtu.be/EC0SVkFB2OU?t=3009</a>
+<https://youtu.be/EC0SVkFB2OU?t=3009>
 
 What dimensions drive a lot of the variation among cocktails?
 
@@ -1906,22 +1889,21 @@ recipe_svd %>%
 
 ![](examples_files/figure-markdown_github/singular_value_decomposition_recipes-1.png)
 
-Logistic Regression
--------------------
+## Logistic Regression
 
 ``` r
 head(beer_awards)
 ```
 
-    ## # A tibble: 6 x 7
-    ##   medal  beer_name        brewery          city      state category         year
-    ##   <fct>  <chr>            <chr>            <chr>     <chr> <chr>           <dbl>
-    ## 1 Gold   Volksbier Vienna Wibby Brewing    Longmont  CO    American Amber…  2020
-    ## 2 Silver Oktoberfest      Founders Brewin… Grand Ra… MI    American Amber…  2020
-    ## 3 Bronze Amber Lager      Skipping Rock B… Staunton  VA    American Amber…  2020
-    ## 4 Gold   Lager at World'… Epidemic Ales    Concord   CA    American Lager   2020
-    ## 5 Silver Seismic Tremor   Seismic Brewing… Santa Ro… CA    American Lager   2020
-    ## 6 Bronze Lite Thinking    Pollyanna Brewi… Lemont    IL    American Lager   2020
+    ## # A tibble: 6 × 7
+    ##   medal  beer_name            brewery         city     state category       year
+    ##   <fct>  <chr>                <chr>           <chr>    <chr> <chr>         <dbl>
+    ## 1 Gold   Volksbier Vienna     Wibby Brewing   Longmont CO    American Amb…  2020
+    ## 2 Silver Oktoberfest          Founders Brewi… Grand R… MI    American Amb…  2020
+    ## 3 Bronze Amber Lager          Skipping Rock … Staunton VA    American Amb…  2020
+    ## 4 Gold   Lager at World's End Epidemic Ales   Concord  CA    American Lag…  2020
+    ## 5 Silver Seismic Tremor       Seismic Brewin… Santa R… CA    American Lag…  2020
+    ## 6 Bronze Lite Thinking        Pollyanna Brew… Lemont   IL    American Lag…  2020
 
 ``` r
 awards_by_year_state <- beer_awards %>%
@@ -1934,7 +1916,7 @@ awards_by_year_state <- beer_awards %>%
 head(awards_by_year_state)
 ```
 
-    ## # A tibble: 6 x 6
+    ## # A tibble: 6 × 6
     ##    year state total_yearly_awards awards_won pct_awards_won awards_not_won
     ##   <dbl> <fct>               <int>      <int>          <dbl>          <int>
     ## 1  2019 Other                 257        105          0.409            152
@@ -1960,7 +1942,7 @@ How has the probability of successes vs failtures (i.e. awards vs not
 awards) changed over time?
 
 See
-<a href="https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md" class="uri">https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md</a>
+<https://github.com/shane-kercheval/r-examples/blob/main/examples/logistic_regression/logistic_regression.md>
 
 > Logistic Regression is a linear model for log odds. The odds of an
 > event are the probability that it happens over the probability that it
@@ -1968,7 +1950,7 @@ See
 
 > `log[ p / (1-p) ] = B0 + B1X1 + B2X2 + ... + error`
 
-`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
+`log( succeses / failures)` i.e. `log( awards_won / awards_not_won)`
 
 ``` r
 wi_model <- awards_by_year_state %>%
@@ -2008,8 +1990,7 @@ wi_model %>% summary()
 What do the coefficients mean?
 
 > This is a log-odds ratio. So this is how much the log-odds ratio
-> changes each year.
-> (<a href="https://youtu.be/BV_afpCDQ70?t=3001" class="uri">https://youtu.be/BV_afpCDQ70?t=3001</a>)
+> changes each year. (<https://youtu.be/BV_afpCDQ70?t=3001>)
 
 ``` r
 (.log_odds <- coef(wi_model)['year'])
@@ -2025,8 +2006,8 @@ What do the coefficients mean?
     ##      year 
     ## -1.070175
 
--   <a href="http://had.co.nz/notes/modelling/logistic-regression.html" class="uri">http://had.co.nz/notes/modelling/logistic-regression.html</a>
--   <a href="https://www.flutterbys.com.au/stats/tut/tut10.5a.html" class="uri">https://www.flutterbys.com.au/stats/tut/tut10.5a.html</a>
+-   <http://had.co.nz/notes/modelling/logistic-regression.html>
+-   <https://www.flutterbys.com.au/stats/tut/tut10.5a.html>
 
 ``` r
 #library(broom)
@@ -2044,18 +2025,18 @@ models_by_state <- awards_by_year_state %>%
 models_by_state %>% mutate_if(is.numeric, function(.x) {round(.x, 3)})
 ```
 
-    ## # A tibble: 9 x 9
-    ##   state      model term  estimate std.error statistic p.value conf.low conf.high
-    ##   <fct>      <lis> <chr>    <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
-    ## 1 California <glm> year     0.008     0.004     1.93    0.054    0         0.016
-    ## 2 Colorado   <glm> year     0.011     0.005     2.30    0.022    0.002     0.021
-    ## 3 Illinois   <glm> year     0.005     0.01      0.454   0.65    -0.015     0.025
-    ## 4 Oregon     <glm> year     0.009     0.007     1.39    0.165   -0.004     0.023
-    ## 5 Pennsylva… <glm> year    -0.033     0.008    -4.19    0       -0.049    -0.018
-    ## 6 Texas      <glm> year    -0.022     0.008    -2.94    0.003   -0.037    -0.007
-    ## 7 Virginia   <glm> year     0.043     0.013     3.37    0.001    0.018     0.068
-    ## 8 Washington <glm> year    -0.006     0.009    -0.671   0.502   -0.023     0.011
-    ## 9 Wisconsin  <glm> year    -0.068     0.007    -9.12    0       -0.082    -0.053
+    ## # A tibble: 9 × 9
+    ##   state        model  term  estimate std.error statistic p.value conf.low conf.high
+    ##   <fct>        <list> <chr>    <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+    ## 1 California   <glm>  year     0.008     0.004     1.93    0.054    0         0.016
+    ## 2 Colorado     <glm>  year     0.011     0.005     2.30    0.022    0.002     0.021
+    ## 3 Illinois     <glm>  year     0.005     0.01      0.454   0.65    -0.015     0.025
+    ## 4 Oregon       <glm>  year     0.009     0.007     1.39    0.165   -0.004     0.023
+    ## 5 Pennsylvania <glm>  year    -0.033     0.008    -4.19    0       -0.049    -0.018
+    ## 6 Texas        <glm>  year    -0.022     0.008    -2.94    0.003   -0.037    -0.007
+    ## 7 Virginia     <glm>  year     0.043     0.013     3.37    0.001    0.018     0.068
+    ## 8 Washington   <glm>  year    -0.006     0.009    -0.671   0.502   -0.023     0.011
+    ## 9 Wisconsin    <glm>  year    -0.068     0.007    -9.12    0       -0.082    -0.053
 
 ``` r
 models_by_state %>%
@@ -2070,18 +2051,17 @@ models_by_state %>%
 
 ![](examples_files/figure-markdown_github/logistic_regression_coefficients_beer_awards-1.png)
 
-Nested Regression
------------------
+## Nested Regression
 
 Example from David Robinson’s screencast
-(<a href="https://youtu.be/lY0YLDZhT88?t=2977" class="uri">https://youtu.be/lY0YLDZhT88?t=2977</a>)
+(<https://youtu.be/lY0YLDZhT88?t=2977>)
 
 ``` r
 .ikea <- ikea %>% select(price_usd, category, other_colors, depth, height, width)
 head(.ikea)
 ```
 
-    ## # A tibble: 6 x 6
+    ## # A tibble: 6 × 6
     ##   price_usd category      other_colors depth height width
     ##       <dbl> <chr>         <chr>        <dbl>  <dbl> <dbl>
     ## 1      71.6 Bar furniture No              NA     99    51
@@ -2102,15 +2082,15 @@ head(.ikea)
 head(.ikea_volume)
 ```
 
-    ## # A tibble: 6 x 8
-    ##   price_usd category    other_colors depth height width volume_m3 category_total
-    ##       <dbl> <chr>       <chr>        <dbl>  <dbl> <dbl>     <dbl>          <int>
-    ## 1     1453. Wardrobes   No             210    236   275     13.6             199
-    ## 2     1775. Sofas & ar… Yes            252    104   327      8.57            223
-    ## 3     2403  Sofas & ar… No             252    104   327      8.57            223
-    ## 4     2240. Sofas & ar… Yes            257     83   368      7.85            223
-    ## 5     1862. Sofas & ar… Yes            257     83   328      7.00            223
-    ## 6     2267. Sofas & ar… Yes            249     83   327      6.76            223
+    ## # A tibble: 6 × 8
+    ##   price_usd category          other_colors depth height width volume_m3 category_total
+    ##       <dbl> <chr>             <chr>        <dbl>  <dbl> <dbl>     <dbl>          <int>
+    ## 1     1453. Wardrobes         No             210    236   275     13.6             199
+    ## 2     1775. Sofas & armchairs Yes            252    104   327      8.57            223
+    ## 3     2403  Sofas & armchairs No             252    104   327      8.57            223
+    ## 4     2240. Sofas & armchairs Yes            257     83   368      7.85            223
+    ## 5     1862. Sofas & armchairs Yes            257     83   328      7.00            223
+    ## 6     2267. Sofas & armchairs Yes            249     83   327      6.76            223
 
 ``` r
 .ikea_model <-lm(log2(price_usd) ~ log2(volume_m3), data = .ikea_volume)
@@ -2142,7 +2122,7 @@ If we were to predict price based on only the volumn (cubic meters).
     ## F-statistic:  4440 on 1 and 1889 DF,  p-value: < 0.00000000000000022
 
 Then what this says that our Intercept (which is where `log2(volume_m3)`
-is `0`; or in other words when the volumn\_m3 is 1 (cubic meter) because
+is `0`; or in other words when the volumn_m3 is 1 (cubic meter) because
 `log2(1)` equals `0`) …
 
 ``` r
