@@ -622,7 +622,7 @@ ikea %>%
 
 https://github.com/davidsjoberg/ggsankey
 
-```{r}
+```{r sankey}
 # devtools::install_github("davidsjoberg/ggsankey")
 #library(ggsankey)
 
@@ -726,7 +726,7 @@ most_plausible
 
 This is **not** a probability distribution, it is a distribution of relative plausibilities.
 
-```{r}
+```{r optimize}
 plot(probability_grid, likelihood)
 abline(v = most_plausible$minimum, col='red', lwd=3)
 ```
