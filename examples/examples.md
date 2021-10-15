@@ -623,7 +623,7 @@ mtcars %>% with_data(.x=mean(cyl) * 10)
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x127566e80
+    ## env:  0x11a21f590
 
     ## [1] 61.875
 
@@ -648,6 +648,8 @@ mtcars %>%
 
 What if we wanted to do the same thing for different variables,
 dynamically? We need a special assignment operator `:=`.
+
+-   <https://dplyr.tidyverse.org/articles/programming.html#tidy-selection-1>
 
 ``` r
 dynamically <- function(data, mutate_var, group_by_var) {
