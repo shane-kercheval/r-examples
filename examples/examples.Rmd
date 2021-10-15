@@ -414,6 +414,8 @@ mtcars %>%
 
 What if we wanted to do the same thing for different variables, dynamically? We need a special assignment operator `:=`.
 
+- https://dplyr.tidyverse.org/articles/programming.html#tidy-selection-1
+
 ```{r}
 dynamically <- function(data, mutate_var, group_by_var) {
     mtcars %>% 
