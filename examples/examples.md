@@ -614,18 +614,74 @@ mtcars %>%
 
 ``` r
 with_data <- function(data, .x) {
-  expr <- rlang::enquo(.x)
-  print(expr)
-  rlang::eval_tidy(expr, data = data)
+    expr <- rlang::enquo(.x)
+    print(expr)
+    rlang::eval_tidy(expr, data = data)
 }
 mtcars %>% with_data(.x=mean(cyl) * 10)
 ```
 
     ## <quosure>
     ## expr: ^mean(cyl) * 10
-    ## env:  0x1315edf30
+    ## env:  0x127566e80
 
     ## [1] 61.875
+
+### assignment into dynamic variable
+
+Say we did something like this, where we mutate `hp`, group by `cyl`,
+and then summarise with `hp`.
+
+``` r
+mtcars %>% 
+    mutate(hp = hp + 1) %>%
+    group_by(cyl) %>%
+    summarise(mean_hp = mean(hp))
+```
+
+    ## # A tibble: 3 × 2
+    ##     cyl mean_hp
+    ##   <dbl>   <dbl>
+    ## 1     4    83.6
+    ## 2     6   123. 
+    ## 3     8   210.
+
+What if we wanted to do the same thing for different variables,
+dynamically? We need a special assignment operator `:=`.
+
+``` r
+dynamically <- function(data, mutate_var, group_by_var) {
+    mtcars %>% 
+        mutate({{ mutate_var }} := {{ mutate_var }} + 1) %>%
+        group_by({{ group_by_var }}) %>%
+        summarise('mean_{{ mutate_var }}' := mean({{ mutate_var }}))
+}
+```
+
+This gives the same result as above:
+
+``` r
+dynamically(mtcars, hp, cyl)
+```
+
+    ## # A tibble: 3 × 2
+    ##     cyl mean_hp
+    ##   <dbl>   <dbl>
+    ## 1     4    83.6
+    ## 2     6   123. 
+    ## 3     8   210.
+
+But not we can do it with other variables:
+
+``` r
+dynamically(mtcars, mpg, vs)
+```
+
+    ## # A tibble: 2 × 2
+    ##      vs mean_mpg
+    ##   <dbl>    <dbl>
+    ## 1     0     17.6
+    ## 2     1     25.6
 
 ### other examples
 
