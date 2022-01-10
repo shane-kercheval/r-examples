@@ -24,14 +24,15 @@ options(dplyr.summarise.inform=F)
 
 theme_set(theme_light())
 
-calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
+GOLDEN_RATIO <- 1.61803398875
+calculate_plot_width <- function(plot_height) { plot_height * GOLDEN_RATIO }
 plot_width_height_6 <- calculate_plot_width(6)
 plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
 ```{r data, echo=FALSE}
-the_data <- readRDS('data.RDS')
+the_data <- readRDS('the_data.RDS')
 ```
 
 ```{r snippet_name, echo=FALSE, fig.height=6, fig.width=plot_width_height_6}
@@ -44,11 +45,16 @@ the_data %>%
     expand_limits(y=0) +
     scale_fill_manual(values=rt_colors()) +
     theme_light(base_size=base_size) +
-    theme(legend.position='none',
+    theme(aspect.ratio = 1/1.61803398875,
+          legend.position = 'none',
           axis.text.x=element_text(angle=30, hjust=1)) +
     labs(title="",
          subtitle="",
          x="",
          y="",
          caption="")
+```
+
+```{r include=FALSE}
+knitr::knit_exit()
 ```
