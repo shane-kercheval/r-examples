@@ -37,12 +37,12 @@ beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidyt
          medal = fct_relevel(medal, c("Bronze", "Silver")))
 
 cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
-    select(-X1) %>%
+    select(-`...1`) %>%
     mutate(birthYear = as.numeric(birthYear))
 cetaceans <- cetaceans_raw %>% select(species, originLocation)
 
 ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv') %>%
-    select(-X1) %>%
+    select(-`...1`) %>%
     mutate(price_usd = 0.27 * price,
            short_description = str_squish(short_description)) %>%
     add_count(category, name = "category_total") %>%
@@ -217,6 +217,27 @@ iris %>% group_by(Species) %>% summarise_at(vars(Sepal.Length, Sepal.Width), sum
 
 ---
 
+### dynamic `group_by` with `across`
+
+```{r}
+.group_by <- c("vs", "cyl")
+
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
+
+.group_by <- c("vs")
+mtcars %>%
+  group_by(across(all_of(.group_by))) %>%
+  summarise(wt = sum(wt))
+
+mtcars %>% count(across(all_of(.group_by)), wt=wt, name='wt')
+```
+
+---
+
 ### `add_count`
 
 ```{r}
@@ -373,11 +394,47 @@ mtcars %>%
 
 ```{r}
 with_data <- function(data, .x) {
-  expr <- rlang::enquo(.x)
-  print(expr)
-  rlang::eval_tidy(expr, data = data)
+    expr <- rlang::enquo(.x)
+    print(expr)
+    rlang::eval_tidy(expr, data = data)
 }
 mtcars %>% with_data(.x=mean(cyl) * 10)
+```
+
+### assignment into dynamic variable
+
+Say we did something like this, where we mutate `hp`, group by `cyl`, and then summarise with `hp`.
+
+```{r}
+mtcars %>% 
+    mutate(hp = hp + 1) %>%
+    group_by(cyl) %>%
+    summarise(mean_hp = mean(hp))
+```
+
+What if we wanted to do the same thing for different variables, dynamically? We need a special assignment operator `:=`.
+
+- https://dplyr.tidyverse.org/articles/programming.html#tidy-selection-1
+
+```{r}
+dynamically <- function(data, mutate_var, group_by_var) {
+    mtcars %>% 
+        mutate({{ mutate_var }} := {{ mutate_var }} + 1) %>%
+        group_by({{ group_by_var }}) %>%
+        summarise('mean_{{ mutate_var }}' := mean({{ mutate_var }}))
+}
+```
+
+This gives the same result as above:
+
+```{r}
+dynamically(mtcars, hp, cyl)
+```
+
+But not we can do it with other variables:
+
+```{r}
+dynamically(mtcars, mpg, vs)
 ```
 
 ### other examples
@@ -601,7 +658,7 @@ ikea %>%
 
 https://github.com/davidsjoberg/ggsankey
 
-```{r}
+```{r sankey}
 # devtools::install_github("davidsjoberg/ggsankey")
 #library(ggsankey)
 
@@ -705,7 +762,7 @@ most_plausible
 
 This is **not** a probability distribution, it is a distribution of relative plausibilities.
 
-```{r}
+```{r optimize}
 plot(probability_grid, likelihood)
 abline(v = most_plausible$minimum, col='red', lwd=3)
 ```
