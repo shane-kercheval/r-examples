@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
-#devtools::install_github('shane-kercheval/rtools')
+# devtools::install_github('shane-kercheval/rtools')
 # library(rtools)
 # library(stringr)
 # library(ggrepel)
@@ -50,7 +50,7 @@ ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/
 
 mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
 
-restaurant_inspections_by_dba <- readRDS('data/restaurant_inspections_by_dba.RDS')
+restaurant_inspections_by_dba <- readRDS('examples/data/restaurant_inspections_by_dba.RDS')
 ```
 
 # Data Cleaning
