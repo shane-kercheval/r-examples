@@ -14,9 +14,13 @@ output:
 # library(stringr)
 # library(ggrepel)
 # library(forecast)
+library(readr)
 library(scales)
+library(stringr)
+library(forcats)
 library(lubridate)
 library(tidyverse)
+library(dplyr)
 library(ggplot2)
 library(knitr)
 
@@ -58,9 +62,9 @@ restaurant_inspections_by_dba <- readRDS('examples/data/restaurant_inspections_b
 ---
 
 ```{r eval=FALSE, include=FALSE}
-CO2
-starwars
-storms
+head(CO2)
+head(starwars)
+head(storms)
 ```
 
 ## General
@@ -87,7 +91,7 @@ Turn `1` column into `x` columns based on regex
 .df <- data.frame(season_epison = paste0('S', c(1, 1, 1, 2, 2, 2, 3, 3, 3),
                                          'E', c(1, 2, 3, 1, 2, 3, 1, 2, 3)))
 
-.df %>% extract(season_epison, c('season', 'episode'), 'S(.*)E(.*)', convert = TRUE, remove = FALSE)
+.df %>% extract(season_epison, c('season', 'episode'), 'S(.*)E(.*)', convert = TRUE, remove = FALSE) # nolint
 ```
 
 ---
@@ -502,6 +506,8 @@ For example, the order of `setosa`, `versicolor`, `virginica` is allowed to chan
 other examples: https://juliasilge.com/blog/reorder-within/
 
 ```{r reorder_within_iris}
+library(tidyr)
+library(tidytext)
 iris_gathered <- iris %>% pivot_longer(-Species, names_to = 'metric', values_to = 'value')
 iris_gathered %>%
     ggplot(aes(x=tidytext::reorder_within(x=Species, by=value, within=metric),

@@ -7,6 +7,7 @@ RUN mkdir /code
 WORKDIR /code
 
 RUN apt update
+RUN apt-get install -y libxml2-dev
 RUN apt-get install -y libcurl4-openssl-dev
 
 RUN R -e "install.packages('devtools')"
@@ -20,5 +21,6 @@ RUN R -e "install.packages('knitr')"
 RUN R -e "install.packages('stringr')"
 RUN R -e "install.packages('ggrepel')"
 RUN R -e "install.packages('forecast')"
+RUN R -e "install.packages('tidytext')"
 RUN R -e "remotes::install_github('shane-kercheval/rtools')"
 RUN R -e "install.packages('languageserver')"
