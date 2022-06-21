@@ -9,11 +9,6 @@ output:
 ---
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
-# devtools::install_github('shane-kercheval/rtools')
-# library(rtools)
-# library(stringr)
-# library(ggrepel)
-# library(forecast)
 library(readr)
 library(scales)
 library(stringr)
@@ -24,8 +19,8 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 
-options(scipen=999) # non-scientific notation
-options(dplyr.summarise.inform=F)
+options(scipen = 999) # non-scientific notation
+options(dplyr.summarise.inform = FALSE)
 
 theme_set(theme_light())
 
@@ -33,28 +28,31 @@ calculate_plot_width <- function(plot_height) { plot_height * 1.61803398875 }
 plot_width_height_6 <- calculate_plot_width(6)
 plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
+
+print(getwd())
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>%
+beer_awards <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-20/beer_awards.csv') %>% # nolint
   mutate(state = str_to_upper(state),
          medal = fct_relevel(medal, c("Bronze", "Silver")))
 
-cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>% 
+cetaceans_raw <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-18/allCetaceanData.csv') %>%  # nolint
     select(-`...1`) %>%
     mutate(birthYear = as.numeric(birthYear))
 cetaceans <- cetaceans_raw %>% select(species, originLocation)
 
-ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv') %>%
+ikea <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv') %>% # nolint
     select(-`...1`) %>%
     mutate(price_usd = 0.27 * price,
            short_description = str_squish(short_description)) %>%
     add_count(category, name = "category_total") %>%
-    select(item_id, name, price_usd, category, category_total, short_description, depth, height, width, other_colors)
+    select(item_id, name, price_usd, category, category_total, short_description, depth, height, width,
+           other_colors)
 
-mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv')
+mr_boston <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-26/boston_cocktails.csv') # nolint
 
-restaurant_inspections_by_dba <- readRDS('examples/data/restaurant_inspections_by_dba.RDS')
+restaurant_inspections_by_dba <- readRDS("data/restaurant_inspections_by_dba.RDS")
 ```
 
 # Data Cleaning
@@ -613,7 +611,7 @@ cateaceans_acquisition_by_decade_complete %>%
     ggplot(aes(decade, percent, fill = acquisition)) +
     geom_area() +
     scale_y_continuous(labels = percent_format()) +
-    scale_fill_manual(values=rtools::rt_colors()) +
+    scale_fill_manual(values = rtools::rt_colors()) +
     theme_minimal() +
     labs(x = "year",
        y = "% of dolphins recorded")
@@ -665,9 +663,6 @@ ikea %>%
 https://github.com/davidsjoberg/ggsankey
 
 ```{r sankey}
-# devtools::install_github("davidsjoberg/ggsankey")
-#library(ggsankey)
-
 example_dat <- mtcars %>%
   ggsankey::make_long(cyl, vs, am, gear, carb) # function in ggsankey to format data correctly
 
@@ -943,7 +938,7 @@ pitchers <- Lahman::Pitching %>%
     filter(gamesPitched > 3)
 
 # Add player names
-player_names <- Lahman::Master %>%
+player_names <- Lahman::People %>%
     tibble::as_tibble() %>%
     dplyr::select(playerID, nameFirst, nameLast, bats) %>%
     unite(name, nameFirst, nameLast, sep = " ")
@@ -983,11 +978,9 @@ career %>%
 ### Prior Distribution
 
 ```{r message=FALSE, warning=FALSE}
-#devtools::install_github("dgrtwo/ebbr")
-#library(ebbr)
 prior <- career %>%
-  filter(at_bats >= 500) %>%
-  ebbr::ebb_fit_prior(hits, at_bats)
+    filter(at_bats >= 500) %>%
+    ebbr::ebb_fit_prior(hits, at_bats)
 
 prior
 ```
@@ -1177,7 +1170,6 @@ Answer by Dave
 > Your question raises a very important issue- I bring it up in the following post in this series (http://varianceexplained.or.... In short you're 100% right that this doesn't work for predicting future performance of rookies without more adjustments. "One important aspect of this prediction is that it won’t be useful when we’ve just hired a “rookie” player, and we’re wondering what his batting average will be. This observed variable ABAB is based on a player’s entire career, such that a low number is evidence that a player didn’t have much of a chance to bat. (If we wanted to make a prediction, we’d have to consider the distribution of possible ABAB’s the player could end up with and integrate over that, which is beyond the scope of this post)."
 
 ```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-#library(splines)
 eb_career_prior <- career_full %>%
   ebbr::ebb_fit_prior(hits, at_bats, method = "gamlss",
                       mu_predictors = ~ 0 + splines::ns(year, df = 5) * bats + log(at_bats))
@@ -1267,8 +1259,6 @@ head(mr_boston)
 Example from David Robinson screencase (https://youtu.be/EC0SVkFB2OU?t=1234)
 
 ```{r}
-#library(widyr)
-#library(tidytext)
 ingredient_pairs <- mr_boston %>%
   add_count(ingredient) %>%
   filter(n >= 10) %>%
@@ -1306,7 +1296,8 @@ mr_boston_parsed <- mr_boston %>%
 
 
 ingredients_summarized <- mr_boston_parsed %>%
-    # first, groupr by drink name so that we can create a percentile (based off of ingredient number) for all ingrediates within their drink
+    # first, groupr by drink name so that we can create a percentile (based off of ingredient number)
+    # for all ingrediates within their drink
     group_by(name) %>%
     mutate(percentile = row_number() / n()) %>%
     ungroup() %>%
@@ -1326,25 +1317,30 @@ head(ingredients_summarized)
 https://youtu.be/EC0SVkFB2OU?t=1269
 
 ```{r network_graph_cocktails, fig.height=7, fig.width=7}
-#library(ggraph)
-#library(igraph)
 top_cors <- ingredient_pairs %>% head(150)  # most correlated cocktail ingrediants
 ingredient_info <- ingredients_summarized %>% filter(ingredient %in% top_cors$item1)
 
 set.seed(2)
 top_cors %>%
-  igraph::graph_from_data_frame(vertices = ingredient_info) %>%
-  ggraph::ggraph(layout = "fr") +
-  ggraph::geom_edge_link() +
-  ggraph::geom_node_text(aes(label = name), repel = TRUE) +
-  ggraph::geom_node_point(aes(size = 1.1 * n)) +
-  ggraph::geom_node_point(aes(size = n, color = avg_position)) +
-  scale_color_gradient2(low = "red", high = "blue", midpoint = .5,
-                        labels = scales::percent_format()) +
-  labs(size = "# of recipes",
-       color = "Avg position in drink",
-       title = "The constellations of cocktail ingredients",
-       subtitle = "Connected ingredients tend to appear in the same recipes. Red ingredients are early in the recipe, blue tend to be later")
+    igraph::graph_from_data_frame(vertices = ingredient_info) %>%
+    ggraph::ggraph(layout = "fr") +
+    ggraph::geom_edge_link() +
+    ggraph::geom_node_text(aes(label = name), repel = TRUE) +
+    ggraph::geom_node_point(aes(size = 1.1 * n)) +
+    ggraph::geom_node_point(aes(size = n, color = avg_position)) +
+    scale_color_gradient2(
+        low = "red", high = "blue", midpoint = .5,
+        labels = scales::percent_format()
+    ) +
+    labs(
+        size = "# of recipes",
+        color = "Avg position in drink",
+        title = "The constellations of cocktail ingredients",
+        subtitle = paste(
+            "Connected ingredients tend to appear in the same recipes.",
+            "Red ingredients are early in the recipe, blue tend to be later"
+        )
+    )
 ```
 
 ## Singular Value Decomposition (PCA)
@@ -1465,7 +1461,6 @@ What do the coefficients mean?
 - https://www.flutterbys.com.au/stats/tut/tut10.5a.html
 
 ```{r}
-#library(broom)
 models_by_state <- awards_by_year_state %>%
   filter(state != "Other") %>%
   mutate(state = state.name[match(state, state.abb)]) %>%
@@ -1556,9 +1551,9 @@ i.e. every time we doulbe in cubic meters we would expect an increase to the pri
 But now lets include `category` and `other_colors`.
 
 ```{r nested_regression_ikea, fig.height=5, fig.width=7}
-#library(broom)
 .ikea_volume %>%
-    # we are making `Tables & desk` the first factor level and therefore the reference category in the model for category
+    # we are making `Tables & desk` the first factor level and therefore the reference category in the model
+    # for category
     mutate(category = fct_relevel(category, "Tables & desks")) %>%
     lm(log2(price_usd) ~ log2(volume_m3) + category + other_colors, data = .) %>%
     broom::tidy(conf.int = TRUE) %>%

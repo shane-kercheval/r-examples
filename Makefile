@@ -1,3 +1,4 @@
+.PHONY: examples
 ####
 # DOCKER
 ####
@@ -11,4 +12,4 @@ zsh:
 	docker exec -it r-bash-1 /bin/zsh
 
 examples:
-	Rscript -e "rmarkdown::render('examples/exmaples.Rmd')"
+	Rscript -e "rmarkdown::render('examples/examples.Rmd')"
