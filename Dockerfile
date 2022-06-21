@@ -7,7 +7,7 @@ RUN mkdir /code
 WORKDIR /code
 ENV PATH "$PATH:/code"
 
-RUN apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev pandoc
+RUN apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev libgit2-dev pandoc
 
 RUN R -e "install.packages('dplyr')"
 RUN R -e "install.packages('tidyverse')"
@@ -26,7 +26,8 @@ RUN R -e "install.packages('ggridges')"
 RUN R -e "install.packages('ggraph')"
 RUN R -e "install.packages('igraph')"
 RUN R -e "install.packages('Lahman')"
-RUN R -e "remotes::install_github('dgrtwo/ebbr')"
-RUN R -e "remotes::install_github('davidsjoberg/ggsankey')"
-RUN R -e "remotes::install_github('shane-kercheval/rtools')"
+RUN R -e "install.packages('devtools')"
+RUN R -e "devtools::install_github('dgrtwo/ebbr')"
+RUN R -e "devtools::install_github('davidsjoberg/ggsankey')"
+RUN R -e "devtools::install_github('shane-kercheval/rtools')"
 RUN R -e "install.packages('languageserver')"

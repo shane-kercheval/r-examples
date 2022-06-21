@@ -9,7 +9,7 @@ docker_compose:
 docker_run: zsh
 
 zsh:
-	docker exec -it r-bash-1 /bin/zsh
+	docker exec -it r-examples-bash-1 /bin/zsh
 
 examples:
 	Rscript -e "rmarkdown::render('examples/examples.Rmd')"
