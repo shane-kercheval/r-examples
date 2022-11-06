@@ -31,6 +31,11 @@ plot_width_height_7 <- calculate_plot_width(7)
 plot_width_height_8 <- calculate_plot_width(8)
 ```
 
+```{r}
+quantile(rbinom(100000, 100, 0.1), probs = seq(0, 1, 0.05))
+```
+
+
 ```{r data, echo=FALSE}
 the_data <- readRDS('the_data.RDS')
 ```
